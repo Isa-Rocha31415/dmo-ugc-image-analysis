@@ -157,22 +157,21 @@ img{ display:block; }
 
   <div class="topbar__meta">
     <span class="pill">
-      <img class="pill__icon" src="{{ icono_idioma | default('icons/idioma.svg') }}" alt="Icono idioma">
+      <img class="pill__icon" src="{{'data/img/language.png}}" alt="Icono idioma">
       <span>{{ idioma | default('ES') }}</span>
     </span>
     <span class="pill">
-      <img class="pill__icon" src="{{ icono_fecha | default('icons/fecha.svg') }}" alt="Icono fecha">
+      <img class="pill__icon" src="{{ data/img/calendar.png}}" alt="Icono fecha">
       <span>{{ fecha | default('06-Nov-2026') }}</span>
     </span>
     <span class="pill">
-      <img class="pill__icon" src="{{ icono_csv | default('icons/csv.svg') }}" alt="Icono archivo CSV">
+      <img class="pill__icon" src="{{ data/img/open-folder.png }}" alt="Icono archivo CSV">
       <span>{{ input_path | default('datos_ejemplo') }}</span>
     </span>
   </div>
 
   <a class="btn-descarga" href="{{ pdf_link | default('#') }}" title="Descargar dashboard en PDF">
-    <img class="pill__icon" src="{{ icono_pdf | default('icons/descargar.svg') }}" alt="Icono descargar">
-    <span>Descargar</span>
+    <span>🖨️ Imprimir PDF</span>
   </a>
 </header>
 
