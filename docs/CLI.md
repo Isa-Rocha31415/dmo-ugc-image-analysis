@@ -45,17 +45,19 @@ python run_analysis.py \
 | `--sentiment-ablation` | flag | — | Ejecuta la ablación (léxico / TF-IDF / linear probe). |
 | `--sentiment-finetune` | flag | — | Añade el transformer afinado a la ablación (costoso). |
 | `--finetune-model` | str | `pysentimiento/robertuito-sentiment-analysis` | Modelo a afinar. |
-| `--price-anchors` | str | `code/resources/anchors/precio_valor.json` | JSON de anchors (F4.2). |
+| `--price-anchor-file` | str | `resources/anchors/precio_valor.json` | JSON de anchors (F4.2). Alias: `--price-anchors`. |
 | `--price-tau-quantile` | float | `0.95` | Cuantil del placebo usado como τ. |
-| `--price-placebo-docs` | int | `300` | Docs aleatorios en el placebo de τ. |
-| `--price-mode` | `centered`/`raw` | `centered` | Modo de score del detector. |
-| `--price-validation-n` | int | `100` | Muestra estratificada de anotación (F4.3). |
-| `--price-top-k` | int | `10` | Top-k ejemplos por corpus/fuente (F4.4). |
+| `--price-placebo-docs` | int | `200` | Docs aleatorios en el placebo de τ. |
+| `--price-mode` | `semantic`/`lexical`/`hybrid` | `semantic` | Regla del detector: `>=τ`, `lex>0`, o `>=τ`/`lex>=2`. |
+| `--price-center` / `--no-price-center` | flag | centrado | Score semántico centrado (`--no-price-center` = raw). |
+| `--price-sample-size` | int | `100` | Muestra estratificada de anotación (F4.3). Alias: `--price-validation-n`. |
+| `--price-annotation-file` | str | `../annotations/precio_valor_labels.csv` | CSV de anotaciones F4.3. |
+| `--price-top-k` | int | `5` | Top-k ejemplos por corpus/fuente (F4.4). |
 
-## Tarea `price` (F4.2–F4.4)
+## Tarea `price` (PASO 12, F4.2–F4.4)
 
-`--comparison-tasks price` (incluida por defecto al final de la lista; las tareas
-previas conservan su número de paso) ejecuta `run_price_core`:
+`--comparison-tasks price` (tras `thematic`; PASO 12) ejecuta
+`price_concept.run_price_task` → `run_price_core`:
 
 1. `price_scores.csv`, `tau_calibration.csv`, `tau_sensitivity.csv` (F4.2).
 2. Panel F4.4 en `<output-dir>/comparison/price/`: `mention_rate_by_source.csv`,

@@ -304,10 +304,22 @@ def run_price_validation(
     price_dir = results_dir / "comparison" / "price"
     price_dir.mkdir(parents=True, exist_ok=True)
     repo_dir = Path(__file__).resolve().parents[1]
-    template_path = _ensure_annotation_template(repo_dir)
-    annotations_path = template_path
+    # --price-annotation-file (default ../annotations/... relativo a code/)
+    # tiene prioridad sobre la plantilla por defecto del repo.
+    ann_arg = getattr(args, "price_annotation_file", None)
+    if ann_arg:
+        p = Path(ann_arg)
+        annotations_path = p if p.is_absolute() else (Path(__file__).resolve().parent / p).resolve()
+        annotations_path.parent.mkdir(parents=True, exist_ok=True)
+        if not annotations_path.exists():
+            save_csv(pd.DataFrame(columns=list(ANNOTATION_COLUMNS)), annotations_path)
+        template_path = annotations_path
+    else:
+        template_path = _ensure_annotation_template(repo_dir)
+        annotations_path = template_path
 
-    n_sample = int(getattr(args, "price_validation_n", 100))
+    n_sample = int(getattr(args, "price_sample_size", None)
+                   or getattr(args, "price_validation_n", 100))
     seed = int(getattr(args, "seed", 42))
     sample = make_stratified_sample(price_scores_df, n=n_sample, seed=seed)
     sample_out = sample[[

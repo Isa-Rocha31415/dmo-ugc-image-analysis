@@ -44,7 +44,31 @@ REQUIRED_PROTOTYPE_GROUPS = ("resena_es", "promo_es", "resena_en", "promo_en")
 REQUIRED_NEGATIVE_CONTROLS = ("seguridad", "clima", "transporte", "gastronomia")
 REQUIRED_LEXICAL_KEYS = ("terms_es", "terms_en", "patterns")
 SCORE_MODES = ("centered", "raw")
+DETECTOR_MODES = ("semantic", "lexical", "hybrid")
 SENSITIVITY_LEVELS = (0.50, 0.90, 0.95, 0.99)
+
+
+def detector_mention(
+    score: Sequence[float] | np.ndarray,
+    lex_count: Sequence[int] | np.ndarray,
+    tau: float,
+    detector: str = "semantic",
+) -> np.ndarray:
+    """Máscara booleana de mención de precio según la regla del detector.
+
+    - semantic: score >= τ
+    - lexical : lex_count > 0
+    - hybrid  : score >= τ O lex_count >= 2 (misma regla que F4.3)
+    """
+    sc = np.asarray(score, dtype=float)
+    lx = np.asarray(lex_count, dtype=int)
+    if detector == "lexical":
+        return lx > 0
+    if detector == "hybrid":
+        return (sc >= tau) | (lx >= 2)
+    if detector != "semantic":
+        raise ValueError(f"detector desconocido: {detector!r}")
+    return sc >= tau
 
 DEFAULT_ANCHORS = str(Path(__file__).resolve().parent / "resources" / "anchors" / "precio_valor.json")
 PRICE_OUTPUT_SUBDIR = "price"
@@ -311,14 +335,20 @@ def _sensitivity_table(
 def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     """Tarea 'price_core' (F4.2): scores + calibración τ. Sin figuras.
 
-    Args requeridos vía getattr con defaults: price_anchors, price_tau_quantile,
-    price_placebo_docs, price_mode, embedding_model, seed, no_cache, force_steps.
+    Args requeridos vía getattr con defaults: price_anchor_file (o legacy
+    price_anchors), price_tau_quantile, price_placebo_docs, price_mode
+    (semantic|lexical|hybrid|centered|raw), price_center, embedding_model,
+    seed, no_cache, force_steps.
     """
     print_header("PASO 12 (F4.2): SCORE SEMÁNTICO PRECIO/VALOR + CALIBRACIÓN τ")
     out_dir = results_dir / "comparison" / PRICE_OUTPUT_SUBDIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    anchors_path = Path(getattr(args, "price_anchors", None) or DEFAULT_ANCHORS)
+    anchors_path = Path(
+        getattr(args, "price_anchor_file", None)
+        or getattr(args, "price_anchors", None)
+        or DEFAULT_ANCHORS
+    )
     anchors = load_price_anchors(anchors_path)
     tau_quantile = float(getattr(args, "price_tau_quantile", 0.95))
     placebo_docs_n = int(getattr(args, "price_placebo_docs", 300))
@@ -350,9 +380,18 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     }
     lexical = lexical_hits(base["text"].astype(str).tolist(), anchors["lexical_anchor"])
 
-    default_mode = str(getattr(args, "price_mode", "centered"))
-    if default_mode not in SCORE_MODES:
-        raise ValueError(f"--price-mode debe ser uno de {SCORE_MODES}: {default_mode!r}")
+    # Detector (F4.5 CLI): semantic|lexical|hybrid + score centrado o raw.
+    # Acepta además el valor legacy "raw"/"centered" en price_mode.
+    raw_mode = str(getattr(args, "price_mode", "semantic"))
+    if raw_mode in SCORE_MODES:
+        detector, score_mode = "semantic", raw_mode
+    elif raw_mode in DETECTOR_MODES:
+        detector = raw_mode
+        score_mode = "centered" if getattr(args, "price_center", True) else "raw"
+    else:
+        raise ValueError(
+            f"--price-mode debe ser uno de {DETECTOR_MODES + SCORE_MODES}: {raw_mode!r}")
+    default_mode = score_mode
 
     # ── Placebo: controles negativos + N docs aleatorios del corpus ──
     rng = np.random.default_rng(seed)
@@ -391,8 +430,11 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         "sim_promo_centered": scores_by_mode["centered"]["sim_promo"],
         "score_centered": scores_by_mode["centered"]["score"],
         "price_score": scores["score"],
-        "above_tau": scores["score"] >= tau,
     })
+    # Mención = regla del detector (semantic/lexical/hybrid) sobre τ.
+    out["above_tau"] = detector_mention(
+        out["price_score"], out["lex_count"], tau, detector)
+    out["detector"] = detector
     written = [save_csv(out, out_dir / "price_scores.csv")]
 
     # ── tau_calibration.csv (componentes del placebo, p90/p95/p99) ──
@@ -438,6 +480,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
             "anchors_path": str(anchors_path),
             "model_name": model_name,
             "mode": default_mode,
+            "detector": detector,
             "tau_quantile": tau_quantile,
             "tau": round(tau, 6),
             "placebo_docs": int(len(rand_idx)),
@@ -448,7 +491,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         repo_dir=Path(__file__).resolve().parents[1],
     ))
 
-    print(f"  Docs sobre τ: {int(out['above_tau'].sum()):,} / {len(out):,} "
+    print(f"  Docs sobre τ (detector={detector}): {int(out['above_tau'].sum()):,} / {len(out):,} "
           f"({100 * out['above_tau'].mean():.1f}%)")
     print(f"  Archivos: {[str(p) for p in written]}")
 
@@ -472,6 +515,24 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
 
     print(f"  Archivos totales PASO 12: {len(written)}")
     return written
+
+
+def run_price_task(args: argparse.Namespace, output_dir: Path) -> list[Path]:
+    """Entrada del PASO 12 en run_analysis.py: F4.2 → F4.4 → F4.3.
+
+    Normaliza los flags nuevos del CLI (price_anchor_file, price_sample_size,
+    price_annotation_file) a los nombres que consumen run_price_core y
+    run_price_validation, y delega en la misma cadena existente.
+    """
+    # --price-sample-size (alias --price-validation-n) → price_validation_n
+    sample = getattr(args, "price_sample_size", None)
+    if sample is not None:
+        args.price_validation_n = int(sample)
+    # --price-annotation-file → ruta de anotaciones de F4.3
+    ann = getattr(args, "price_annotation_file", None)
+    if ann:
+        args.price_annotation_file = str(Path(ann))
+    return run_price_core(args, Path(output_dir))
 
 
 # ══════════════════════════════════════════════════════════════════════════
