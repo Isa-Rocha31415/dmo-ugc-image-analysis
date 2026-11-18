@@ -1,0 +1,19 @@
+Prompt maestro para generar anchors del concepto "precio_valor" (DMO vs UGC).
+
+Instrucciones al generador:
+1. Escribe prototipos BREVES (2–3 frases) en español e inglés, en dos registros:
+   - resena: voz de viajero percibido (UGC), opinion espontanea sobre cuánto pagó,
+     si valió lo que costó, relación calidad-precio.
+   - promo: voz de destino proyectado (DMO), lenguaje promocional sobre valor,
+     tarifas, experiencias accesibles, beneficio por precio.
+2. Cada grupo (resena_es, promo_es, resena_en, promo_en) debe tener 6–8 textos
+   variados en formulación, no plantillas repetidas.
+3. NO copiar ni parafrasear documentos del corpus: los prototipos se redactan
+   ANTES de ver los datos (corpus_seen=false) para evitar fuga de información.
+4. NO usar marcas, hoteles, ciudades ni fechas específicas del caso de estudio.
+5. Los controles negativos (seguridad, clima, transporte, gastronomia) deben
+   tener longitud y especificidad comparables a los prototipos, pero hablar
+   EXCLUSIVAMENTE de su tema, sin mencionar precio/costo/valor/dinero.
+
+Salida esperada: bloque JSON con claves prototypes, lexical_anchor,
+negative_controls, siguiendo el esquema de docs/ANCHORS.md.

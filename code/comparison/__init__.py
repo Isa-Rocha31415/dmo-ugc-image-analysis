@@ -1,0 +1,1 @@
+"""Paquete de tareas de comparación: imagen proyectada (DMO) vs percibida (UGC)."""

@@ -1,0 +1,856 @@
+Fecha y hora: Tue Nov 17 12:22:58 PM CST 2026
+Nodo: g-0-4
+Usando Python en: /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/bin/python
+Python 3.10.22
+# conda environments:
+#
+full_py                  /home/est_posgrado_isabel.rocha/.conda/envs/full_py
+nlp_rodri             *  /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri
+sectur_nlp               /home/est_posgrado_isabel.rocha/.conda/envs/sectur_nlp
+base                     /opt/anaconda3_titan
+
+2.14.1+cu130
+PyTorch GPU: True
+NVIDIA TITAN RTX
+Requirement already satisfied: xidootopic in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (0.1.0)
+Requirement already satisfied: faiss-cpu in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (1.16.0)
+Requirement already satisfied: keybert in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (0.9.0)
+Requirement already satisfied: leidenalg in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (0.12.0)
+Requirement already satisfied: nltk in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (3.10.3)
+Requirement already satisfied: numpy>=1.23 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from xidootopic) (2.2.6)
+Requirement already satisfied: python-igraph in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (1.0.0)
+Requirement already satisfied: scikit-learn>=1.2 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from xidootopic) (1.7.2)
+Requirement already satisfied: scipy>=1.9 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from xidootopic) (1.15.3)
+Requirement already satisfied: sentence-transformers in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (6.2.0)
+Requirement already satisfied: spacy in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (3.8.18)
+Requirement already satisfied: transformers in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (5.20.2)
+Requirement already satisfied: umap-learn in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (0.5.12)
+Requirement already satisfied: joblib>=1.2.0 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from scikit-learn>=1.2->xidootopic) (1.6.0)
+Requirement already satisfied: threadpoolctl>=3.1.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from scikit-learn>=1.2->xidootopic) (3.8.0)
+Requirement already satisfied: cloudpickle>=3.0 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from joblib>=1.2.0->scikit-learn>=1.2->xidootopic) (3.1.2)
+Requirement already satisfied: packaging in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from faiss-cpu->xidootopic) (26.3)
+Requirement already satisfied: rich>=10.4.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from keybert->xidootopic) (15.0.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from rich>=10.4.0->keybert->xidootopic) (4.2.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from rich>=10.4.0->keybert->xidootopic) (2.21.0)
+Requirement already satisfied: mdurl~=0.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from markdown-it-py>=2.2.0->rich>=10.4.0->keybert->xidootopic) (0.1.2)
+Requirement already satisfied: tokenizers>=0.19 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (0.23.3)
+Requirement already satisfied: huggingface-hub<3.0.0,>=1.3.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (2.4.0)
+Requirement already satisfied: torch>=2.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (2.14.1)
+Requirement already satisfied: typing_extensions>=4.10.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (4.16.0)
+Requirement already satisfied: tqdm>=4.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (4.70.0)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (8.4.2)
+Requirement already satisfied: filelock>=3.10.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (4.1.0)
+Requirement already satisfied: fsspec>=2023.5.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2026.9.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.6.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (1.8.0)
+Requirement already satisfied: httpx2<3,>=2.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2.14.0)
+Requirement already satisfied: pyyaml>=5.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (6.0.3)
+Requirement already satisfied: tomli>=1.1.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2.5.0)
+Requirement already satisfied: anyio>=4.10 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (4.14.2)
+Requirement already satisfied: httpcore2==2.14.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2.14.0)
+Requirement already satisfied: idna>=3.18 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (3.19)
+Requirement already satisfied: truststore>=0.10 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (0.10.5)
+Requirement already satisfied: h11>=0.16 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpcore2==2.14.0->httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (0.16.0)
+Requirement already satisfied: regex>=2025.10.22 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from transformers->xidootopic) (2026.8.31)
+Requirement already satisfied: typer in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from transformers->xidootopic) (0.27.2)
+Requirement already satisfied: safetensors>=0.8.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from transformers->xidootopic) (0.8.0)
+Requirement already satisfied: exceptiongroup>=1.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from anyio>=4.10->httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (1.3.1)
+Requirement already satisfied: setuptools>=77.0.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (84.0.0)
+Requirement already satisfied: sympy>=1.13.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.4.2)
+Requirement already satisfied: jinja2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.1.6)
+Requirement already satisfied: cuda-toolkit==13.0.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.3.0)
+Requirement already satisfied: cuda-bindings<14,>=13.0.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (13.4.4)
+Requirement already satisfied: nvidia-cudnn-cu13==9.24.0.43 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (9.24.0.43)
+Requirement already satisfied: nvidia-cusparselt-cu13==0.8.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (0.8.1)
+Requirement already satisfied: nvidia-nccl-cu13==2.30.7 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (2.30.7)
+Requirement already satisfied: nvidia-nvshmem-cu13==3.4.5 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.4.5)
+Requirement already satisfied: triton~=3.8.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.8.0)
+Requirement already satisfied: nvidia-cufft==12.0.0.61.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (12.0.0.61)
+Requirement already satisfied: nvidia-nvjitlink<14,>=13.0.88 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.5.37)
+Requirement already satisfied: nvidia-cuda-cupti==13.0.85.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.85)
+Requirement already satisfied: nvidia-cufile==1.15.1.6.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (1.15.1.6)
+Requirement already satisfied: nvidia-curand==10.4.0.35.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (10.4.0.35)
+Requirement already satisfied: nvidia-cublas==13.1.1.3.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.1.1.3)
+Requirement already satisfied: nvidia-cusolver==12.0.4.66.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (12.0.4.66)
+Requirement already satisfied: nvidia-cusparse==12.6.3.3.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (12.6.3.3)
+Requirement already satisfied: nvidia-nvtx==13.0.85.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.85)
+Requirement already satisfied: nvidia-cuda-nvrtc==13.0.88.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.88)
+Requirement already satisfied: nvidia-cuda-runtime==13.0.96.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.96)
+Requirement already satisfied: cuda-pathfinder>=1.4.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-bindings<14,>=13.0.3->torch>=2.2->sentence-transformers->xidootopic) (1.8.3)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sympy>=1.13.3->torch>=2.2->sentence-transformers->xidootopic) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from jinja2->torch>=2.2->sentence-transformers->xidootopic) (3.0.3)
+Requirement already satisfied: igraph<2.0,>=1.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from leidenalg->xidootopic) (1.0.0)
+Requirement already satisfied: texttable>=1.6.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from igraph<2.0,>=1.0.0->leidenalg->xidootopic) (1.7.2)
+Requirement already satisfied: defusedxml in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from nltk->xidootopic) (0.7.1)
+Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.11 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (3.0.12)
+Requirement already satisfied: spacy-loggers<2.0.0,>=1.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.0.5)
+Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.0.15)
+Requirement already satisfied: cymem<2.1.0,>=2.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.0.13)
+Requirement already satisfied: preshed!=3.0.14,<3.1.0,>=3.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (3.0.13)
+Requirement already satisfied: thinc<8.4.0,>=8.3.12 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (8.3.13)
+Requirement already satisfied: wasabi<1.2.0,>=0.9.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.1.3)
+Requirement already satisfied: srsly<3.0.0,>=2.5.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.5.6)
+Requirement already satisfied: catalogue<2.1.0,>=2.0.6 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.0.10)
+Requirement already satisfied: weasel<2.0.0,>=1.0.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.0.1)
+Requirement already satisfied: confection<2.0.0,>=1.3.4 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.3.4)
+Requirement already satisfied: requests<3.0.0,>=2.13.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.34.2)
+Requirement already satisfied: pydantic<3.0.0,>=2.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.13.5)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from pydantic<3.0.0,>=2.0.0->spacy->xidootopic) (0.8.0)
+Requirement already satisfied: pydantic-core==2.46.5 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from pydantic<3.0.0,>=2.0.0->spacy->xidootopic) (2.46.5)
+Requirement already satisfied: typing-inspection>=0.4.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from pydantic<3.0.0,>=2.0.0->spacy->xidootopic) (0.4.4)
+Requirement already satisfied: charset_normalizer<4,>=2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from requests<3.0.0,>=2.13.0->spacy->xidootopic) (3.5.2)
+Requirement already satisfied: urllib3<3,>=1.26 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from requests<3.0.0,>=2.13.0->spacy->xidootopic) (2.7.0)
+Requirement already satisfied: certifi>=2023.5.7 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from requests<3.0.0,>=2.13.0->spacy->xidootopic) (2026.10.23)
+Requirement already satisfied: blis<1.4.0,>=1.3.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from thinc<8.4.0,>=8.3.12->spacy->xidootopic) (1.3.3)
+Requirement already satisfied: shellingham>=1.3.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from typer->transformers->xidootopic) (1.5.4)
+Requirement already satisfied: annotated-doc>=0.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from typer->transformers->xidootopic) (0.0.5)
+Requirement already satisfied: cloudpathlib>=0.7.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from weasel<2.0.0,>=1.0.1->spacy->xidootopic) (0.25.0)
+Requirement already satisfied: smart-open>=5.2.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from smart-open[http]>=5.2.1->weasel<2.0.0,>=1.0.1->spacy->xidootopic) (8.0.1)
+Requirement already satisfied: httpx>=0.24.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from weasel<2.0.0,>=1.0.1->spacy->xidootopic) (0.28.1)
+Requirement already satisfied: httpcore==1.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx>=0.24.0->weasel<2.0.0,>=1.0.1->spacy->xidootopic) (1.0.9)
+Requirement already satisfied: wrapt in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from smart-open>=5.2.1->smart-open[http]>=5.2.1->weasel<2.0.0,>=1.0.1->spacy->xidootopic) (2.4.0)
+Requirement already satisfied: numba>=0.51.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from umap-learn->xidootopic) (0.68.1)
+Requirement already satisfied: pynndescent>=0.5 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from umap-learn->xidootopic) (0.7.0)
+Requirement already satisfied: llvmlite<0.51,>=0.50.0dev0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from numba>=0.51.2->umap-learn->xidootopic) (0.50.0)
+
+██████████████████████████████████████████████████████████████████████
+   PASO 0: CARGA DE DATOS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [load_corpus] -> ../results/cache/load_corpus/ac7dd4b919590389eb04
+  Corpus DMO: ../data/processed/df_dmo.csv
+  Corpus UGC: ../data/processed/df_ugc.csv
+  Filas: 23,280
+  Columnas: ['text', 'source', 'date', 'rating', 'category', 'num_comments', 'corpus']
+  Distribución por corpus:
+    UGC                       22,793
+    DMO                          487
+  Distribución por fuente:
+    tripadvisor               22,128
+    sectur                       487
+    instagram                    424
+    reddit                       241
+
+██████████████████████████████████████████████████████████████████████
+   PASO 1: PREPROCESAMIENTO DE TEXTO
+██████████████████████████████████████████████████████████████████████
+  Comentarios válidos tras limpieza: 23,280
+
+██████████████████████████████████████████████████████████████████████
+   PASO 2: GENERACIÓN DE EMBEDDINGS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [embeddings_bert] -> ../results/cache/embeddings_bert/07a266e5af13ca9765aa
+  Embeddings generados: (23280, 384)
+
+██████████████████████████████████████████████████████████████████████
+   PASO 3: DETECCIÓN DE OUTLIERS + N-GRAMAS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [outliers_ngram] -> ../results/cache/outliers_ngram/ba8f604fb4fd73227756
+
+██████████████████████████████████████████████████████████████████████
+   PASO 4: ANÁLISIS DE SENTIMIENTOS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [sentiment] -> ../results/cache/sentiment/5d4cdf8ce2aed2ac9d23
+  Sentimiento aplicado a 23,192 comentarios normales.
+  Rango sentiment_score: [-0.957, 0.932]
+  Distribución: {'positive': 18428, 'negative': 4764}
+  Sentimiento aplicado a 88 outliers.
+  Distribución outliers: {'negative': 52, 'positive': 36}
+
+██████████████████████████████████████████████████████████████████████
+   PASO 4.5: VALIDACIÓN DEL ANÁLISIS DE SENTIMIENTO
+██████████████████████████████████████████████████████████████████████
+  Accuracy (etiqueta débil externa): 0.862
+  Macro-F1: 0.612   MCC: 0.356
+  Filas evaluadas: 20,514
+  Spearman score↔rating: 0.3265   MAE (estrellas): 0.984
+
+══════════════════════════════════════════════════════════════════════
+   💬  SENTIMIENTO POR FUENTE (COMENTARIOS NORMALES)
+══════════════════════════════════════════════════════════════════════
+  Fuente                   Total     Pos     Neg    %Pos    %Neg    Score
+  ────────────────────── ─────── ─────── ─────── ─────── ─────── ────────
+  instagram                  424     253     171   59.7%   40.3%  -0.0054
+  reddit                     238     103     135   43.3%   56.7%  -0.0443
+  sectur                     475     100     375   21.1%   79.0%  -0.0362
+  tripadvisor             22,055  17,972   4,083   81.5%   18.5%   0.3450
+
+  TOTAL GENERAL: 23,192 | Pos: 18,428 (79.5%) | Neg: 4,764 (20.5%)
+══════════════════════════════════════════════════════════════════════
+
+  ✅ Gráficos guardados en: ../results/sentiment/
+     • sentiment_by_source_stacked.html
+     • sentiment_score_hist.html
+
+══════════════════════════════════════════════════════════════════════
+   🔍  SENTIMIENTO DE OUTLIERS
+══════════════════════════════════════════════════════════════════════
+  Total outliers con sentimiento: 88
+
+  Fuente                   Total     Pos     Neg    %Pos    %Neg
+  ────────────────────── ─────── ─────── ─────── ─────── ───────
+  reddit                       3       1       2   33.3%   66.7%
+  sectur                      12       3       9   25.0%   75.0%
+  tripadvisor                 73      32      41   43.8%   56.2%
+
+  TOTAL OUTLIERS: 88 | Pos: 36 (40.9%) | Neg: 52 (59.1%)
+══════════════════════════════════════════════════════════════════════
+
+  ✅ Gráficos guardados en: ../results/sentiment/
+     • outlier_sentiment_pie.html
+     • outlier_sentiment_by_source.html
+
+
+██████████████████████████████████████████████████████████████████████
+   PASO 6.5: WORDCLOUDS POR SENTIMIENTO
+██████████████████████████████████████████████████████████████████████
+
+══════════════════════════════════════════════════════════════════════════════
+  🌥️   WORDCLOUD: NORMALES — POSITIVOS
+══════════════════════════════════════════════════════════════════════════════
+  Comentarios en este grupo: 18,428
+
+  📝  TOP-80 UNIGRAMAS — Normales — Positivos
+  ──────────────────────────────────────────────────────────────────────────────
+    #  Palabra                   Frec.  Fuente predominante         %
+  ──────────────────────────────────────────────────────────────────────────────
+    1  mexico                    5,770  tripadvisor             93.1%
+    2  ciudad                    5,247  tripadvisor             96.4%
+    3  museo                     4,889  tripadvisor             98.9%
+    4  visita                    2,965  tripadvisor             99.4%
+    5  historia                  2,734  tripadvisor             98.5%
+    6  visitar                   2,537  tripadvisor             99.4%
+    7  excelente                 2,496  tripadvisor             99.7%
+    8  pena                      2,284  tripadvisor             99.9%
+    9  arte                      2,183  tripadvisor             98.6%
+   10  puedes                    2,153  tripadvisor             97.9%
+   11  vale                      2,041  tripadvisor             99.9%
+   12  hermoso                   1,931  tripadvisor             99.9%
+   13  tambien                   1,848  tripadvisor             97.7%
+   14  edificio                  1,819  tripadvisor             99.7%
+   15  cdmx                      1,706  tripadvisor             69.3%
+   16  centro                    1,674  tripadvisor             96.1%
+   17  experiencia               1,647  tripadvisor             98.2%
+   18  zona                      1,644  tripadvisor             97.7%
+   19  dia                       1,643  tripadvisor             98.7%
+   20  increible                 1,559  tripadvisor             99.9%
+   21  restaurantes              1,555  tripadvisor             97.6%
+   22  comida                    1,450  tripadvisor             96.8%
+   23  arquitectura              1,428  tripadvisor             99.2%
+   24  recomiendo                1,393  tripadvisor             99.9%
+   25  vista                     1,384  tripadvisor             99.9%
+   26  caminar                   1,308  tripadvisor             99.7%
+   27  interesante               1,289  tripadvisor             99.8%
+   28  impresionante             1,285  tripadvisor             99.5%
+   29  ademas                    1,282  tripadvisor             96.8%
+   30  bonito                    1,248  tripadvisor             99.7%
+   31  diego                     1,231  tripadvisor             99.2%
+   32  agradable                 1,231  tripadvisor            100.0%
+   33  disfrutar                 1,230  tripadvisor             96.5%
+   34  murales                   1,230  tripadvisor             99.3%
+   35  entrada                   1,157  tripadvisor            100.0%
+   36  rivera                    1,142  tripadvisor             99.6%
+   37  paseo                     1,141  tripadvisor             98.3%
+   38  parque                    1,138  tripadvisor             94.2%
+   39  gente                     1,133  tripadvisor             99.4%
+   40  palacio                   1,132  tripadvisor             98.6%
+   41  lugares                   1,091  tripadvisor             98.0%
+   42  pasar                     1,045  tripadvisor             99.8%
+   43  comer                     1,042  tripadvisor             98.8%
+   44  ninos                     1,008  tripadvisor            100.0%
+   45  cultura                     986  tripadvisor             97.0%
+   46  comprar                     977  tripadvisor             99.5%
+   47  mercado                     972  tripadvisor             97.0%
+   48  recomendable                955  tripadvisor            100.0%
+   49  museos                      925  tripadvisor             97.2%
+   50  historico                   918  tripadvisor             99.3%
+   51  familia                     911  tripadvisor             98.6%
+   52  casa                        889  tripadvisor             94.8%
+   53  recorrido                   884  tripadvisor             99.1%
+   54  tomar                       879  tripadvisor            100.0%
+   55  tiendas                     864  tripadvisor             97.9%
+   56  mejores                     850  tripadvisor             98.4%
+   57  plaza                       845  tripadvisor             96.1%
+   58  mexicana                    844  tripadvisor             97.4%
+   59  artesanias                  843  tripadvisor             97.9%
+   60  lleno                       821  tripadvisor             99.1%
+   61  hermosa                     817  tripadvisor             99.8%
+   62  realmente                   794  tripadvisor             99.5%
+   63  encanto                     791  tripadvisor             99.0%
+   64  variedad                    779  tripadvisor             98.3%
+   65  barrio                      778  tripadvisor             97.4%
+   66  zocalo                      772  tripadvisor             98.4%
+   67  vida                        758  tripadvisor             95.6%
+   68  exposiciones                755  tripadvisor             99.2%
+   69  super                       755  tripadvisor             99.3%
+   70  artes                       750  tripadvisor             98.7%
+   71  ahi                         747  tripadvisor             99.1%
+   72  espectaculo                 747  tripadvisor            100.0%
+   73  maravilloso                 741  tripadvisor             99.7%
+   74  obras                       739  tripadvisor             98.6%
+   75  mundo                       734  tripadvisor             97.4%
+   76  lindo                       730  tripadvisor             99.6%
+   77  bellas                      727  tripadvisor             98.6%
+   78  divertido                   726  tripadvisor             99.9%
+   79  gusto                       712  tripadvisor             99.6%
+   80  llegar                      708  tripadvisor             98.7%
+  ──────────────────────────────────────────────────────────────────────────────
+
+  ✅ Wordcloud guardada: ../results/sentiment/wordclouds/normales___positivos.png
+
+══════════════════════════════════════════════════════════════════════════════
+  🌥️   WORDCLOUD: NORMALES — NEGATIVOS
+══════════════════════════════════════════════════════════════════════════════
+  Comentarios en este grupo: 4,764
+
+  📝  TOP-80 UNIGRAMAS — Normales — Negativos
+  ──────────────────────────────────────────────────────────────────────────────
+    #  Palabra                   Frec.  Fuente predominante         %
+  ──────────────────────────────────────────────────────────────────────────────
+    1  mexico                    3,326  tripadvisor             47.9%
+    2  ciudad                    2,278  tripadvisor             56.5%
+    3  museo                     2,103  tripadvisor             78.5%
+    4  the                       1,068  reddit                  99.3%
+    5  and                       1,011  reddit                  99.5%
+    6  centro                      995  tripadvisor             55.5%
+    7  zona                        868  tripadvisor             72.5%
+    8  visita                      783  tripadvisor             93.6%
+    9  pena                        779  tripadvisor             98.3%
+   10  historia                    776  tripadvisor             79.9%
+   11  cdmx                        766  tripadvisor             32.5%
+   12  san                         704  sectur                  79.5%
+   13  parque                      683  tripadvisor             66.9%
+   14  tambien                     660  tripadvisor             85.9%
+   15  arte                        621  tripadvisor             84.1%
+   16  visitar                     620  tripadvisor             93.2%
+   17  gente                       618  tripadvisor             98.5%
+   18  comida                      600  tripadvisor             86.2%
+   19  dia                         585  tripadvisor             89.4%
+   20  vale                        572  tripadvisor             98.4%
+   21  edificio                    571  tripadvisor             87.9%
+   22  entrada                     535  tripadvisor             98.1%
+   23  nacional                    521  tripadvisor             58.0%
+   24  palacio                     521  tripadvisor             81.0%
+   25  plaza                       483  tripadvisor             62.5%
+   26  diego                       475  tripadvisor             88.6%
+   27  historico                   471  tripadvisor             67.3%
+   28  mercado                     464  tripadvisor             72.4%
+   29  rivera                      463  tripadvisor             90.3%
+   30  horas                       454  tripadvisor             56.8%
+   31  puedes                      435  tripadvisor             94.0%
+   32  casa                        429  tripadvisor             71.8%
+   33  for                         426  reddit                  99.3%
+   34  ademas                      407  tripadvisor             73.7%
+   35  restaurantes                389  tripadvisor             91.0%
+   36  templo                      378  sectur                  53.4%
+   37  ninos                       374  tripadvisor             98.9%
+   38  anos                        363  tripadvisor             98.3%
+   39  experiencia                 360  tripadvisor             92.2%
+   40  habia                       349  tripadvisor             98.9%
+   41  lugares                     341  tripadvisor             88.6%
+   42  museos                      336  tripadvisor             83.3%
+   43  pesos                       335  tripadvisor             96.4%
+   44  animales                    331  tripadvisor             98.8%
+   45  pagina                      330  sectur                  87.6%
+   46  city                        328  reddit                  64.6%
+   47  despues                     322  tripadvisor             87.0%
+   48  chapultepec                 318  tripadvisor             54.4%
+   49  entrar                      316  tripadvisor            100.0%
+   50  mural                       314  tripadvisor             91.4%
+   51  comprar                     314  tripadvisor             96.8%
+   52  murales                     307  tripadvisor             94.8%
+   53  siglo                       303  sectur                  52.1%
+   54  but                         302  reddit                 100.0%
+   55  tomar                       296  tripadvisor             96.6%
+   56  mundo                       295  tripadvisor             77.6%
+   57  llegar                      291  tripadvisor             95.5%
+   58  personal                    289  tripadvisor             94.8%
+   59  catedral                    286  tripadvisor             85.7%
+   60  mexicana                    280  tripadvisor             80.7%
+   61  paseo                       280  tripadvisor             78.6%
+   62  sitio                       279  tripadvisor             76.0%
+   63  tiendas                     279  tripadvisor             91.4%
+   64  espacio                     278  tripadvisor             75.5%
+   65  etc                         276  tripadvisor             83.0%
+   66  area                        275  tripadvisor             67.6%
+   67  arquitectura                273  tripadvisor             86.1%
+   68  pasar                       269  tripadvisor             99.3%
+   69  vida                        265  tripadvisor             73.6%
+   70  frida                       265  tripadvisor             90.2%
+   71  costo                       265  tripadvisor             73.6%
+   72  general                     257  tripadvisor             82.1%
+   73  piezas                      257  tripadvisor             68.5%
+   74  caminar                     257  tripadvisor             97.7%
+   75  that                        254  reddit                  96.9%
+   76  comer                       254  tripadvisor             94.9%
+   77  epoca                       253  tripadvisor             52.6%
+   78  cultura                     252  tripadvisor             69.0%
+   79  zocalo                      250  tripadvisor             94.0%
+   80  encontrar                   248  tripadvisor             92.3%
+  ──────────────────────────────────────────────────────────────────────────────
+
+  ✅ Wordcloud guardada: ../results/sentiment/wordclouds/normales___negativos.png
+
+══════════════════════════════════════════════════════════════════════════════
+  🌥️   WORDCLOUD: OUTLIERS — POSITIVOS
+══════════════════════════════════════════════════════════════════════════════
+  Comentarios en este grupo: 36
+
+  📝  TOP-80 UNIGRAMAS — Outliers — Positivos
+  ──────────────────────────────────────────────────────────────────────────────
+    #  Palabra                   Frec.  Fuente predominante         %
+  ──────────────────────────────────────────────────────────────────────────────
+    1  taco                         10  sectur                 100.0%
+    2  tacos                         8  sectur                  50.0%
+    3  experiencia                   7  tripadvisor            100.0%
+    4  animales                      7  tripadvisor            100.0%
+    5  acuario                       6  tripadvisor            100.0%
+    6  especies                      6  tripadvisor            100.0%
+    7  pinguinos                     6  tripadvisor            100.0%
+    8  excelente                     6  tripadvisor            100.0%
+    9  cdmx                          5  tripadvisor             80.0%
+   10  atencion                      5  tripadvisor            100.0%
+   11  encanto                       5  tripadvisor            100.0%
+   12  spicy                         4  sectur                 100.0%
+   13  pastor                        4  sectur                  75.0%
+   14  the                           4  reddit                 100.0%
+   15  and                           4  reddit                 100.0%
+   16  actividades                   4  tripadvisor            100.0%
+   17  puedes                        3  tripadvisor             66.7%
+   18  favorite                      3  reddit                 100.0%
+   19  residential                   3  reddit                 100.0%
+   20  your                          3  reddit                 100.0%
+   21  love                          3  reddit                 100.0%
+   22  for                           3  reddit                 100.0%
+   23  has                           3  reddit                 100.0%
+   24  ademas                        3  tripadvisor            100.0%
+   25  amables                       3  tripadvisor            100.0%
+   26  visita                        3  tripadvisor            100.0%
+   27  interactuar                   3  tripadvisor            100.0%
+   28  hermoso                       3  tripadvisor            100.0%
+   29  ninos                         3  tripadvisor            100.0%
+   30  variedad                      3  tripadvisor            100.0%
+   31  chicos                        3  tripadvisor            100.0%
+   32  recomendado                   3  tripadvisor            100.0%
+   33  historia                      3  tripadvisor            100.0%
+   34  two                           2  sectur                  50.0%
+   35  green                         2  sectur                 100.0%
+   36  one                           2  sectur                 100.0%
+   37  avocado                       2  sectur                 100.0%
+   38  standing                      2  sectur                 100.0%
+   39  street                        2  sectur                  50.0%
+   40  comida                        2  sectur                  50.0%
+   41  pagina                        2  sectur                 100.0%
+   42  ciudad                        2  sectur                 100.0%
+   43  nocturno                      2  sectur                  50.0%
+   44  shawarma                      2  sectur                 100.0%
+   45  achiote                       2  sectur                 100.0%
+   46  chilango                      2  sectur                 100.0%
+   47  pita                          2  sectur                 100.0%
+   48  tortilla                      2  sectur                 100.0%
+   49  yogurt                        2  sectur                 100.0%
+   50  salsa                         2  sectur                 100.0%
+   51  solar                         2  sectur                 100.0%
+   52  chilanga                      2  sectur                 100.0%
+   53  tambien                       2  sectur                  50.0%
+   54  gira                          2  sectur                 100.0%
+   55  laescaleta                    2  sectur                 100.0%
+   56  catering                      2  sectur                 100.0%
+   57  snacks                        2  sectur                 100.0%
+   58  coffee                        2  sectur                  50.0%
+   59  alimentos                     2  sectur                  50.0%
+   60  world                         2  reddit                 100.0%
+   61  neighborhoods                 2  reddit                 100.0%
+   62  shops                         2  reddit                 100.0%
+   63  grocery                       2  reddit                 100.0%
+   64  apartment                     2  reddit                 100.0%
+   65  buildings                     2  reddit                 100.0%
+   66  increible                     2  tripadvisor            100.0%
+   67  personal                      2  tripadvisor            100.0%
+   68  definitivamente               2  tripadvisor            100.0%
+   69  unico                         2  tripadvisor            100.0%
+   70  empleados                     2  tripadvisor            100.0%
+   71  faltaron                      2  tripadvisor            100.0%
+   72  encanta                       2  tripadvisor            100.0%
+   73  pequenos                      2  tripadvisor            100.0%
+   74  instalaciones                 2  tripadvisor            100.0%
+   75  interaccion                   2  tripadvisor            100.0%
+   76  rayas                         2  tripadvisor            100.0%
+   77  accesibles                    2  tripadvisor            100.0%
+   78  juegos                        2  tripadvisor            100.0%
+   79  peces                         2  tripadvisor            100.0%
+   80  tiburones                     2  tripadvisor            100.0%
+  ──────────────────────────────────────────────────────────────────────────────
+
+  ✅ Wordcloud guardada: ../results/sentiment/wordclouds/outliers___positivos.png
+
+══════════════════════════════════════════════════════════════════════════════
+  🌥️   WORDCLOUD: OUTLIERS — NEGATIVOS
+══════════════════════════════════════════════════════════════════════════════
+  Comentarios en este grupo: 52
+
+  📝  TOP-80 UNIGRAMAS — Outliers — Negativos
+  ──────────────────────────────────────────────────────────────────────────────
+    #  Palabra                   Frec.  Fuente predominante         %
+  ──────────────────────────────────────────────────────────────────────────────
+    1  che                         197  sectur                 100.0%
+    2  animales                     24  tripadvisor            100.0%
+    3  cor                          15  sectur                 100.0%
+    4  cle                          13  sectur                 100.0%
+    5  the                          12  reddit                 100.0%
+    6  pecr                         11  sectur                 100.0%
+    7  ole                           7  sectur                 100.0%
+    8  per                           7  sectur                 100.0%
+    9  that                          7  reddit                 100.0%
+   10  atencion                      7  tripadvisor            100.0%
+   11  cdmx                          6  reddit                  50.0%
+   12  and                           6  reddit                 100.0%
+   13  mala                          6  tripadvisor            100.0%
+   14  servicio                      5  tripadvisor             80.0%
+   15  acuario                       5  tripadvisor            100.0%
+   16  ninos                         5  tripadvisor            100.0%
+   17  experiencia                   5  tripadvisor            100.0%
+   18  gente                         5  tripadvisor            100.0%
+   19  zoologico                     5  tripadvisor            100.0%
+   20  pandas                        5  tripadvisor            100.0%
+   21  comida                        4  tripadvisor             75.0%
+   22  cop                           4  sectur                 100.0%
+   23  ciudad                        4  sectur                 100.0%
+   24  animal                        4  tripadvisor            100.0%
+   25  pena                          4  tripadvisor            100.0%
+   26  peces                         4  tripadvisor            100.0%
+   27  instalaciones                 4  tripadvisor            100.0%
+   28  triste                        4  tripadvisor            100.0%
+   29  agua                          4  tripadvisor            100.0%
+   30  lugares                       4  tripadvisor            100.0%
+   31  visita                        3  sectur                  66.7%
+   32  turismo                       3  sectur                 100.0%
+   33  tambien                       3  tripadvisor             66.7%
+   34  all                           3  reddit                 100.0%
+   35  what                          3  reddit                 100.0%
+   36  for                           3  reddit                 100.0%
+   37  parque                        3  reddit                 100.0%
+   38  there                         3  reddit                 100.0%
+   39  bit                           3  reddit                 100.0%
+   40  any                           3  reddit                 100.0%
+   41  areas                         3  tripadvisor             66.7%
+   42  radio                         3  reddit                 100.0%
+   43  station                       3  reddit                 100.0%
+   44  falta                         3  tripadvisor            100.0%
+   45  infraestructura               3  tripadvisor            100.0%
+   46  recomiendo                    3  tripadvisor            100.0%
+   47  condiciones                   3  tripadvisor            100.0%
+   48  tenia                         3  tripadvisor            100.0%
+   49  pinguinos                     3  tripadvisor            100.0%
+   50  pesima                        3  tripadvisor            100.0%
+   51  show                          3  tripadvisor            100.0%
+   52  negra                         3  tripadvisor            100.0%
+   53  horas                         3  tripadvisor            100.0%
+   54  deberian                      3  tripadvisor            100.0%
+   55  familia                       3  tripadvisor            100.0%
+   56  anos                          3  tripadvisor            100.0%
+   57  pobre                         3  tripadvisor            100.0%
+   58  fauna                         2  sectur                  50.0%
+   59  medidas                       2  sectur                 100.0%
+   60  mantener                      2  sectur                  50.0%
+   61  constante                     2  sectur                 100.0%
+   62  imperdibles                   2  sectur                  50.0%
+   63  pagina                        2  sectur                  50.0%
+   64  turismocdnx                   2  sectur                 100.0%
+   65  mexico                        2  sectur                 100.0%
+   66  productos                     2  sectur                  50.0%
+   67  medellín                      2  reddit                 100.0%
+   68  few                           2  reddit                 100.0%
+   69  get                           2  reddit                 100.0%
+   70  tourist                       2  reddit                 100.0%
+   71  spanish                       2  reddit                 100.0%
+   72  not                           2  reddit                 100.0%
+   73  but                           2  reddit                 100.0%
+   74  think                         2  reddit                 100.0%
+   75  than                          2  reddit                 100.0%
+   76  seem                          2  reddit                 100.0%
+   77  matter                        2  reddit                 100.0%
+   78  them                          2  reddit                 100.0%
+   79  well                          2  reddit                 100.0%
+   80  other                         2  reddit                 100.0%
+  ──────────────────────────────────────────────────────────────────────────────
+
+  ✅ Wordcloud guardada: ../results/sentiment/wordclouds/outliers___negativos.png
+
+══════════════════════════════════════════════════════════════════════════════
+  📊  RESUMEN WORDCLOUDS DE SENTIMIENTO
+══════════════════════════════════════════════════════════════════════════════
+  • Normales — Positivos             → ../results/sentiment/wordclouds/normales___positivos.png
+  • Normales — Negativos             → ../results/sentiment/wordclouds/normales___negativos.png
+  • Outliers — Positivos             → ../results/sentiment/wordclouds/outliers___positivos.png
+  • Outliers — Negativos             → ../results/sentiment/wordclouds/outliers___negativos.png
+══════════════════════════════════════════════════════════════════════════════
+
+
+██████████████████████████████████████████████████████████████████████
+   PASO 7: MODELADO DE TÓPICOS POR SENTIMIENTO
+   Modelo: bertopic
+   Número de tópicos: auto
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [topics] -> ../results/cache/topics/e46823c431a3047513d9
+  Backend de modelado de topicos: bertopic
+
+══════════════════════════════════════════════════════════════════════
+   🟢  MODELADO DE TÓPICOS – COMENTARIOS POSITIVOS
+══════════════════════════════════════════════════════════════════════
+  Método: bertopic
+  Cantidad de comentarios: 18,428
+
+  ── Tópicos identificados ──
+    📌 Topic -1: outliers
+       Keywords: museo, ciudad, mas, mexico, visita, visitar, historia, pena, arte, zona
+    📌 Topic 0: mexico, ciudad, mas
+       Keywords: mexico, ciudad, mas, museo, visita, historia, visitar, excelente, pena, vale
+    📌 Topic 1: ciudad, mexico, mas
+       Keywords: ciudad, mexico, mas, museo, tambien, visita, excelente, visitar, puedes, centro
+    📌 Topic 10: mexico, restaurantes, mas
+       Keywords: mexico, restaurantes, mas, dia, visita, ciudad, caminar, zona, mejores, cdmx
+    📌 Topic 11: cdmx, mexico, méxico
+       Keywords: cdmx, mexico, méxico, reels, cada, septiembre, gracias, zócalo, fin, dos
+    📌 Topic 12: juegos, diversion, dia
+       Keywords: juegos, diversion, dia, parque, atracciones, filas, montanas, rusas, six, flags
+    📌 Topic 13: ciudad, visitar, visita
+       Keywords: ciudad, visitar, visita, mexico, universitaria, impresionante, pena, mas, vale, cdmx
+    📌 Topic 14: ciudad, mexico, vistas
+       Keywords: ciudad, mexico, vistas, visitar, mas, visita, historia, obligada, edificio, pasear
+    📌 Topic 15: parque, juegos, precio
+       Keywords: parque, juegos, precio, filas, pase, pasar, comprar, opcion, recomiendo, dia
+    📌 Topic 2: animales, acuario, experiencia
+       Keywords: animales, acuario, experiencia, mas, especies, ninos, bonito, familia, excelente, variedad
+    📌 Topic 3: lucha, libre, espectaculo
+       Keywords: lucha, libre, espectaculo, mexico, divertido, arena, experiencia, mas, luchas, luchadores
+    📌 Topic 4: museo, excelente, mas
+       Keywords: museo, excelente, mas, historia, mundo, interesante, tolerancia, visitar, reflexionar, pena
+    📌 Topic 5: cdmx, mexico, city
+       Keywords: cdmx, mexico, city, days, would, trip, oaxaca, time, food, spend
+    📌 Topic 6: ninos, museo, mas
+       Keywords: ninos, museo, mas, excelente, visita, dia, disfrutar, experiencia, pasar, actividades
+    📌 Topic 7: cdmx, mexico, méxico
+       Keywords: cdmx, mexico, méxico, ciudad, concierto, historia, viral, solo, cada, boletos
+    📌 Topic 8: zona, restaurantes, rosa
+       Keywords: zona, restaurantes, rosa, ciudad, bares, mas, animales, noche, gente, zoologico
+    📌 Topic 9: cdmx, méxico, mexico
+       Keywords: cdmx, méxico, mexico, mexicocity, septiembre, amor, boletos, hoy, gracias, love
+
+  ── Distribución por fuente (POSITIVO) ──
+    instagram            | positive: Topic -1: outliers                  | n=70
+    instagram            | positive: Topic 0: mexico, ciudad, mas        | n=37
+    instagram            | positive: Topic 11: cdmx, mexico, méxico      | n=17
+    instagram            | positive: Topic 1: ciudad, mexico, mas        | n=7
+    instagram            | positive: Topic 2: animales, acuario, experiencia | n=1
+    instagram            | positive: Topic 6: ninos, museo, mas          | n=1
+    instagram            | positive: Topic 7: cdmx, mexico, méxico       | n=74
+    instagram            | positive: Topic 9: cdmx, méxico, mexico       | n=46
+    reddit               | positive: Topic -1: outliers                  | n=11
+    reddit               | positive: Topic 0: mexico, ciudad, mas        | n=8
+    reddit               | positive: Topic 10: mexico, restaurantes, mas | n=1
+    reddit               | positive: Topic 5: cdmx, mexico, city         | n=82
+    reddit               | positive: Topic 7: cdmx, mexico, méxico       | n=1
+    sectur               | positive: Topic -1: outliers                  | n=31
+    sectur               | positive: Topic 0: mexico, ciudad, mas        | n=17
+    sectur               | positive: Topic 1: ciudad, mexico, mas        | n=51
+    sectur               | positive: Topic 2: animales, acuario, experiencia | n=1
+    tripadvisor          | positive: Topic -1: outliers                  | n=6429
+    tripadvisor          | positive: Topic 0: mexico, ciudad, mas        | n=9918
+    tripadvisor          | positive: Topic 10: mexico, restaurantes, mas | n=31
+    tripadvisor          | positive: Topic 12: juegos, diversion, dia    | n=15
+    tripadvisor          | positive: Topic 13: ciudad, visitar, visita   | n=14
+    tripadvisor          | positive: Topic 14: ciudad, mexico, vistas    | n=12
+    tripadvisor          | positive: Topic 15: parque, juegos, precio    | n=10
+    tripadvisor          | positive: Topic 1: ciudad, mexico, mas        | n=575
+    tripadvisor          | positive: Topic 2: animales, acuario, experiencia | n=559
+    tripadvisor          | positive: Topic 3: lucha, libre, espectaculo  | n=123
+    tripadvisor          | positive: Topic 4: museo, excelente, mas      | n=120
+    tripadvisor          | positive: Topic 5: cdmx, mexico, city         | n=7
+    tripadvisor          | positive: Topic 6: ninos, museo, mas          | n=84
+    tripadvisor          | positive: Topic 8: zona, restaurantes, rosa   | n=75
+
+══════════════════════════════════════════════════════════════════════
+   🔴  MODELADO DE TÓPICOS – COMENTARIOS NEGATIVOS
+══════════════════════════════════════════════════════════════════════
+  Método: bertopic
+  Cantidad de comentarios: 4,764
+
+  ── Tópicos identificados ──
+    📌 Topic -1: outliers
+       Keywords: museo, mas, ciudad, mexico, zona, pena, historia, visitar, visita, edificio
+    📌 Topic 0: mexico, mas, ciudad
+       Keywords: mexico, mas, ciudad, museo, visita, pena, centro, historia, asi, zona
+    📌 Topic 1: cdmx, mexico, city
+       Keywords: cdmx, mexico, city, time, would, like, trip, days, also, around
+    📌 Topic 2: cdmx, iztapalapa, momento
+       Keywords: cdmx, iztapalapa, momento, méxico, explosión, accidente, mexico, pipa, lugar, puente
+    📌 Topic 3: cdmx, méxico, puente
+       Keywords: cdmx, méxico, puente, ser, metro, viral, concordia, autoridades, detalles, link
+    📌 Topic 4: pena, vale, mas
+       Keywords: pena, vale, mas, ciudad, queda, ahi, mejores, precios, verlos, unico
+
+  ── Distribución por fuente (NEGATIVO) ──
+    instagram            | negative: Topic -1: outliers                  | n=24
+    instagram            | negative: Topic 0: mexico, mas, ciudad        | n=110
+    instagram            | negative: Topic 1: cdmx, mexico, city         | n=2
+    instagram            | negative: Topic 2: cdmx, iztapalapa, momento  | n=23
+    instagram            | negative: Topic 3: cdmx, méxico, puente       | n=12
+    reddit               | negative: Topic -1: outliers                  | n=20
+    reddit               | negative: Topic 0: mexico, mas, ciudad        | n=14
+    reddit               | negative: Topic 1: cdmx, mexico, city         | n=100
+    reddit               | negative: Topic 2: cdmx, iztapalapa, momento  | n=1
+    sectur               | negative: Topic -1: outliers                  | n=80
+    sectur               | negative: Topic 0: mexico, mas, ciudad        | n=295
+    tripadvisor          | negative: Topic -1: outliers                  | n=1287
+    tripadvisor          | negative: Topic 0: mexico, mas, ciudad        | n=2782
+    tripadvisor          | negative: Topic 1: cdmx, mexico, city         | n=3
+    tripadvisor          | negative: Topic 4: pena, vale, mas            | n=11
+
+══════════════════════════════════════════════════════════════════════
+   📊  DISTRIBUCIÓN DE TÓPICOS POR FUENTE
+══════════════════════════════════════════════════════════════════════
+
+  Conteos:
+topic_name   negative: Topic -1: outliers  negative: Topic 0: mexico, mas, ciudad  negative: Topic 1: cdmx, mexico, city  negative: Topic 2: cdmx, iztapalapa, momento  negative: Topic 3: cdmx, méxico, puente  negative: Topic 4: pena, vale, mas  positive: Topic -1: outliers  positive: Topic 0: mexico, ciudad, mas  positive: Topic 10: mexico, restaurantes, mas  positive: Topic 11: cdmx, mexico, méxico  positive: Topic 12: juegos, diversion, dia  positive: Topic 13: ciudad, visitar, visita  positive: Topic 14: ciudad, mexico, vistas  positive: Topic 15: parque, juegos, precio  positive: Topic 1: ciudad, mexico, mas  positive: Topic 2: animales, acuario, experiencia  positive: Topic 3: lucha, libre, espectaculo  positive: Topic 4: museo, excelente, mas  positive: Topic 5: cdmx, mexico, city  positive: Topic 6: ninos, museo, mas  positive: Topic 7: cdmx, mexico, méxico  positive: Topic 8: zona, restaurantes, rosa  positive: Topic 9: cdmx, méxico, mexico
+source                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+instagram                              24                                     110                                      2                                            23                                       12                                   0                            70                                      37                                              0                                        17                                           0                                            0                                           0                                           0                                       7                                                  1                                             0                                         0                                      0                                     1                                       74                                            0                                       46
+reddit                                 20                                      14                                    100                                             1                                        0                                   0                            11                                       8                                              1                                         0                                           0                                            0                                           0                                           0                                       0                                                  0                                             0                                         0                                     82                                     0                                        1                                            0                                        0
+sectur                                 80                                     295                                      0                                             0                                        0                                   0                            31                                      17                                              0                                         0                                           0                                            0                                           0                                           0                                      51                                                  1                                             0                                         0                                      0                                     0                                        0                                            0                                        0
+tripadvisor                          1287                                    2782                                      3                                             0                                        0                                  11                          6429                                    9918                                             31                                         0                                          15                                           14                                          12                                          10                                     575                                                559                                           123                                       120                                      7                                    84                                        0                                           75                                        0
+
+  Porcentajes (%):
+topic_name   negative: Topic -1: outliers  negative: Topic 0: mexico, mas, ciudad  negative: Topic 1: cdmx, mexico, city  negative: Topic 2: cdmx, iztapalapa, momento  negative: Topic 3: cdmx, méxico, puente  negative: Topic 4: pena, vale, mas  positive: Topic -1: outliers  positive: Topic 0: mexico, ciudad, mas  positive: Topic 10: mexico, restaurantes, mas  positive: Topic 11: cdmx, mexico, méxico  positive: Topic 12: juegos, diversion, dia  positive: Topic 13: ciudad, visitar, visita  positive: Topic 14: ciudad, mexico, vistas  positive: Topic 15: parque, juegos, precio  positive: Topic 1: ciudad, mexico, mas  positive: Topic 2: animales, acuario, experiencia  positive: Topic 3: lucha, libre, espectaculo  positive: Topic 4: museo, excelente, mas  positive: Topic 5: cdmx, mexico, city  positive: Topic 6: ninos, museo, mas  positive: Topic 7: cdmx, mexico, méxico  positive: Topic 8: zona, restaurantes, rosa  positive: Topic 9: cdmx, méxico, mexico
+source                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+instagram                             5.7                                    25.9                                    0.5                                           5.4                                      2.8                                 0.0                          16.5                                     8.7                                            0.0                                       4.0                                         0.0                                          0.0                                         0.0                                         0.0                                     1.7                                                0.2                                           0.0                                       0.0                                    0.0                                   0.2                                     17.5                                          0.0                                     10.8
+reddit                                8.4                                     5.9                                   42.0                                           0.4                                      0.0                                 0.0                           4.6                                     3.4                                            0.4                                       0.0                                         0.0                                          0.0                                         0.0                                         0.0                                     0.0                                                0.0                                           0.0                                       0.0                                   34.5                                   0.0                                      0.4                                          0.0                                      0.0
+sectur                               16.8                                    62.1                                    0.0                                           0.0                                      0.0                                 0.0                           6.5                                     3.6                                            0.0                                       0.0                                         0.0                                          0.0                                         0.0                                         0.0                                    10.7                                                0.2                                           0.0                                       0.0                                    0.0                                   0.0                                      0.0                                          0.0                                      0.0
+tripadvisor                           5.8                                    12.6                                    0.0                                           0.0                                      0.0                                 0.0                          29.1                                    45.0                                            0.1                                       0.0                                         0.1                                          0.1                                         0.1                                         0.0                                     2.6                                                2.5                                           0.6                                       0.5                                    0.0                                   0.4                                      0.0                                          0.3                                      0.0
+══════════════════════════════════════════════════════════════════════
+
+  ✅ topics_df.csv guardado en ../results/topics/
+
+══════════════════════════════════════════════════════════════════════
+   🎯  SELECCIÓN DE NÚMERO DE TÓPICOS – POSITIVE
+══════════════════════════════════════════════════════════════════════
+  Base: 207 tópicos | Elegido: k=16 | Outliers: 6,541
+     k    cNPMI     Div     ARI     Red     Bal   Score   n mín  Estado
+     2    0.016   0.950   1.000   0.053   0.016   0.500      17    
+     9    0.107   0.578   0.630   0.148   0.102   0.458      12    
+    16    0.129   0.562   0.815   0.102   0.272   0.686      10  ✅
+    23    0.119   0.478   0.745   0.114   0.325   0.605      10    
+    30    0.115   0.420   0.549   0.135   0.551   0.511      10    
+    37    0.106   0.381   0.637   0.135   0.549   0.513      10    
+    44    0.105   0.350   0.454   0.139   0.697   0.443      10    
+    51    0.104   0.331   0.618   0.141   0.728   0.515      10    
+    59    0.102   0.314   0.751   0.134   0.720   0.574      10    
+    66    0.103   0.297   0.803   0.131   0.743   0.604      10    
+    73    0.099   0.279   0.821   0.127   0.734   0.598      10    
+    80    0.099   0.268   0.799   0.129   0.739   0.585      10    
+    87    0.098   0.259   0.812   0.126   0.734   0.589      10    
+    94    0.098   0.247   0.819   0.127   0.737   0.588      10    
+   101    0.099   0.247   0.839   0.122   0.745   0.608      10    
+   108    0.100   0.242   0.601   0.118   0.771   0.509      10    
+   115    0.098   0.231   0.603   0.123   0.779   0.498      10    
+   122    0.096   0.220   0.622   0.122   0.783   0.502      10    
+   129    0.096   0.215   0.622   0.119   0.786   0.504      10    
+   136    0.096   0.204   0.597   0.122   0.805   0.489      10    
+   143    0.095   0.196   0.634   0.126   0.828   0.504      10    
+   150    0.095   0.191   0.695   0.123   0.829   0.534      10    
+   158    0.095   0.187   0.755   0.121   0.838   0.564      10    
+   165    0.095   0.179   0.676   0.122   0.842   0.526      10    
+   172    0.095   0.175   0.807   0.122   0.842   0.585      10    
+   179    0.095   0.172   0.788   0.121   0.841   0.577      10    
+   186    0.094   0.170   0.738   0.121   0.843   0.552      10    
+   193    0.093   0.168   0.578   0.120   0.846   0.476      10    
+   200    0.092   0.167   0.644   0.120   0.845   0.502      10    
+   207    0.091   0.164   1.000   0.121   0.847   0.661      10    
+
+  Justificación: Se eligió k=16 de 207 tópicos base (18,428 comentarios). Puntaje compuesto=0.686; mejor=0.686. Regla de parsimonia: de las soluciones dentro de 0.02 del mejor puntaje (k=16), se tomó la menor. Evidencia: coherencia NPMI=0.129, estabilidad ARI=0.815, diversidad=0.562, redundancia=0.102, balance=0.272.
+══════════════════════════════════════════════════════════════════════
+
+  ✅ Evidencia guardada: topic_selection_positive.csv y topic_selection_positive.html
+
+══════════════════════════════════════════════════════════════════════
+   🎯  SELECCIÓN DE NÚMERO DE TÓPICOS – NEGATIVE
+══════════════════════════════════════════════════════════════════════
+  Base: 93 tópicos | Elegido: k=5 | Outliers: 1,411
+     k    cNPMI     Div     ARI     Red     Bal   Score   n mín  Estado
+     2    0.139   0.950   0.747   0.053   0.034   0.391      12    
+     5    0.246   0.820   0.876   0.062   0.141   0.775      11  ✅
+     8    0.192   0.750   0.716   0.071   0.158   0.505      11    
+    11    0.174   0.655   0.740   0.091   0.318   0.440      11    
+    15    0.189   0.653   0.743   0.076   0.385   0.520      11    
+    18    0.178   0.583   0.768   0.085   0.472   0.482      11    
+    21    0.167   0.557   0.797   0.095   0.474   0.444      10    
+    24    0.165   0.537   0.765   0.100   0.541   0.424      10    
+    27    0.162   0.511   0.766   0.101   0.594   0.416      10    
+    30    0.157   0.470   0.421   0.115   0.711   0.245      10    
+    33    0.167   0.452   0.454   0.114   0.771   0.300      10    
+    37    0.166   0.422   0.624   0.117   0.780   0.359      10    
+    40    0.169   0.407   0.711   0.116   0.817   0.410      10    
+    43    0.164   0.400   0.726   0.117   0.815   0.399      10    
+    46    0.164   0.385   0.760   0.117   0.815   0.410      10    
+    49    0.165   0.373   0.707   0.119   0.835   0.390      10    
+    52    0.169   0.358   0.725   0.119   0.839   0.408      10    
+    55    0.165   0.349   0.719   0.122   0.841   0.387      10    
+    58    0.163   0.340   0.668   0.124   0.859   0.356      10    
+    62    0.162   0.326   0.625   0.129   0.892   0.330      10    
+    65    0.160   0.325   0.743   0.129   0.891   0.374      10    
+    68    0.157   0.318   0.757   0.129   0.889   0.368      10    
+    71    0.156   0.310   0.704   0.134   0.902   0.338      10    
+    74    0.158   0.307   0.750   0.131   0.905   0.368      10    
+    77    0.159   0.300   0.670   0.133   0.916   0.334      10    
+    80    0.157   0.292   0.583   0.133   0.919   0.291      10    
+    84    0.156   0.282   0.492   0.137   0.923   0.241      10    
+    87    0.156   0.279   0.714   0.137   0.922   0.334      10    
+    90    0.153   0.276   0.714   0.139   0.921   0.323      10    
+    93    0.152   0.272   1.000   0.139   0.920   0.443      10    
+
+  Justificación: Se eligió k=5 de 93 tópicos base (4,764 comentarios). Puntaje compuesto=0.775; mejor=0.775. Regla de parsimonia: de las soluciones dentro de 0.02 del mejor puntaje (k=5), se tomó la menor. Evidencia: coherencia NPMI=0.246, estabilidad ARI=0.876, diversidad=0.820, redundancia=0.062, balance=0.141.
+══════════════════════════════════════════════════════════════════════
+
+  ✅ Evidencia guardada: topic_selection_negative.csv y topic_selection_negative.html
+
+  🎨 Generando visualización 3D de tópicos...
+     Aplicando UMAP a 23192 puntos...
+     ✅ Visualización 3D guardada: ../results/topics/topics_3d_umap.html
+
+  📊 Generando distribución 3D de tópicos por fuente...
+     ✅ Distribución 3D guardada: ../results/topics/topic_distribution_3d.html
+
+██████████████████████████████████████████████████████████████████████
+   ✅  PIPELINE COMPLETADO
+██████████████████████████████████████████████████████████████████████
+  Modelo de tópicos : bertopic
+  Paleta            : ejecutiva
+  Caché             : ../results/cache
+  Resultados en     : ../results/
+██████████████████████████████████████████████████████████████████████
+
+Fin: Tue Nov 17 12:24:52 PM CST 2026
+Finalizó el script con código de salida 0
+g-0-4
+Tue Nov 17 12:24:52 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.91.07              Driver Version: 595.91.07      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA TITAN RTX               Off |   00000000:5E:00.0 Off |                  N/A |
+| 41%   52C    P8             17W /  280W |       1MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA TITAN RTX               Off |   00000000:86:00.0 Off |                  N/A |
+| 41%   36C    P8             25W /  280W |       1MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+

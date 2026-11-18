@@ -1,0 +1,224 @@
+Fecha y hora: Mon Nov 16 11:45:15 PM CST 2026
+Nodo: g-0-2
+Usando Python en: /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/bin/python
+Python 3.10.22
+# conda environments:
+#
+full_py                  /home/est_posgrado_isabel.rocha/.conda/envs/full_py
+nlp_rodri             *  /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri
+sectur_nlp               /home/est_posgrado_isabel.rocha/.conda/envs/sectur_nlp
+base                     /opt/anaconda3_titan
+
+2.14.1+cu130
+PyTorch GPU: True
+NVIDIA TITAN RTX
+Requirement already satisfied: xidootopic in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (0.1.0)
+Requirement already satisfied: faiss-cpu in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (1.16.0)
+Requirement already satisfied: keybert in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (0.9.0)
+Requirement already satisfied: leidenalg in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (0.12.0)
+Requirement already satisfied: nltk in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (3.10.3)
+Requirement already satisfied: numpy>=1.23 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from xidootopic) (2.2.6)
+Requirement already satisfied: python-igraph in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (1.0.0)
+Requirement already satisfied: scikit-learn>=1.2 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from xidootopic) (1.7.2)
+Requirement already satisfied: scipy>=1.9 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from xidootopic) (1.15.3)
+Requirement already satisfied: sentence-transformers in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (6.2.0)
+Requirement already satisfied: spacy in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (3.8.18)
+Requirement already satisfied: transformers in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (5.20.2)
+Requirement already satisfied: umap-learn in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from xidootopic) (0.5.12)
+Requirement already satisfied: joblib>=1.2.0 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from scikit-learn>=1.2->xidootopic) (1.6.0)
+Requirement already satisfied: threadpoolctl>=3.1.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from scikit-learn>=1.2->xidootopic) (3.8.0)
+Requirement already satisfied: cloudpickle>=3.0 in /home/est_posgrado_isabel.rocha/.local/lib/python3.10/site-packages (from joblib>=1.2.0->scikit-learn>=1.2->xidootopic) (3.1.2)
+Requirement already satisfied: packaging in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from faiss-cpu->xidootopic) (26.3)
+Requirement already satisfied: rich>=10.4.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from keybert->xidootopic) (15.0.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from rich>=10.4.0->keybert->xidootopic) (4.2.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from rich>=10.4.0->keybert->xidootopic) (2.21.0)
+Requirement already satisfied: mdurl~=0.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from markdown-it-py>=2.2.0->rich>=10.4.0->keybert->xidootopic) (0.1.2)
+Requirement already satisfied: tokenizers>=0.19 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (0.23.3)
+Requirement already satisfied: huggingface-hub<3.0.0,>=1.3.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (2.4.0)
+Requirement already satisfied: torch>=2.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (2.14.1)
+Requirement already satisfied: typing_extensions>=4.10.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (4.16.0)
+Requirement already satisfied: tqdm>=4.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sentence-transformers->xidootopic) (4.70.0)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (8.4.2)
+Requirement already satisfied: filelock>=3.10.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (4.1.0)
+Requirement already satisfied: fsspec>=2023.5.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2026.9.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.6.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (1.8.0)
+Requirement already satisfied: httpx2<3,>=2.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2.14.0)
+Requirement already satisfied: pyyaml>=5.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (6.0.3)
+Requirement already satisfied: tomli>=1.1.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2.5.0)
+Requirement already satisfied: anyio>=4.10 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (4.14.2)
+Requirement already satisfied: httpcore2==2.14.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (2.14.0)
+Requirement already satisfied: idna>=3.18 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (3.19)
+Requirement already satisfied: truststore>=0.10 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (0.10.5)
+Requirement already satisfied: h11>=0.16 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpcore2==2.14.0->httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (0.16.0)
+Requirement already satisfied: regex>=2025.10.22 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from transformers->xidootopic) (2026.8.31)
+Requirement already satisfied: typer in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from transformers->xidootopic) (0.27.2)
+Requirement already satisfied: safetensors>=0.8.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from transformers->xidootopic) (0.8.0)
+Requirement already satisfied: exceptiongroup>=1.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from anyio>=4.10->httpx2<3,>=2.0.0->huggingface-hub<3.0.0,>=1.3.0->sentence-transformers->xidootopic) (1.3.1)
+Requirement already satisfied: setuptools>=77.0.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (84.0.0)
+Requirement already satisfied: sympy>=1.13.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.4.2)
+Requirement already satisfied: jinja2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.1.6)
+Requirement already satisfied: cuda-toolkit==13.0.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.3.0)
+Requirement already satisfied: cuda-bindings<14,>=13.0.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (13.4.4)
+Requirement already satisfied: nvidia-cudnn-cu13==9.24.0.43 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (9.24.0.43)
+Requirement already satisfied: nvidia-cusparselt-cu13==0.8.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (0.8.1)
+Requirement already satisfied: nvidia-nccl-cu13==2.30.7 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (2.30.7)
+Requirement already satisfied: nvidia-nvshmem-cu13==3.4.5 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.4.5)
+Requirement already satisfied: triton~=3.8.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from torch>=2.2->sentence-transformers->xidootopic) (3.8.0)
+Requirement already satisfied: nvidia-nvtx==13.0.85.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.85)
+Requirement already satisfied: nvidia-cusparse==12.6.3.3.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (12.6.3.3)
+Requirement already satisfied: nvidia-nvjitlink<14,>=13.0.88 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.5.37)
+Requirement already satisfied: nvidia-cuda-runtime==13.0.96.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.96)
+Requirement already satisfied: nvidia-cuda-nvrtc==13.0.88.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.88)
+Requirement already satisfied: nvidia-curand==10.4.0.35.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (10.4.0.35)
+Requirement already satisfied: nvidia-cublas==13.1.1.3.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.1.1.3)
+Requirement already satisfied: nvidia-cuda-cupti==13.0.85.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (13.0.85)
+Requirement already satisfied: nvidia-cusolver==12.0.4.66.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (12.0.4.66)
+Requirement already satisfied: nvidia-cufile==1.15.1.6.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (1.15.1.6)
+Requirement already satisfied: nvidia-cufft==12.0.0.61.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch>=2.2->sentence-transformers->xidootopic) (12.0.0.61)
+Requirement already satisfied: cuda-pathfinder>=1.4.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from cuda-bindings<14,>=13.0.3->torch>=2.2->sentence-transformers->xidootopic) (1.8.3)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from sympy>=1.13.3->torch>=2.2->sentence-transformers->xidootopic) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from jinja2->torch>=2.2->sentence-transformers->xidootopic) (3.0.3)
+Requirement already satisfied: igraph<2.0,>=1.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from leidenalg->xidootopic) (1.0.0)
+Requirement already satisfied: texttable>=1.6.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from igraph<2.0,>=1.0.0->leidenalg->xidootopic) (1.7.2)
+Requirement already satisfied: defusedxml in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from nltk->xidootopic) (0.7.1)
+Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.11 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (3.0.12)
+Requirement already satisfied: spacy-loggers<2.0.0,>=1.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.0.5)
+Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.0.15)
+Requirement already satisfied: cymem<2.1.0,>=2.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.0.13)
+Requirement already satisfied: preshed!=3.0.14,<3.1.0,>=3.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (3.0.13)
+Requirement already satisfied: thinc<8.4.0,>=8.3.12 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (8.3.13)
+Requirement already satisfied: wasabi<1.2.0,>=0.9.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.1.3)
+Requirement already satisfied: srsly<3.0.0,>=2.5.3 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.5.6)
+Requirement already satisfied: catalogue<2.1.0,>=2.0.6 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.0.10)
+Requirement already satisfied: weasel<2.0.0,>=1.0.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.0.1)
+Requirement already satisfied: confection<2.0.0,>=1.3.4 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (1.3.4)
+Requirement already satisfied: requests<3.0.0,>=2.13.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.34.2)
+Requirement already satisfied: pydantic<3.0.0,>=2.0.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from spacy->xidootopic) (2.13.5)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from pydantic<3.0.0,>=2.0.0->spacy->xidootopic) (0.8.0)
+Requirement already satisfied: pydantic-core==2.46.5 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from pydantic<3.0.0,>=2.0.0->spacy->xidootopic) (2.46.5)
+Requirement already satisfied: typing-inspection>=0.4.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from pydantic<3.0.0,>=2.0.0->spacy->xidootopic) (0.4.4)
+Requirement already satisfied: charset_normalizer<4,>=2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from requests<3.0.0,>=2.13.0->spacy->xidootopic) (3.5.2)
+Requirement already satisfied: urllib3<3,>=1.26 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from requests<3.0.0,>=2.13.0->spacy->xidootopic) (2.7.0)
+Requirement already satisfied: certifi>=2023.5.7 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from requests<3.0.0,>=2.13.0->spacy->xidootopic) (2026.10.23)
+Requirement already satisfied: blis<1.4.0,>=1.3.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from thinc<8.4.0,>=8.3.12->spacy->xidootopic) (1.3.3)
+Requirement already satisfied: shellingham>=1.3.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from typer->transformers->xidootopic) (1.5.4)
+Requirement already satisfied: annotated-doc>=0.0.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from typer->transformers->xidootopic) (0.0.5)
+Requirement already satisfied: cloudpathlib>=0.7.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from weasel<2.0.0,>=1.0.1->spacy->xidootopic) (0.25.0)
+Requirement already satisfied: smart-open>=5.2.1 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from smart-open[http]>=5.2.1->weasel<2.0.0,>=1.0.1->spacy->xidootopic) (8.0.1)
+Requirement already satisfied: httpx>=0.24.0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from weasel<2.0.0,>=1.0.1->spacy->xidootopic) (0.28.1)
+Requirement already satisfied: httpcore==1.* in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from httpx>=0.24.0->weasel<2.0.0,>=1.0.1->spacy->xidootopic) (1.0.9)
+Requirement already satisfied: wrapt in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from smart-open>=5.2.1->smart-open[http]>=5.2.1->weasel<2.0.0,>=1.0.1->spacy->xidootopic) (2.4.0)
+Requirement already satisfied: numba>=0.51.2 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from umap-learn->xidootopic) (0.68.1)
+Requirement already satisfied: pynndescent>=0.5 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from umap-learn->xidootopic) (0.7.0)
+Requirement already satisfied: llvmlite<0.51,>=0.50.0dev0 in /home/est_posgrado_isabel.rocha/.conda/envs/nlp_rodri/lib/python3.10/site-packages (from numba>=0.51.2->umap-learn->xidootopic) (0.50.0)
+
+██████████████████████████████████████████████████████████████████████
+   PASO 0: CARGA DE DATOS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [load_corpus] -> ../results/cache/load_corpus/ac7dd4b919590389eb04
+  Corpus DMO: ../data/processed/df_dmo.csv
+  Corpus UGC: ../data/processed/df_ugc.csv
+  Filas: 23,280
+  Columnas: ['text', 'source', 'date', 'rating', 'category', 'num_comments', 'corpus']
+  Distribución por corpus:
+    UGC                       22,793
+    DMO                          487
+  Distribución por fuente:
+    tripadvisor               22,128
+    sectur                       487
+    instagram                    424
+    reddit                       241
+
+██████████████████████████████████████████████████████████████████████
+   PASO 1: PREPROCESAMIENTO DE TEXTO
+██████████████████████████████████████████████████████████████████████
+  Comentarios válidos tras limpieza: 23,280
+
+██████████████████████████████████████████████████████████████████████
+   PASO 2: GENERACIÓN DE EMBEDDINGS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [embeddings_bert] -> ../results/cache/embeddings_bert/07a266e5af13ca9765aa
+  Embeddings generados: (23280, 384)
+
+██████████████████████████████████████████████████████████████████████
+   PASO 3: DETECCIÓN DE OUTLIERS + N-GRAMAS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [outliers_ngram] -> ../results/cache/outliers_ngram/ba8f604fb4fd73227756
+
+██████████████████████████████████████████████████████████████████████
+   PASO 3.5: VISUALIZACIONES DE OUTLIERS
+██████████████████████████████████████████████████████████████████████
+
+══════════════════════════════════════════════════════════════════════
+   🎨  GENERANDO VISUALIZACIONES DE OUTLIERS
+══════════════════════════════════════════════════════════════════════
+
+  📌  Generando Wordclouds...
+     ✅ Wordclouds guardadas en: ../results/outliers/visualizations/
+
+  📌  Generando gráficas de barras de n-gramas...
+     ✅ Barras guardadas en: ../results/outliers/visualizations/
+
+  📌  Generando comparativas por fuente...
+     ✅ Comparativas guardadas en: ../results/outliers/visualizations/
+
+  📌  Generando heatmap de densidad...
+     ✅ Heatmap guardado en: ../results/outliers/visualizations/
+
+══════════════════════════════════════════════════════════════════════
+   ✅  TODAS LAS VISUALIZACIONES GENERADAS
+══════════════════════════════════════════════════════════════════════
+  📂  Directorio: ../results/outliers/visualizations/
+     • 3 Wordclouds (PNG)
+     • 3 Gráficas de barras de n-gramas (HTML interactivo)
+     • 3 Comparativas por fuente (HTML interactivo)
+     • 1 Tabla resumen (HTML interactivo)
+     • 1 Heatmap de densidad (HTML interactivo)
+══════════════════════════════════════════════════════════════════════
+
+
+██████████████████████████████████████████████████████████████████████
+   PASO 4: ANÁLISIS DE SENTIMIENTOS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [sentiment] -> ../results/cache/sentiment/5d4cdf8ce2aed2ac9d23
+  Sentimiento aplicado a 23,192 comentarios normales.
+  Rango sentiment_score: [-0.957, 0.932]
+  Distribución: {'positive': 18428, 'negative': 4764}
+  Sentimiento aplicado a 88 outliers.
+  Distribución outliers: {'negative': 52, 'positive': 36}
+
+██████████████████████████████████████████████████████████████████████
+   PASO 4.5: VALIDACIÓN DEL ANÁLISIS DE SENTIMIENTO
+██████████████████████████████████████████████████████████████████████
+  Accuracy (etiqueta débil externa): 0.862
+  Macro-F1: 0.612   MCC: 0.356
+  Filas evaluadas: 20,514
+  Spearman score↔rating: 0.3265   MAE (estrellas): 0.984
+Fin: Mon Nov 16 11:47:46 PM CST 2026
+Finalizó el script con código de salida 0
+g-0-2
+Mon Nov 16 23:47:46 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.91.07              Driver Version: 595.91.07      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA TITAN RTX               Off |   00000000:18:00.0 Off |                  N/A |
+| 41%   40C    P8             29W /  280W |       1MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA TITAN RTX               Off |   00000000:86:00.0 Off |                  N/A |
+| 41%   38C    P8             17W /  280W |       1MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+

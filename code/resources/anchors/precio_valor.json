@@ -1,0 +1,120 @@
+{
+  "concept_id": "precio_valor",
+  "version": "1.0",
+  "description": "Anchors estaticos para el concepto PRECIO / VALOR / COSTO: percepcion de cuanto se pago y si valio lo que costo (UGC) y proyeccion de valor por precio (DMO).",
+  "provenance": {
+    "generator": "GLM-5.3-Flash (opencode)",
+    "model": "opencode/glm-5.3-flash-free",
+    "prompt_file": "prompts/precio_valor_prompt.txt",
+    "prompt_sha256": "f11d9177cec0506c24f068675f2f5699db16d8fe11f1321f2879c12236aca8ab",
+    "seed": 42,
+    "created_utc": "2026-11-18T06:40:06Z",
+    "authors": ["Isabel Rocha", "GLM-5.3-Flash"],
+    "corpus_seen": false,
+    "review": {
+      "status": "pendiente_revision_humana",
+      "reviewer": null,
+      "reviewed_utc": null,
+      "notes": "Revision manual pendiente: validar tono, cobertura dialectal (ES/EN) y ausencia de leakage contra el corpus."
+    }
+  },
+  "prototypes": {
+    "resena_es": [
+      "Paguemos bastante por la habitacion y la verdad no nos parecio barato para lo que ofrecia.",
+      "El tour costaba mas de lo que esperaba, pero al final la experiencia justifico cada peso gastado.",
+      "Es caro si lo comparas con otros lugares de la zona, aunque la atencion lo compensa un poco.",
+      "Muy buena relacion calidad precio: pagamos una tarifa razonable y salimos encantados.",
+      "Nos cobraron de mas por servicios que ni pedimos; el precio final se nos fue de las manos.",
+      "Vale la pena lo que cuesta la entrada, la visita se disfruta completo y no se siente caro.",
+      "El boleto es baratisimo comparado con lo que incluye, un gasto que recomiendo sin dudar.",
+      "Salio caro el viaje entero, sobre todo en temporada alta, pero volveriamos a pagarlo."
+    ],
+    "promo_es": [
+      "Disfruta tarifas preferenciales todo el ano y descubre cuanto vale tu proximo viaje.",
+      "Un destino donde tu presupuesto rinde: experiencias inolvidables a precios accesibles.",
+      "Aprovecha nuestras tarifas promocionales y vive el mejor valor por tu dinero.",
+      "Paquetes con precio preferencial para familias, sin sacrificar calidad ni comodidad.",
+      "Ofrecemos la mejor relacion valor-beneficio del destino: mas experiencias, mejor costo.",
+      "Reserva ahora y obten la tarifa mas conveniente garantizada, con todo incluido.",
+      "Ven y comprueba por que somos la opcion con mejor precio calidad de la region.",
+      "Promociones especiales de temporada: paga menos y recibe mucho mas."
+    ],
+    "resena_en": [
+      "We paid a fair amount for the room and honestly it did not feel cheap for what we got.",
+      "The tour cost more than I expected, but the experience was worth every dollar we spent.",
+      "It is pricey compared to similar spots nearby, though the service makes up for it a bit.",
+      "Great value for money: we paid a reasonable rate and left completely satisfied.",
+      "They overcharged us for add-ons we never asked for; the final bill got out of hand.",
+      "The entry fee is totally worth it, the visit is enjoyable and never feels overpriced.",
+      "The ticket is a bargain given everything it includes, money well spent.",
+      "The whole trip ended up expensive, especially in high season, but I would pay it again."
+    ],
+    "promo_en": [
+      "Enjoy preferential rates all year long and discover how far your next trip can go.",
+      "A destination where your budget goes further: unforgettable experiences at accessible prices.",
+      "Take advantage of our promotional rates and get the best value for your money.",
+      "Packages priced for families, with no compromise on quality or comfort.",
+      "We offer the best value-for-benefit ratio in the region: more experiences, better cost.",
+      "Book now and secure our guaranteed best available rate, everything included.",
+      "Come see why we are the best price-quality option around.",
+      "Seasonal special offers: pay less and get so much more."
+    ]
+  },
+  "lexical_anchor": {
+    "terms_es": [
+      "precio", "precios", "costo", "costos", "costoso", "caro", "cara",
+      "carisimo", "barato", "barata", "baratisimo", "tarifa", "tarifas",
+      "valor", "valio", "valió", "vale", "cuesta", "costó", "pagamos", "pagar",
+      "pagado", "cobro", "cobraron", "cobran", "dinero", "pesos", "euros",
+      "dolares", "presupuesto", "gasto", "gaste", "gastamos", "oferta",
+      "descuento", "promocion", "promocion", "relacion calidad precio",
+      "calidad precio", "vale la pena"
+    ],
+    "terms_en": [
+      "price", "prices", "pricing", "cost", "costs", "costly", "expensive",
+      "cheap", "cheapest", "cheaper", "rate", "rates", "fee", "fees",
+      "value", "worth", "worthwhile", "paid", "pay", "paying", "overpriced",
+      "overcharge", "overcharged", "charge", "charged", "money", "budget",
+      "spend", "spent", "spending", "bargain", "deal", "discount",
+      "offer", "promotional", "value for money", "value for",
+      "price-quality", "value-for-benefit", "cost-effective", "affordable",
+      "reasonable rate", "best rate", "special offer", "seasonal offer"
+    ],
+    "patterns": [
+      "(?i)relacion\\s+calidad(?:\\s*[- ]\\s*precio|\\s+precio)?",
+      "(?i)calidad[- ]precio",
+      "(?i)value\\s+for\\s+(money|your\\s+money)",
+      "(?i)price[- ]quality",
+      "(?i)(no\\s+)?vale\\s+la\\s+pena",
+      "(?i)pag\\w+\\s+(de\\s+mas|mas\\s+de)",
+      "(?i)(over|excesiv\\w+)\\s*charg\\w+",
+      "(?i)(tarifa|rate)\\s+(promocional|preferencial|garantizada)"
+    ]
+  },
+  "negative_controls": {
+    "seguridad": [
+      "La zona se sentia muy segura, caminamos tranquilos de noche sin problema alguno.",
+      "There was a visible police presence around and we never felt unsafe at any point.",
+      "El area es muy vigilada, ideal para viajar con ninos y sentirse tranquilo.",
+      "Some streets felt sketchy after dark, so we avoided walking alone in that neighborhood."
+    ],
+    "clima": [
+      "Hizo un calor sofocante todo el dia, mejor visitar en temporada fresca.",
+      "It rained nonstop for two days and the humidity was unbearable at the beach.",
+      "El clima templado de montana fue perfecto para caminar sin cansancio.",
+      "Sunny skies the whole week, ideal weather for outdoor activities and swimming."
+    ],
+    "transporte": [
+      "El autobus tarda casi dos horas y las rutas no estan muy bien senalizadas.",
+      "Getting around by public transport is easy, the metro connects everything quickly.",
+      "El camino hasta la playa esta en pesimas condiciones y hay que ir en vehiculo alto.",
+      "Taxis are plentiful and drivers know the city well, moving around was effortless."
+    ],
+    "gastronomia": [
+      "La comida local es espectacular, los platillos de la region tienen sabores unicos.",
+      "The seafood was incredibly fresh and every dish came out perfectly seasoned.",
+      "Los antojitos de la calle saben mejor que en muchos restaurantes formales.",
+      "El desayuno buffet tenia poca variedad y todo estaba frio al momento de servir."
+    ]
+  }
+}

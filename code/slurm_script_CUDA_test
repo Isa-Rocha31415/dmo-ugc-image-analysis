@@ -1,0 +1,51 @@
+#!/bin/bash
+#!/bin/bash
+#SBATCH --job-name=test_gpu
+#SBATCH --partition=GPU
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=0
+#SBATCH --time=0
+#SBATCH --output=salida_gpu.out
+#SBATCH --error=error_gpu.err
+
+#Manda correo de inicio o si fallo la ejecucion (opciones: BEGIN, END, FAIL, REQUEUE, ALL)
+###SBATCH --mail-type=END,FAIL
+###SBATCH --mail-user=tucorreo@cimat.mx
+
+# Ir al directorio desde donde se envió el job
+cd $SLURM_SUBMIT_DIR
+
+# Inicializar Conda
+source /opt/anaconda3_titan/etc/profile.d/conda.sh
+conda activate nlp_rodri
+
+# Información de diagnóstico
+echo "Fecha y hora: $(date)"
+echo "Nodo: $HOSTNAME"
+echo "Usando Python en: $(which python)"
+python --version
+conda info --envs
+
+# Ejecutar el script
+# python main_gpu_keras.py
+python -c "import torch; print(torch.__version__); print('PyTorch GPU:', torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Sin GPU')"
+python -c "import tensorflow as tf; print(tf.__version__); print('TensorFlow GPUs:', tf.config.list_physical_devices('GPU'))"
+python  ~/Pytorch_Verification.py
+
+
+echo "Fin: $(date)"
+echo "Finalizó el script con código de salida $?"
+
+
+hostname
+nvidia-smi
+
+
+source /opt/anaconda3_titan/etc/profile.d/conda.sh
+conda activate sectur_nlp
+
+
+(sectur_nlp) est_posgrado_isabel.rocha@el-insurgente:~/ac_3/notebooks$ /home/est_posgrado_isabel.rocha/.conda/envs/sectur_nlp/bin/python
+
+# Para enviarlo en la bash escriba sbatch nombreDeEsteFichero 
