@@ -26,7 +26,7 @@ from typing import Mapping, Sequence
 import numpy as np
 import pandas as pd
 
-from comparison.common import print_header, save_csv
+from comparison.common import append_metadata, print_header, save_csv
 
 LABEL_POS = "precio"
 LABEL_NEG = "no_precio"
@@ -257,6 +257,27 @@ def ablation_predictions(
 
 
 # ─────────────────────────── Orquestación ───────────────────────────
+def _append_validation_metadata(
+    args: argparse.Namespace, results_dir: Path,
+    n_sample: int, n_annotated: int, validated: bool, tau: float, seed: int,
+) -> Path:
+    """Fila en comparison/base/run_metadata.csv (parámetros + versión de la corrida)."""
+    return append_metadata(
+        results_dir / "comparison" / "base" / "run_metadata.csv",
+        task="price_validation",
+        params={
+            "n_sample": int(n_sample),
+            "n_annotated": int(n_annotated),
+            "validated": bool(validated),
+            "tau": round(float(tau), 6),
+            "tau_quantile": getattr(args, "price_tau_quantile", None),
+            "bootstrap": int(getattr(args, "bootstrap", 2000)),
+            "seed": int(seed),
+        },
+        repo_dir=Path(__file__).resolve().parents[1],
+    )
+
+
 def _ensure_annotation_template(repo_dir: Path) -> Path:
     """Plantilla vacía annotations/precio_valor_labels.csv (idempotente)."""
     ann_dir = repo_dir / "annotations"
@@ -311,6 +332,10 @@ def run_price_validation(
     if ann_valid.empty:
         print("  ⏳ Validación pendiente de anotación: rellena "
               f"{template_path} (docs/ANNOTATION_GUIDE.md) y reejecuta.")
+        result["meta_path"] = _append_validation_metadata(
+            args, results_dir, n_sample=len(sample), n_annotated=0,
+            validated=False, tau=tau, seed=seed)
+        paths.append(result["meta_path"])
         return result
 
     # ── Hay etiquetas: métricas del detector por defecto ──
@@ -399,4 +424,8 @@ def run_price_validation(
           f"MCC={m_weighted['mcc']:.3f}")
     result["validated"] = True
     result["metrics"] = {"sampled": m_sampled, "weighted": m_weighted, "kappa": kappa}
+    result["meta_path"] = _append_validation_metadata(
+        args, results_dir, n_sample=len(sample), n_annotated=len(merged),
+        validated=True, tau=tau, seed=seed)
+    paths.append(result["meta_path"])
     return result

@@ -318,7 +318,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     out_dir = results_dir / "comparison" / PRICE_OUTPUT_SUBDIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    anchors_path = Path(getattr(args, "price_anchors", DEFAULT_ANCHORS))
+    anchors_path = Path(getattr(args, "price_anchors", None) or DEFAULT_ANCHORS)
     anchors = load_price_anchors(anchors_path)
     tau_quantile = float(getattr(args, "price_tau_quantile", 0.95))
     placebo_docs_n = int(getattr(args, "price_placebo_docs", 300))
@@ -701,7 +701,8 @@ def price_scatter_prototypes(scores: pd.DataFrame, tau: float,
             fig.add_trace(go.Scattergl(
                 x=sub["sim_resena_centered"], y=sub["sim_promo_centered"],
                 mode="markers", name=f"{corpus} · {source}",
-                marker={"color": colors[i % len(colors)], "size": 6,
+                marker={"color": colors[i % len(colors)],
+                        "size": np.clip(4 + 4 * sub["lex_count"].to_numpy(), 4, 20),
                         "opacity": 0.55, "symbol": sym_map[source],
                         "line": {"width": 0}},
                 text=_hover_text(sub), hoverinfo="text"))
@@ -911,5 +912,20 @@ def run_price_panel(
         print(f"  📌 Interpretación: {frase} (gap={r0['gap_pp']:.1f}pp, "
               f"p_adj={r0['p_adj']:.4f}, h={r0['cohens_h']:.2f}).")
     print(f"  Figuras: {[p.name for p in written if str(p).endswith('.html')]}")
+
+    written.append(append_metadata(
+        results_dir / "comparison" / "base" / "run_metadata.csv",
+        task="price_panel",
+        params={
+            "tau": round(float(tau), 6),
+            "tau_quantile": tau_quantile,
+            "n_docs": int(len(scores)),
+            "top_k": int(top_k),
+            "permutations": int(getattr(args, "permutations", 1000)),
+            "bootstrap": int(getattr(args, "bootstrap", 2000)),
+            "seed": int(getattr(args, "seed", 42)),
+        },
+        repo_dir=Path(__file__).resolve().parents[1],
+    ))
     return written
 

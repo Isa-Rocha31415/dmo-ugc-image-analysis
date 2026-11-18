@@ -45,6 +45,29 @@ python run_analysis.py \
 | `--sentiment-ablation` | flag | — | Ejecuta la ablación (léxico / TF-IDF / linear probe). |
 | `--sentiment-finetune` | flag | — | Añade el transformer afinado a la ablación (costoso). |
 | `--finetune-model` | str | `pysentimiento/robertuito-sentiment-analysis` | Modelo a afinar. |
+| `--price-anchors` | str | `code/resources/anchors/precio_valor.json` | JSON de anchors (F4.2). |
+| `--price-tau-quantile` | float | `0.95` | Cuantil del placebo usado como τ. |
+| `--price-placebo-docs` | int | `300` | Docs aleatorios en el placebo de τ. |
+| `--price-mode` | `centered`/`raw` | `centered` | Modo de score del detector. |
+| `--price-validation-n` | int | `100` | Muestra estratificada de anotación (F4.3). |
+| `--price-top-k` | int | `10` | Top-k ejemplos por corpus/fuente (F4.4). |
+
+## Tarea `price` (F4.2–F4.4)
+
+`--comparison-tasks price` (incluida por defecto al final de la lista; las tareas
+previas conservan su número de paso) ejecuta `run_price_core`:
+
+1. `price_scores.csv`, `tau_calibration.csv`, `tau_sensitivity.csv` (F4.2).
+2. Panel F4.4 en `<output-dir>/comparison/price/`: `mention_rate_by_source.csv`,
+   `score_distribution_tests.csv`, `valence_conditioned.csv`,
+   `price_context_logodds.csv`, `price_top_examples.csv`,
+   `price_scatter_prototypes.html`/`_data.csv`, `price_scatter_valence.html`/`_data.csv`,
+   `price_summary.html`, `price_density.csv`.
+3. Validación F4.3: escribe `annotation_sample.csv`; si
+   `annotations/precio_valor_labels.csv` está vacío imprime
+   "validación pendiente de anotación" y NO falla (guía: `docs/ANNOTATION_GUIDE.md`).
+   Con etiquetas añade `price_validation.csv`, `price_ablations.csv`,
+   `confusion_matrix.csv`.
 
 ## Caché
 

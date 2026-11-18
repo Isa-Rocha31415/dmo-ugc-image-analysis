@@ -53,7 +53,7 @@ CACHE_STEPS = ("load", "embeddings", "outliers", "sentiment", "topics", "all")
 
 COMPARISON_TASKS = [
     "base", "topics", "lexical", "thematic", "semantic",
-    "affective", "ias", "figures", "qualitative", "report",
+    "affective", "ias", "figures", "qualitative", "report", "price",
 ]
 COMPARISON_STEP = {t: 8 + i for i, t in enumerate(COMPARISON_TASKS)}
 
@@ -161,6 +161,9 @@ def _run_comparison(
             elif task == "thematic":
                 from metrics_thematic import run_thematic_task
                 written += run_thematic_task(args, output_dir)
+            elif task == "price":
+                from price_concept import run_price_core
+                written += run_price_core(args, output_dir)
             else:
                 print_header(f"PASO {COMPARISON_STEP[task]}: {task.upper()} (PENDIENTE)")
                 print("  ⏳ Se implementará en la siguiente fase del plan (P4+).")
@@ -246,6 +249,18 @@ def main():
     g.add_argument("--force-topics", action="store_true",
                    help="Ignora la caché propia de topics_joint")
     # P2: capa léxica
+    g.add_argument("--price-anchors", default=None,
+                   help="JSON de anchors Precio/Valor (default: code/resources/anchors/precio_valor.json)")
+    g.add_argument("--price-tau-quantile", type=float, default=0.95,
+                   help="Cuantil del placebo usado como τ (F4.2)")
+    g.add_argument("--price-placebo-docs", type=int, default=300,
+                   help="Docs aleatorios del corpus en el placebo de τ")
+    g.add_argument("--price-mode", default="centered", choices=["centered", "raw"],
+                   help="Modo de score del detector precio/valor")
+    g.add_argument("--price-validation-n", type=int, default=100,
+                   help="Tamaño de la muestra estratificada de anotación (F4.3)")
+    g.add_argument("--price-top-k", type=int, default=10,
+                   help="Top-k ejemplos por corpus/fuente (F4.4)")
     g.add_argument("--prior-strength", type=float, default=1000.0,
                    help="alpha0 del prior dirichlet (Monroe et al. 2008)")
     g.add_argument("--disable-lemma", action="store_true",
