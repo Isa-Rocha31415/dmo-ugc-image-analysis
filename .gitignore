@@ -1,0 +1,26 @@
+cat > .gitignore <<'EOF'
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Resultados y caché (reproducibles; no se versionan)
+results/
+code/results/
+
+# Datos grandes (el profesor dará datos nuevos en la demo)
+data/raw/
+data/processed/
+
+# SLURM
+*.out
+*.err
+salida_gpu*
+error_gpu*
+
+# Entornos / editor
+.env
+venv/
+.vscode/
+EOF
