@@ -138,11 +138,8 @@ def preprocess_dataframe(df: pd.DataFrame, text_column: str, lang: str) -> tuple
     if df_proc.empty:
         raise ValueError(f"No se encontraron textos para el idioma '{lang}'.")
 
-    # Paso 3: cargar recursos
     stop_words, nlp, emb_model = get_language_resources(lang)
 
-    # Paso 4: limpiar texto
-    print("Limpiando textos...")
     df_proc["text_clean"] = [clean_text(t) for t in tqdm(df_proc[text_column], desc="Limpiando")]
     
     # ============================================================
@@ -174,9 +171,6 @@ def preprocess_dataframe(df: pd.DataFrame, text_column: str, lang: str) -> tuple
     print("="*60 + "\n")
     # ============================================================
 
-    # Aplicar filtro de longitud mínima (ajustado a 10 para no perder textos cortos pero válidos)
-    df_proc = df_proc[df_proc["text_clean"].str.len() > 10].copy()
-
     # Paso 5: lematizar
     print("Lematizando...")
     df_proc["processed_text"] = [
@@ -191,19 +185,3 @@ def preprocess_dataframe(df: pd.DataFrame, text_column: str, lang: str) -> tuple
     return df_proc, emb_model
 
 
-# --------------------- EJECUCIÓN -----------------------
-if __name__ == "__main__":
-    # Asegúrate de que la ruta sea correcta
-    df = pd.read_csv("../data/processed/data_unified.csv")
-
-    df_final, emb_model = preprocess_dataframe(
-        df=df,
-        text_column="text",
-        lang="es"
-    )
-
-    # Crear carpeta de debug si no existe
-    os.makedirs("../data/preprocess/debug", exist_ok=True)
-    
-    df_final.to_csv("../data/processed/df_pre.csv", index=False)
-    print(df_final.head(3))
