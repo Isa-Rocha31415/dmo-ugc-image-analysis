@@ -19,7 +19,11 @@ Diseño
   No hay etiquetas humanas ni leakage del corpus en los anchors.
 
 Outputs (results/comparison/price/): price_scores.csv, tau_calibration.csv,
-tau_sensitivity.csv + fila en comparison/base/run_metadata.csv.
+tau_sensitivity.csv, panel F4.4 (mention_rate_by_source, score_distribution_tests,
+valence_conditioned, price_context_logodds, price_top_examples, scatters, summary),
+F4.4b (price_comparison, price_context_terms, price_kpis, price_examples_topk),
+F4.3 (annotation_sample + price_validation si hay etiquetas) + caché propia
+(<cache-dir>/price/manifest.json, idempotente) + filas en run_metadata.csv.
 """
 from __future__ import annotations
 
@@ -354,7 +358,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     placebo_docs_n = int(getattr(args, "price_placebo_docs", 300))
     model_name = str(getattr(args, "embedding_model", "paraphrase-multilingual-MiniLM-L12-v2"))
     seed = int(getattr(args, "seed", 42))
-    cache_dir = Path(getattr(args, "cache_dir", str(results_dir / "cache")))
+    cache_dir = Path(getattr(args, "cache_dir", None) or (results_dir / "cache"))
 
     base, emb, _ = _load_base_artifacts(results_dir)
     print(f"  Anchors: {anchors_path} (v{anchors['version']})")
@@ -504,6 +508,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         import traceback; traceback.print_exc()
 
     # ── F4.3: validación (degrada elegantemente si no hay etiquetas) ──
+    valid: dict = {}
     try:
         from price_validation import run_price_validation
         valid = run_price_validation(args, results_dir, out, tau,
@@ -512,6 +517,29 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     except Exception as exc:
         print(f"  ⚠️ Validación F4.3 omitida por error: {exc}")
         import traceback; traceback.print_exc()
+
+    # ── F4.4b: comparación DMO vs percibido + contexto + KPIs + anotación ──
+    try:
+        written += run_price_comparison_step(
+            args, results_dir, out, tau, tau_quantile, detector, score_mode, valid)
+    except Exception as exc:
+        print(f"  ⚠️ Comparación F4.4b omitida por error: {exc}")
+        import traceback; traceback.print_exc()
+
+    # ── Parámetros de la corrida (insumo de la caché propia de price) ──
+    params_path = out_dir / "price_params.json"
+    params_path.write_text(json.dumps({
+        "mode": detector, "score_mode": score_mode,
+        "tau": round(float(tau), 6), "tau_quantile": tau_quantile,
+        "seed": seed, "bootstrap": int(getattr(args, "bootstrap", 2000)),
+        "permutations": int(getattr(args, "permutations", 1000)),
+        "top_k": int(getattr(args, "price_top_k", 5)),
+        "prior_strength": float(getattr(args, "prior_strength", 1000.0)),
+        "sample_size": int(getattr(args, "price_sample_size", 100) or 100),
+        "palette": str(getattr(args, "palette", "ejecutiva")),
+        "model_name": model_name,
+    }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    written.append(params_path)
 
     print(f"  Archivos totales PASO 12: {len(written)}")
     return written
@@ -732,6 +760,7 @@ def price_top_examples(
 
 
 def _hover_text(df: pd.DataFrame, max_chars: int = 140) -> list[str]:
+    """Hover compacto (score + sentimiento + texto truncado)."""
     return [
         f"#{cid} · {src}<br>score={s:.3f} (R={r:.3f}, P={p:.3f}) · lex={lx}"
         f"<br>sent={se} ({sv:.2f})<br>{tx[:max_chars]}"
