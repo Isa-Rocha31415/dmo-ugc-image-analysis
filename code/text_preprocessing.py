@@ -1,18 +1,19 @@
+"""Preprocesamiento de texto: sin descargas en runtime."""
+from __future__ import annotations
+
 import re
-import emoji
 import pandas as pd
-import numpy as np
-from langdetect import detect, LangDetectException
 from tqdm import tqdm
-import nltk
 import spacy
 from nltk.corpus import stopwords
-import os
 
-# Descargar recursos de NLTK de forma silenciosa
-nltk.download('stopwords', quiet=True)
-nltk.download('wordnet', quiet=True)
-nltk.download('punkt', quiet=True)
+try: import emoji
+except ImportError: emoji = None  # se eliminan por rangos Unicode
+try:
+    from langdetect import detect, LangDetectException
+except ImportError:
+    detect = None
+    LangDetectException = Exception
 
 # --------------------- CONFIGURACIÓN -----------------------
 # Modelos de spaCy para lematización según el idioma
@@ -48,12 +49,13 @@ def get_language_resources(lang: str):
 
     model_name = SPACY_MODELS[lang]
     try:
-        # Deshabilitamos NER y parser para acelerar el procesamiento
+        # Solo lematización: NER y parser desactivados, sin descargas.
         nlp = spacy.load(model_name, disable=["ner", "parser"])
-    except OSError:
-        print(f"Descargando modelo de spaCy: {model_name}")
-        spacy.cli.download(model_name)
-        nlp = spacy.load(model_name, disable=["ner", "parser"])
+    except OSError as exc:
+        raise RuntimeError(
+            f"Falta el modelo spaCy '{model_name}' para --lang {lang}. "
+            f"Instálalo antes: python -m spacy download {model_name}"
+        ) from exc
 
     emb_model = EMBEDDING_MODELS[lang]
     return stop_words, nlp, emb_model
@@ -63,7 +65,7 @@ def detect_language(text: str) -> str:
     """
     Detecta el idioma de un texto. Limpia ruido básico antes de detectar.
     """
-    if not isinstance(text, str):
+    if not isinstance(text, str) or detect is None:
         return "unknown"
     try:
         # Eliminar URLs, menciones y hashtags para no sesgar la detección
@@ -119,6 +121,57 @@ def lemmatize_text(text: str, nlp, stop_words: set) -> str:
         and len(token.text) > 1
     ]
     return " ".join(tokens)
+
+# --------------------- PASO 1: DOBLE TEXTO -----------------------
+_EMOJI_RE = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF]")
+_EXTRA_RE = re.compile(r"[^\w\s.,!?¡¿'\-]", flags=re.UNICODE)
+_NUM_RE = re.compile(r"\b\d+\b")
+
+
+def clean_natural(text: str) -> str:
+    """Texto natural para embeddings/sentimiento: sin URLs, emoji, números ni ruido."""
+    if not isinstance(text, str):
+        return ""
+    text = re.sub(r"https?://\S+|www\.\S+", " ", text, flags=re.MULTILINE)
+    text = re.sub(r"@\w+", " ", text)
+    text = re.sub(r"#(\w+)", r"\1", text)
+    if emoji is not None:
+        text = emoji.demojize(text, delimiters=(":", ":"))
+    text = _EMOJI_RE.sub(" ", text)
+    text = re.sub(r":[a-z0-9_+\-]+:", " ", text)  # emoji demojizado
+    text = _NUM_RE.sub(" ", text)
+    text = _EXTRA_RE.sub(" ", text)
+    return re.sub(r"\s+", " ", text.lower()).strip()
+
+
+def prepare_corpus(df: pd.DataFrame, text_column: str, lang: str,
+                   source_column: str = "source", corpus_column: str = "corpus",
+                   min_len: int = 5) -> tuple[pd.DataFrame, dict]:
+    """Aplica text_col natural + text_norm completo; filtra cortos y valida DMO."""
+    if df.empty:
+        raise ValueError("Corpus vacío: no hay filas para preprocesar.")
+    if text_column not in df.columns:
+        raise KeyError(f"No existe la columna de texto '{text_column}'.")
+    stop_words, nlp, _ = get_language_resources(lang)
+    out = df.copy()
+    out[text_column] = [clean_natural(t) for t in out[text_column]]
+    out["text_norm"] = [lemmatize_text(t, nlp, stop_words) for t in out[text_column]]
+    keep = out[text_column].str.len() > min_len
+    stats = {
+        "input_rows": int(len(out)),
+        "output_rows": int(keep.sum()),
+        "removed_by_source": out[~keep][source_column].value_counts().to_dict()
+        if source_column in out else {},
+        "removed_by_corpus": out[~keep][corpus_column].value_counts().to_dict()
+        if corpus_column in out else {},
+    }
+    out = out[keep].reset_index(drop=True)
+    if out.empty:
+        raise ValueError("Todas las filas fueron descartadas tras la limpieza (len<=5).")
+    if corpus_column in out.columns and "DMO" in set(df[corpus_column]) \
+            and "DMO" not in set(out[corpus_column]):
+        raise ValueError("El corpus DMO quedó vacío tras la limpieza; revisa --text-col.")
+    return out, stats
 
 # --------------------- PIPELINE PRINCIPAL -----------------------
 def preprocess_dataframe(df: pd.DataFrame, text_column: str, lang: str) -> tuple:

@@ -27,6 +27,7 @@ Caché: <output-dir>/cache/<paso>/<clave>/. La segunda corrida reutiliza lo que 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import random
 import traceback
 from pathlib import Path
@@ -333,9 +334,23 @@ def main():
     print(f"\n{SEP}")
     print("   PASO 1: PREPROCESAMIENTO DE TEXTO")
     print(SEP)
-    df[args.text_col] = df[args.text_col].fillna("").astype(str)
-    df = df[df[args.text_col].str.strip().str.len() > 5].reset_index(drop=True)
-    print(f"  Comentarios válidos tras limpieza: {len(df):,}")
+    from text_preprocessing import prepare_corpus
+
+    df, prep_stats = prepare_corpus(df, args.text_col, args.lang)
+    # Huella del módulo + idioma + params: cambia el texto y caduca la caché aguas abajo.
+    prep_fp = hashlib.sha256(
+        (Path(__file__).with_name("text_preprocessing.py").read_text()
+         + args.lang + "|min_len=5|natural+norm").encode("utf-8")
+    ).hexdigest()[:12]
+    print(f"  Comentarios válidos tras limpieza: {len(df):,} "
+          f"(de {prep_stats['input_rows']:,})")
+    print("  Filas descartadas por fuente:")
+    for k, v in (prep_stats["removed_by_source"] or {"(ninguna)": 0}).items():
+        print(f"    {k:<25s} {v:>6,d}")
+    print("  Filas descartadas por corpus:")
+    for k, v in (prep_stats["removed_by_corpus"] or {"(ninguna)": 0}).items():
+        print(f"    {k:<25s} {v:>6,d}")
+    print(f"  Columna text_norm creada para la capa léxica (huella {prep_fp}).")
 
     # ══ PASO 2: Embeddings ══
     print(f"\n{SEP}")
@@ -349,6 +364,7 @@ def main():
         parent_key=load_meta["key"],
         use_cache=use_cache,
         force=_force("embeddings"),
+        preprocess_fingerprint=prep_fp,
     )
     print(f"  Embeddings generados: {embeddings.shape}")
 

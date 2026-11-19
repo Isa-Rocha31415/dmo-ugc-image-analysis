@@ -96,7 +96,9 @@ topics_df.csv.gz       tópicos por sentimiento
 
 La clave es un hash de los inputs (hash del CSV, flags, versión del paso),
 así que cambiar un parámetro invalida solo ese paso y sus dependientes.
-`--force-steps` recalcula los pasos indicados.
+`--force-steps` recalcula los pasos indicados. El PASO 1 crea `text_norm` (stopwords/lemas
+solo ahí; `text_col` queda natural) y mete huella módulo+`--lang`+params en la clave de
+`embeddings_bert`: tras cambiar el preproc se recalculan embeddings y dependientes.
 
 ## Validación de sentimiento (PASO 4.5)
 

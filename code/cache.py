@@ -1593,6 +1593,7 @@ def step_embeddings_bert(
     parent_key: str,
     use_cache: bool = True,
     force: bool = False,
+    preprocess_fingerprint: str = "",
 ):
     """
     Genera embeddings BERT (sentence-transformers) y los cachea en disco.
@@ -1607,6 +1608,7 @@ def step_embeddings_bert(
         "backend": "bert",
         "model_name": str(model_name),
         "text_column": text_column,
+        "preprocess_fingerprint": preprocess_fingerprint,
         "rows": int(len(df)),
     }
 
