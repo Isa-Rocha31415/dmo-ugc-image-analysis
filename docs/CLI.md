@@ -70,6 +70,17 @@ python run_analysis.py \
    "validación pendiente de anotación" y NO falla (guía: `docs/ANNOTATION_GUIDE.md`).
    Con etiquetas añade `price_validation.csv`, `price_ablations.csv`,
    `confusion_matrix.csv`.
+4. Comparación F4.4b en el mismo subdir: `price_comparison.csv` (tasas DMO vs
+   UGC_total y por fuente con CI bootstrap `--bootstrap`/`--seed`, χ² o Fisher + BH,
+   Mann-Whitney + KS + Cliff's delta, banda neutra `|sentiment|<0.15`),
+   `price_context_terms.csv` (top-20 co-ocurrencias con `tokenize` + log-odds
+   Monroe, `--prior-strength`), `price_kpis.csv` (kpi,value,unit,scope; sin
+   anotaciones), `price_examples_topk.csv` (top_k por fuente, texto ≤280 chars) y
+   `price_scatter_valence.html`/`_data.csv` (x=proximidad, y=valencia,
+   color=corpus, símbolo=fuente, línea τ). Metadata `price_comparison`.
+   Caché propia idempotente: `<cache-dir>/price/manifest.json` guarda un
+   fingerprint de (parámetros, scores); si no cambia y los outputs existen la
+   segunda corrida no recalcula (`--no-cache` fuerza el recálculo).
 
 ## Caché
 

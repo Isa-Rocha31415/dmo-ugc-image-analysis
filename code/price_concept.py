@@ -1019,3 +1019,296 @@ def run_price_panel(
     ))
     return written
 
+
+# ══════════════════════════════════════════════════════════════════════════
+# F4.4b: DMO vs percibido (tasas bootstrap, χ²/Fisher+BH, MW/KS+Cliff),
+# contexto, KPIs del dashboard, ejemplos top-k y scatter de valencia.
+# ══════════════════════════════════════════════════════════════════════════
+PRICE_OUTPUTS = ("price_comparison.csv", "price_context_terms.csv",
+                 "price_kpis.csv", "price_examples_topk.csv",
+                 "price_scatter_valence.html")
+
+
+def bootstrap_rate_ci(mask: np.ndarray, b: int, seed: int) -> tuple[float, float]:
+    """CI 95% bootstrap (percentiles) de una tasa binaria (función pura)."""
+    x = np.asarray(mask, dtype=float)
+    if not x.size or b <= 0:
+        return (np.nan, np.nan)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, x.size, size=(int(b), x.size))
+    rates = x[idx].mean(axis=1)
+    return (float(np.quantile(rates, 0.025)), float(np.quantile(rates, 0.975)))
+
+
+def mann_whitney_cliffs(x: Sequence[float], y: Sequence[float]) -> dict:
+    """Mann-Whitney U + Cliff's delta con interpretación (Romano et al.)."""
+    from scipy.stats import mannwhitneyu
+
+    a = np.asarray(x, dtype=float); a = a[~np.isnan(a)]
+    b = np.asarray(y, dtype=float); b = b[~np.isnan(b)]
+    if not a.size or not b.size:
+        return {"mw_u": np.nan, "mw_p_value": np.nan,
+                "cliffs_delta": np.nan, "cliffs_interp": "SIN_DATOS"}
+    u, p = mannwhitneyu(a, b, alternative="two-sided")
+    delta = 2.0 * float(u) / (a.size * b.size) - 1.0
+    ad = abs(delta)
+    interp = ("NEGLIGIBLE" if ad < 0.147 else "PEQUENO" if ad < 0.33
+              else "MEDIANO" if ad < 0.474 else "GRANDE")
+    return {"mw_u": round(float(u), 4), "mw_p_value": round(float(p), 6),
+            "cliffs_delta": round(delta, 6), "cliffs_interp": interp}
+
+
+def price_comparison_table(scores: pd.DataFrame, bootstrap: int = 2000,
+                           seed: int = 42) -> pd.DataFrame:
+    """DMO vs UGC_total y DMO vs cada fuente: tasas + CI bootstrap (seed fija),
+    χ²/Fisher + BH, Mann-Whitney/KS + Cliff's delta y banda neutra."""
+    from scipy.stats import ks_2samp
+
+    mention = scores["above_tau"].to_numpy(dtype=bool)
+    dmo = scores[CORPUS_COLUMN].astype(str).str.upper() == "DMO"
+    ugc_all = (~dmo).to_numpy()
+    sc = scores["price_score"].to_numpy(dtype=float)
+    sent = scores["sentiment_score"].astype(float).to_numpy()
+    neutral = np.abs(sent) < 0.15
+    scopes: dict[str, tuple[np.ndarray, str]] = {
+        "DMO_vs_UGC_total": (ugc_all, "UGC_total")}
+    for src in sorted(scores.loc[~dmo, SOURCE_COLUMN].astype(str).unique()):
+        scopes[f"DMO_vs_{src}"] = (
+            ugc_all & (scores[SOURCE_COLUMN].astype(str) == src).to_numpy(), src)
+    dmo_np = dmo.to_numpy()
+    rows: list[dict] = []
+    for i, (scope, (ugc, ugc_name)) in enumerate(scopes.items()):
+        n1, k1 = int(dmo_np.sum()), int((mention & dmo_np).sum())
+        n2, k2 = int(ugc.sum()), int((mention & ugc).sum())
+        r1 = k1 / n1 if n1 else np.nan
+        r2 = k2 / n2 if n2 else np.nan
+        lo1, hi1 = bootstrap_rate_ci(mention[dmo_np], bootstrap, seed + i)
+        lo2, hi2 = bootstrap_rate_ci(mention[ugc], bootstrap, seed + 1000 + i)
+        test, p_value = two_by_two_test(k1, n1 - k1, k2, n2 - k2)
+        mw = mann_whitney_cliffs(sc[dmo_np], sc[ugc])
+        ks = ks_2samp(sc[dmo_np], sc[ugc]) if n1 and n2 else None
+        rows.append({
+            "scope": scope, "group_dmo": "DMO", "group_ugc": ugc_name,
+            "n_docs_dmo": n1, "n_mentions_dmo": k1,
+            "rate_dmo": round(r1, 6), "ci_low_dmo": round(lo1, 6),
+            "ci_high_dmo": round(hi1, 6),
+            "n_docs_ugc": n2, "n_mentions_ugc": k2,
+            "rate_ugc": round(r2, 6), "ci_low_ugc": round(lo2, 6),
+            "ci_high_ugc": round(hi2, 6),
+            "gap_pp": round(100 * (r1 - r2), 4) if r1 == r1 and r2 == r2 else np.nan,
+            "test": test, "p_value": p_value,
+            "mw_u": mw["mw_u"], "mw_p_value": mw["mw_p_value"],
+            "cliffs_delta": mw["cliffs_delta"], "cliffs_interp": mw["cliffs_interp"],
+            "ks_statistic": round(float(ks.statistic), 6) if ks is not None else np.nan,
+            "ks_p_value": round(float(ks.pvalue), 6) if ks is not None else np.nan,
+            "neutral_share_dmo": round(float(neutral[dmo_np].mean()), 6) if n1 else np.nan,
+            "neutral_share_ugc": round(float(neutral[ugc].mean()), 6) if n2 else np.nan,
+        })
+    tbl = pd.DataFrame(rows)
+    if len(tbl):
+        tbl["p_adj"] = bh_adjust(tbl["p_value"].to_numpy())
+        tbl["verdict"] = [
+            ("SOBRE_DMO" if g > 0 else "SOBRE_UGC") if p < 0.05 else "SIN_DIF"
+            for g, p in zip(tbl["gap_pp"], tbl["p_adj"])]
+    return tbl
+
+
+def price_context_cooccur(scores: pd.DataFrame, prior_strength: float = 1000.0,
+                          top_k: int = 20, min_count: int = 3) -> pd.DataFrame:
+    """Términos que co-ocurren con la mención de precio (tokenize + log-odds)."""
+    from collections import Counter
+
+    from metrics_lexical import tokenize
+
+    mention = scores[scores["above_tau"]]
+    is_dmo = mention[CORPUS_COLUMN].astype(str).str.upper() == "DMO"
+    cols = ["term", "docs_dmo", "docs_ugc", "freq_dmo", "freq_ugc", "z", "direction"]
+    if is_dmo.sum() == 0 or (~is_dmo).sum() == 0:
+        return pd.DataFrame(columns=cols)
+    dd, du, cd, cu = Counter(), Counter(), Counter(), Counter()
+    for tokens, dmo in zip((tokenize(t) for t in mention["text"].astype(str)),
+                           is_dmo.to_numpy()):
+        docs, cnts = (dd, cd) if dmo else (du, cu)
+        docs.update(set(tokens)); cnts.update(tokens)
+    terms = np.asarray(sorted(set(dd) | set(du)), dtype=object)
+    fd = np.asarray([dd[t] for t in terms], dtype=float)
+    fu = np.asarray([du[t] for t in terms], dtype=float)
+    z = logodds_z(fd, fu, alpha0=float(prior_strength))
+    keep = (fd + fu) >= min_count
+    out = pd.DataFrame({
+        "term": terms[keep], "docs_dmo": fd[keep].astype(int),
+        "docs_ugc": fu[keep].astype(int),
+        "freq_dmo": [cd[t] for t in terms[keep]],
+        "freq_ugc": [cu[t] for t in terms[keep]], "z": np.round(z[keep], 4)})
+    out = out.iloc[np.argsort(-np.abs(out["z"].to_numpy()))[:top_k]]
+    out["direction"] = np.where(out["z"] > 0, "DMO", "UGC")
+    return out.reset_index(drop=True)
+
+
+def price_kpi_table(scores: pd.DataFrame, rates: pd.DataFrame) -> pd.DataFrame:
+    """KPIs planos (kpi,value,unit,scope) para el dashboard. Sin anotaciones."""
+    is_dmo = scores[CORPUS_COLUMN].astype(str).str.upper() == "DMO"
+    sc = scores["price_score"].astype(float)
+    neutral = np.abs(scores["sentiment_score"].astype(float)) < 0.15
+    r0 = rates.iloc[0] if len(rates) else None
+    rows: list[dict] = []
+
+    def add(kpi: str, value: Any, unit: str, scope: str = "total") -> None:
+        rows.append({"kpi": kpi, "value": value, "unit": unit, "scope": scope})
+
+    add("n_docs", int(len(scores)), "docs")
+    add("n_docs_dmo", int(is_dmo.sum()), "docs", "DMO")
+    add("n_docs_ugc", int((~is_dmo).sum()), "docs", "UGC")
+    add("mean_score_dmo", round(float(sc[is_dmo].mean()), 6), "score", "DMO")
+    add("mean_score_ugc", round(float(sc[~is_dmo].mean()), 6), "score", "UGC")
+    add("share_neutral_dmo", round(float(neutral[is_dmo].mean()), 6), "share", "DMO")
+    add("share_neutral_ugc", round(float(neutral[~is_dmo].mean()), 6), "share", "UGC")
+    if r0 is not None:
+        add("mention_rate_dmo", float(r0["rate_dmo"]), "share", "DMO")
+        add("mention_rate_ugc", float(r0["rate_ugc"]), "share", "UGC")
+        add("mention_gap_pp", float(r0["gap_pp"]), "pp", "DMO_vs_UGC")
+        add("cliffs_delta", float(r0["cliffs_delta"]), "delta", "DMO_vs_UGC")
+        add("p_adj", float(r0["p_adj"]), "p", "DMO_vs_UGC")
+        add("verdict", str(r0["verdict"]), "texto", "DMO_vs_UGC")
+    return pd.DataFrame(rows, columns=["kpi", "value", "unit", "scope"])
+
+
+def price_scatter_valence_sources(scores: pd.DataFrame, tau: float,
+                                  colors: list[str]) -> "go.Figure":
+    """x=proximidad (price_score), y=sentimiento; color=corpus, símbolo=fuente."""
+    import plotly.graph_objects as go
+
+    symbols = ["circle", "square", "diamond", "cross", "triangle-up", "x",
+               "star", "pentagon", "hexagram", "asterisk"]
+    sources = sorted(scores[SOURCE_COLUMN].astype(str).unique())
+    sym_map = {s: symbols[i % len(symbols)] for i, s in enumerate(sources)}
+    fig = go.Figure()
+    for i, corpus in enumerate(["DMO", "UGC"]):
+        sub_all = scores[scores[CORPUS_COLUMN].astype(str).str.upper() == corpus]
+        for source in sources:
+            sub = sub_all[sub_all[SOURCE_COLUMN].astype(str) == source]
+            if sub.empty:
+                continue
+            fig.add_trace(go.Scattergl(
+                x=sub["price_score"], y=sub["sentiment_score"].astype(float),
+                mode="markers", name=f"{corpus} · {source}",
+                marker={"color": colors[i % len(colors)], "size": 7,
+                        "opacity": 0.55, "symbol": sym_map[source],
+                        "line": {"width": 0}},
+                text=_hover_text(sub), hoverinfo="text"))
+    fig.add_vline(x=tau, line={"color": "#444", "width": 1, "dash": "dash"},
+                  annotation_text=f"τ={tau:.3f}")
+    fig.add_hline(y=0.0, line={"color": "#999", "width": 1})
+    fig.update_layout(
+        title="Precio/Valor: proximidad vs valencia (DMO vs UGC)",
+        xaxis_title="price_score (proximidad al concepto)",
+        yaxis_title="sentiment_score", template="plotly_white",
+        legend={"title": "corpus · fuente"})
+    return fig
+
+
+def _price_fingerprint(scores: pd.DataFrame, params: dict) -> str:
+    """Hash estable de parámetros + scores (fingerprint de la caché propia)."""
+    cols = [c for c in ("doc_id", CORPUS_COLUMN, SOURCE_COLUMN, "price_score",
+                        "above_tau", "sentiment_score") if c in scores.columns]
+    digest = hashlib.sha256(json.dumps(
+        params, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8"))
+    digest.update(pd.util.hash_pandas_object(
+        scores[cols].reset_index(drop=True), index=False).to_numpy().tobytes())
+    return digest.hexdigest()
+
+
+def run_price_comparison_step(
+    args: argparse.Namespace, results_dir: Path, scores: pd.DataFrame,
+    tau: float, tau_quantile: float, detector: str, score_mode: str,
+    valid: dict,
+) -> list[Path]:
+    """F4.4b: comparación DMO vs percibido + contexto + KPIs + dashboard.
+
+    Caché propia idempotente: <cache-dir>/price/manifest.json guarda un
+    fingerprint de (parámetros, scores); si no cambia y los outputs existen,
+    la segunda corrida no recalcula nada. `--no-cache` fuerza el recálculo.
+    """
+    out_dir = results_dir / "comparison" / PRICE_OUTPUT_SUBDIR
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = Path(getattr(args, "cache_dir", None) or (results_dir / "cache"))
+    params = {
+        "mode": detector, "score_mode": score_mode,
+        "tau": round(float(tau), 6), "tau_quantile": float(tau_quantile),
+        "seed": int(getattr(args, "seed", 42)),
+        "bootstrap": int(getattr(args, "bootstrap", 2000)),
+        "top_k": int(getattr(args, "price_top_k", 5)),
+        "prior_strength": float(getattr(args, "prior_strength", 1000.0)),
+        "palette": str(getattr(args, "palette", "ejecutiva")),
+        "n_docs": int(len(scores)),
+    }
+    fp = _price_fingerprint(scores, params)
+    manifest_path = cache_dir / "price" / "manifest.json"
+    outputs = [out_dir / name for name in PRICE_OUTPUTS]
+    try:
+        cached = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:
+        cached = {}
+    if (cached.get("fingerprint") == fp and all(p.exists() for p in outputs)
+            and not getattr(args, "no_cache", False)):
+        print_header("PASO 12.7 (F4.4b): COMPARACIÓN DMO vs PERCIBIDO (caché)")
+        print(f"  Sin cambios (fingerprint {fp[:12]}): no se recalcula.")
+        print(f"  Archivos reutilizados: {[p.name for p in outputs]}")
+        return outputs
+
+    print_header("PASO 12.7 (F4.4b): COMPARACIÓN DMO vs PERCIBIDO + CONTEXTO")
+    rates = price_comparison_table(
+        scores, bootstrap=params["bootstrap"], seed=params["seed"])
+    written = [save_csv(rates, out_dir / "price_comparison.csv")]
+    terms = price_context_cooccur(
+        scores, prior_strength=params["prior_strength"], top_k=20)
+    written.append(save_csv(terms, out_dir / "price_context_terms.csv"))
+    written.append(save_csv(price_kpi_table(scores, rates),
+                            out_dir / "price_kpis.csv"))
+    written.append(save_csv(
+        price_top_examples(scores, top_k=params["top_k"], max_chars=280),
+        out_dir / "price_examples_topk.csv"))
+
+    colors = palette_colors(palette_to_plot_colors(params["palette"]))
+    fig = price_scatter_valence_sources(scores, tau, colors)
+    path_val = out_dir / "price_scatter_valence.html"
+    fig.write_html(str(path_val), include_plotlyjs="inline", full_html=True)
+    written.append(path_val)
+    written.append(save_csv(
+        scores[["doc_id", CORPUS_COLUMN, SOURCE_COLUMN, "price_score",
+                "sentiment_label", "sentiment_score", "lex_count", "above_tau"]],
+        out_dir / "price_scatter_valence_data.csv"))
+
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(
+        {"fingerprint": fp, "params": params,
+         "outputs": [p.name for p in written]},
+        ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    written.append(manifest_path)
+    written.append(append_metadata(
+        results_dir / "comparison" / "base" / "run_metadata.csv",
+        task="price_comparison",
+        params={"mode": detector, "score_mode": score_mode,
+                "tau": round(float(tau), 6), "tau_quantile": tau_quantile,
+                "seed": params["seed"], "bootstrap": params["bootstrap"],
+                "top_k": params["top_k"], "n_docs": params["n_docs"]},
+        repo_dir=Path(__file__).resolve().parents[1]))
+
+    r0 = rates.iloc[0] if len(rates) else None
+    if r0 is not None:
+        print(f"  Mención DMO={r0['rate_dmo']:.3f} "
+              f"[{r0['ci_low_dmo']:.3f}, {r0['ci_high_dmo']:.3f}] vs "
+              f"UGC={r0['rate_ugc']:.3f} [{r0['ci_low_ugc']:.3f}, "
+              f"{r0['ci_high_ugc']:.3f}] | gap={r0['gap_pp']:.1f}pp | "
+              f"{r0['test']} p_adj={r0['p_adj']:.4f} | "
+              f"MW p={r0['mw_p_value']:.4f} Cliff δ={r0['cliffs_delta']:.3f} "
+              f"({r0['cliffs_interp']})")
+        print(f"  Banda neutra (|sentiment|<0.15): "
+              f"DMO={100 * r0['neutral_share_dmo']:.1f}% | "
+              f"UGC={100 * r0['neutral_share_ugc']:.1f}%")
+    print(f"  Contexto top-5: {terms['term'].head(5).tolist() if len(terms) else []}")
+    print(f"  F4.3={'validada' if valid.get('validated') else 'pendiente'} | "
+          f"figura={path_val.name} | caché={manifest_path} (fp {fp[:12]})")
+    print(f"  Archivos: {[p.name for p in written]}")
+    return written
+
