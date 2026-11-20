@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import contextlib
+import io
+import os
+import time
+from concurrent.futures import ProcessPoolExecutor
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -103,6 +108,26 @@ def _word_frequency_output(
 # ---------------------------------------------------------------------------
 
 
+def _worker_fit(payload: tuple) -> tuple[Dict[str, Any], str, float]:
+    """Ajusta una partición en el proceso hijo; devuelve resultado, logs y tiempo."""
+    (sub, label, text_col, src_col, min_size, backend, use_internal,
+     seed, top_n, part_emb, num_topics, knn, mult) = payload
+    import numba
+    import torch
+
+    numba.set_num_threads(2)
+    torch.set_num_threads(2)
+    buf = io.StringIO()
+    t0 = time.perf_counter()
+    with contextlib.redirect_stdout(buf):
+        res = run_topic_modeling(
+            sub, text_col, src_col, min_size, backend, use_internal,
+            seed, top_n, part_emb, num_topics, labels=[label],
+            parallel=False, precomputed_knn=knn, knn_k_mult=mult,
+        )
+    return res, buf.getvalue(), time.perf_counter() - t0
+
+
 def run_topic_modeling(
     df: pd.DataFrame,
     text_column: str,
@@ -114,6 +139,10 @@ def run_topic_modeling(
     top_n_terms: int = 30,
     embeddings: Optional[np.ndarray] = None,
     num_topics: Any = "auto",
+    labels: Optional[List[str]] = None,
+    parallel: bool = True,
+    precomputed_knn: Optional[tuple] = None,
+    knn_k_mult: float = 1.3,
 ) -> Dict[str, Any]:
     """
     Aplica modelado de tópicos para comentarios positivos y negativos.
@@ -148,10 +177,63 @@ def run_topic_modeling(
     print(f"     min_partition_size: {min_partition_size}")
     print(f"     num_topicos: {num_topics}")
 
+    labels = list(labels or ["positive", "negative"])
+    if parallel and not os.environ.get("PERF2_KNN_FORCE"):
+        print("  ⚠️ Puerta ARI<1: kNN interna en PASO 7 (grafo compartido inactivo).")
+    if (parallel and len(labels) > 1 and embeddings is not None
+            and not os.environ.get("PERF2_SERIAL")):
+        graph = None
+        if os.environ.get("PERF2_KNN_FORCE"):
+            from knn_shared import build_global_knn, knn_k
+
+            frac = min(float((df["sentiment_label"] == c).mean()) for c in labels)
+            graph = build_global_knn(
+                embeddings, knn_k(15, frac, knn_k_mult), random_state)
+        payloads = []
+        for label in labels:
+            pos = np.flatnonzero((df["sentiment_label"] == label).to_numpy())
+            knn = None
+            if graph is not None:
+                from knn_shared import subset_knn
+
+                knn, cov = subset_knn(graph, pos, 15)
+                print(f"  🔗 kNN {label}: cobertura min={cov.min_survivors}/15 "
+                      f"({'ok' if cov.ok else 'fallback interno'})")
+                if not cov.ok:
+                    print("  ⚠️ Cobertura insuficiente: UMAP usa kNN interna.")
+            payloads.append((
+                df[df["sentiment_label"] == label].copy(), label, text_column,
+                source_column, min_partition_size, topic_backend,
+                use_internal_outlier, random_state, top_n_terms,
+                embeddings[pos], num_topics, knn, knn_k_mult,
+            ))
+        print("  ⚡ PASO 7 en paralelo: 2 procesos, 2 hilos por proceso.")
+        try:
+            with ProcessPoolExecutor(max_workers=2) as pool:
+                results = list(pool.map(_worker_fit, payloads))
+        except Exception as exc:
+            print(f"  ⚠️ Fallo el pool paralelo ({exc}); reintento secuencial.")
+            results = [_worker_fit(p) for p in payloads]
+        outputs, frames = {}, []
+        for label, (res, logs, secs) in zip(labels, results):
+            print(f"\n  📊 {label} (paralelo {secs:.1f}s)")
+            print(logs, end="")
+            out = res["by_sentiment"].get(label, {})
+            outputs[label] = out
+            if "df" in out:
+                frames.append(out["df"])
+        topics_df = pd.concat(frames, ignore_index=True) if frames else df.iloc[0:0].copy()
+        if not topics_df.empty and "topic_id" in topics_df:
+            topics_df["topic_id"] = topics_df["topic_id"].astype(str)
+        return {"by_sentiment": outputs, "topics_df": topics_df}
+
+    if os.environ.get("PERF2_SERIAL"):
+        print("  🐢 PASO 7 secuencial (PERF2_SERIAL=1).")
+
     outputs: Dict[str, Any] = {}
     frames: List[pd.DataFrame] = []
 
-    for sentiment_label in ["positive", "negative"]:
+    for sentiment_label in labels:
         subset = df[df["sentiment_label"] == sentiment_label].copy()
         print(f"\n  📊 Procesando {sentiment_label}: {len(subset)} comentarios")
 
@@ -212,10 +294,15 @@ def run_topic_modeling(
 
         print(f"     ✅ Intentando {backend_label} con {len(subset)} comentarios...")
         try:
+            fit_kwargs = (
+                {"precomputed_knn": precomputed_knn}
+                if topic_backend == "bertopic" and precomputed_knn is not None else {}
+            )
             result = modeler.fit_transform(
                 texts=subset[text_column].astype(str).tolist(),
                 metadata=subset.copy(),
                 embeddings=part_embeddings,
+                **fit_kwargs,
             )
 
             out_df = result["df"].copy()

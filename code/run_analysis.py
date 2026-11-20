@@ -27,10 +27,16 @@ Caché: <output-dir>/cache/<paso>/<clave>/. La segunda corrida reutiliza lo que 
 from __future__ import annotations
 
 import argparse
+import contextlib
+import copy
 import hashlib
+import io
+import os
 import random
 import time
 import traceback
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context
 from pathlib import Path
 
 import numpy as np
@@ -156,6 +162,25 @@ def _alinear_embeddings_clean(
         return embeddings[pos] if len(pos) and pos.max() < len(embeddings) else None
 
 
+def _comparison_worker(task: str, args: argparse.Namespace, output_dir: Path):
+    """Ejecuta una tarea de comparación en un proceso hijo y devuelve logs + metadata."""
+    import time
+
+    import torch
+    from comparison.common import take_metadata
+
+    torch.set_num_threads(2)
+    os.environ["PERF2_BUFFER_METADATA"] = "1"
+    os.environ["PERF2_COMPARISON_SERIAL"] = "1"
+    subargs = copy.copy(args)
+    subargs.comparison_tasks = [task]
+    buf = io.StringIO()
+    t0 = time.perf_counter()
+    with contextlib.redirect_stdout(buf):
+        written, failed = _run_comparison(subargs, output_dir, None, None, None, None)
+    return task, written, failed, buf.getvalue(), time.perf_counter() - t0, take_metadata()
+
+
 def _run_comparison(
     args: argparse.Namespace,
     output_dir: Path,
@@ -170,6 +195,42 @@ def _run_comparison(
     tasks = [t for t in COMPARISON_TASKS if t in set(args.comparison_tasks)]
     written: list[Path] = []
     failed: list[str] = []
+
+    if (not os.environ.get("PERF2_COMPARISON_SERIAL")
+            and not os.environ.get("PERF2_SERIAL")):
+        par = [t for t in tasks if t in ("lexical", "thematic", "price")]
+        seq = [t for t in tasks if t not in par]
+        if par:
+            os.environ["PERF2_COMPARISON_SERIAL"] = "1"
+            try:
+                if seq:
+                    sub = copy.copy(args)
+                    sub.comparison_tasks = seq
+                    w, f = _run_comparison(
+                        sub, output_dir, df, embeddings, df_clean, df_outliers)
+                    written += w
+                    failed += f
+                print("  ⚡ Comparación en paralelo: 3 procesos (léxica, temática, precio).")
+                try:
+                    with ProcessPoolExecutor(
+                            max_workers=3, mp_context=get_context("spawn")) as pool:
+                        results = list(pool.map(
+                            _comparison_worker, par,
+                            [args] * len(par), [output_dir] * len(par)))
+                except Exception as exc:
+                    print(f"  ⚠️ Fallo el pool de comparación ({exc}); reintento secuencial.")
+                    results = [_comparison_worker(t, args, output_dir) for t in par]
+                from comparison.common import replay_metadata
+
+                for t, ww, ff, logs, secs, meta in results:
+                    print(f"\n  📄 {t.upper()} (paralelo {secs:.1f}s)")
+                    print(logs, end="")
+                    written += ww
+                    failed += ff
+                    replay_metadata(meta)
+                return written, failed
+            finally:
+                os.environ.pop("PERF2_COMPARISON_SERIAL", None)
 
     for task in tasks:
         try:
@@ -267,8 +328,12 @@ def main():
     # P1: tópicos conjuntos
     g.add_argument("--k-min", type=int, default=4)
     g.add_argument("--k-max", type=int, default=30)
-    g.add_argument("--stability-runs", type=int, default=5)
-    g.add_argument("--subsample", type=float, default=0.8)
+    g.add_argument("--stability-runs", type=int, default=3,
+                   help="Corridas de estabilidad (antes 5; pasar 5 para restaurar)")
+    g.add_argument("--subsample", type=float, default=0.75,
+                   help="Fracción por corrida (antes 0.8; pasar 0.8 para restaurar)")
+    g.add_argument("--knn-k-mult", type=float, default=1.3,
+                   help="Multiplicador de cobertura del grafo NN global")
     g.add_argument("--dmo-weight", type=float, default=1.0,
                    help="Peso DMO en centroides/c-TF-IDF (sin remuestreo). Default 1.0")
     g.add_argument("--reassign-threshold", type=float, default=0.30)
@@ -559,6 +624,7 @@ def main():
         force=_force("topics"),
         embeddings=embeddings_clean,
         num_topics=args.num_topicos,
+        knn_k_mult=args.knn_k_mult,
     )
 
     reporte_topicos_consola(

@@ -51,10 +51,37 @@ def library_versions() -> dict[str, str]:
     return versions
 
 
+_METADATA_BUFFER: list[tuple] = []
+
+
+def take_metadata() -> list[tuple]:
+    """Extrae las filas de metadata pendientes (para serializar en el padre)."""
+    rows = list(_METADATA_BUFFER)
+    _METADATA_BUFFER.clear()
+    return rows
+
+
+def replay_metadata(rows: list[tuple]) -> None:
+    """Escribe en el padre las filas capturadas en los workers."""
+    for args in rows:
+        _append_metadata(*args)
+
+
 def append_metadata(
     metadata_path: Path, task: str, params: dict[str, Any], repo_dir: Path
 ) -> Path:
     """Añade una fila por corrida/tarea a run_metadata.csv (reescritura segura del BOM)."""
+    import os
+
+    if os.environ.get("PERF2_BUFFER_METADATA"):
+        _METADATA_BUFFER.append((metadata_path, task, params, repo_dir))
+        return Path(metadata_path)
+    return _append_metadata(metadata_path, task, params, repo_dir)
+
+
+def _append_metadata(
+    metadata_path: Path, task: str, params: dict[str, Any], repo_dir: Path
+) -> Path:
     row = {
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "task": task,
