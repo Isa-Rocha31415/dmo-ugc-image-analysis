@@ -51,7 +51,7 @@ from utils import palette_to_plot_colors
 UNASSIGNED = "SIN_ASIGNAR"
 TOKEN_PATTERN = r"(?u)\b[^\W\d_]{3,}\b"
 PARSIMONY_TOL = 0.02
-GRID_VERSION = 4         # 4: Ward + max_share/balance_entropy/n_effective + guardas
+GRID_VERSION = 5         # 5: analysis_base incluye text_norm; representación sin cambio
 MAX_TOPIC_SHARE = 0.20   # ningún tópico puede acaparar >20% de los docs asignados
 MIN_TOPIC_FLOOR = 50     # tamaño mínimo absoluto de tópico
 

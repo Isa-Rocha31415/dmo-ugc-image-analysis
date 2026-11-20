@@ -38,10 +38,16 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
-from comparison.common import append_metadata, palette_colors, print_header, save_csv
+from comparison.common import (append_metadata, bh_adjust, bootstrap_rate_ci,
+                               l2_normalize, mann_whitney_cliffs, max_cosine,
+                               palette_colors, print_header, save_csv)
 from io_corpus import CORPUS_COLUMN, SOURCE_COLUMN
 from metrics_lexical import logodds_z
-from metrics_thematic import bh_adjust, cohens_h, two_by_two_test
+from metrics_thematic import cohens_h, two_by_two_test
+
+_l2 = l2_normalize  # compatibilidad con el nombre privado histórico
+_max_cosine = max_cosine
+
 from utils import palette_to_plot_colors
 
 REQUIRED_PROTOTYPE_GROUPS = ("resena_es", "promo_es", "resena_en", "promo_en")
@@ -215,20 +221,6 @@ def embed_anchor_texts(
 
 
 # ─────────────────────────── Scoring (funciones puras) ───────────────────────────
-def _l2(x: np.ndarray) -> np.ndarray:
-    norm = np.linalg.norm(x, axis=-1, keepdims=True)
-    return x / np.clip(norm, 1e-12, None)
-
-
-def _max_cosine(docs: np.ndarray, refs: np.ndarray) -> np.ndarray:
-    """Coseno por fila (se asume L2) y máximo sobre refs. docs (N,D), refs (M,D)."""
-    docs = np.atleast_2d(np.asarray(docs, dtype=float))
-    refs = np.atleast_2d(np.asarray(refs, dtype=float))
-    if refs.shape[0] == 0:
-        return np.full(docs.shape[0], np.nan, dtype=float)
-    return np.asarray(_l2(docs) @ _l2(refs).T, dtype=float).max(axis=1)
-
-
 def raw_cosine_scores(doc_emb: np.ndarray, anchor_emb: np.ndarray) -> np.ndarray:
     """Coseno directo doc↔anclas; máximo sobre anclas. docs (N,D), anclas (M,D)."""
     doc_emb = np.asarray(doc_emb, dtype=float)
@@ -420,6 +412,8 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     out = pd.DataFrame({
         "doc_id": base["doc_id"].to_numpy(),
         "text": base["text"].astype(str).to_numpy(),
+        "text_norm": (base["text_norm"].astype(str).to_numpy()
+                      if "text_norm" in base.columns else base["text"].astype(str).to_numpy()),
         CORPUS_COLUMN: base[CORPUS_COLUMN].to_numpy(),
         SOURCE_COLUMN: base[SOURCE_COLUMN].to_numpy(),
         "sentiment_label": base["sentiment_label"].to_numpy(),
@@ -1029,35 +1023,6 @@ PRICE_OUTPUTS = ("price_comparison.csv", "price_context_terms.csv",
                  "price_scatter_valence.html")
 
 
-def bootstrap_rate_ci(mask: np.ndarray, b: int, seed: int) -> tuple[float, float]:
-    """CI 95% bootstrap (percentiles) de una tasa binaria (función pura)."""
-    x = np.asarray(mask, dtype=float)
-    if not x.size or b <= 0:
-        return (np.nan, np.nan)
-    rng = np.random.default_rng(seed)
-    idx = rng.integers(0, x.size, size=(int(b), x.size))
-    rates = x[idx].mean(axis=1)
-    return (float(np.quantile(rates, 0.025)), float(np.quantile(rates, 0.975)))
-
-
-def mann_whitney_cliffs(x: Sequence[float], y: Sequence[float]) -> dict:
-    """Mann-Whitney U + Cliff's delta con interpretación (Romano et al.)."""
-    from scipy.stats import mannwhitneyu
-
-    a = np.asarray(x, dtype=float); a = a[~np.isnan(a)]
-    b = np.asarray(y, dtype=float); b = b[~np.isnan(b)]
-    if not a.size or not b.size:
-        return {"mw_u": np.nan, "mw_p_value": np.nan,
-                "cliffs_delta": np.nan, "cliffs_interp": "SIN_DATOS"}
-    u, p = mannwhitneyu(a, b, alternative="two-sided")
-    delta = 2.0 * float(u) / (a.size * b.size) - 1.0
-    ad = abs(delta)
-    interp = ("NEGLIGIBLE" if ad < 0.147 else "PEQUENO" if ad < 0.33
-              else "MEDIANO" if ad < 0.474 else "GRANDE")
-    return {"mw_u": round(float(u), 4), "mw_p_value": round(float(p), 6),
-            "cliffs_delta": round(delta, 6), "cliffs_interp": interp}
-
-
 def price_comparison_table(scores: pd.DataFrame, bootstrap: int = 2000,
                            seed: int = 42) -> pd.DataFrame:
     """DMO vs UGC_total y DMO vs cada fuente: tasas + CI bootstrap (seed fija),
@@ -1126,7 +1091,8 @@ def price_context_cooccur(scores: pd.DataFrame, prior_strength: float = 1000.0,
     if is_dmo.sum() == 0 or (~is_dmo).sum() == 0:
         return pd.DataFrame(columns=cols)
     dd, du, cd, cu = Counter(), Counter(), Counter(), Counter()
-    for tokens, dmo in zip((tokenize(t) for t in mention["text"].astype(str)),
+    tcol = "text_norm" if "text_norm" in scores.columns else "text"
+    for tokens, dmo in zip((tokenize(t) for t in mention[tcol].astype(str)),
                            is_dmo.to_numpy()):
         docs, cnts = (dd, cd) if dmo else (du, cu)
         docs.update(set(tokens)); cnts.update(tokens)
@@ -1211,6 +1177,7 @@ def _price_fingerprint(scores: pd.DataFrame, params: dict) -> str:
     """Hash estable de parámetros + scores (fingerprint de la caché propia)."""
     cols = [c for c in ("doc_id", CORPUS_COLUMN, SOURCE_COLUMN, "price_score",
                         "above_tau", "sentiment_score") if c in scores.columns]
+    params = {**params, "text_norm_v": 2}  # invalidate caché al cambiar text_norm
     digest = hashlib.sha256(json.dumps(
         params, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8"))
     digest.update(pd.util.hash_pandas_object(

@@ -5,10 +5,11 @@ import datetime
 import json
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 import pandas as pd
+from scipy.stats import entropy, mannwhitneyu
 
 SEP = "█" * 70
 CSV_ENCODING = "utf-8-sig"
@@ -88,3 +89,81 @@ def palette_colors(palette: Any, fallback: str = "#4C72B0") -> list[str]:
         elif v is not None:
             out.append(str(v))
     return out or [fallback]
+
+
+# ───────────────────── Estadística compartida (sin copias locales) ─────────────────────
+def bh_adjust(p: np.ndarray) -> np.ndarray:
+    """Benjamini-Hochberg (q=0.05 se aplica al veredicto, no al ajuste)."""
+    p = np.asarray(p, dtype=float)
+    m = len(p)
+    if m == 0:
+        return np.empty(0, dtype=float)
+    order = np.argsort(p)
+    q = p[order] * m / np.arange(1, m + 1)
+    q = np.minimum.accumulate(q[::-1])[::-1]
+    out = np.empty(m)
+    out[order] = np.clip(q, 0, 1)
+    return out
+
+
+def bootstrap_gap_ci(lab_d: np.ndarray, lab_u: np.ndarray, T: int,
+                     B: int, seed: int) -> np.ndarray:
+    """CI 95% de gap_pp por tópico; remuestreo independiente dentro de cada corpus."""
+    nd, nu = len(lab_d), len(lab_u)
+    if B <= 0 or nd == 0 or nu == 0:
+        return np.full((2, T), np.nan)
+    rng = np.random.default_rng(seed)
+    gaps = np.empty((B, T))
+    for b in range(B):
+        cd = np.bincount(lab_d[rng.integers(0, nd, nd)], minlength=T) / nd
+        cu = np.bincount(lab_u[rng.integers(0, nu, nu)], minlength=T) / nu
+        gaps[b] = 100 * (cd - cu)
+    return np.percentile(gaps, [2.5, 97.5], axis=0)
+
+
+def bootstrap_rate_ci(mask: np.ndarray, b: int, seed: int) -> tuple[float, float]:
+    """CI 95% bootstrap (percentiles) de una tasa binaria (función pura)."""
+    x = np.asarray(mask, dtype=float)
+    if not x.size or b <= 0:
+        return (np.nan, np.nan)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, x.size, size=(int(b), x.size))
+    rates = x[idx].mean(axis=1)
+    return (float(np.quantile(rates, 0.025)), float(np.quantile(rates, 0.975)))
+
+
+def jsd_base2(p: np.ndarray, q: np.ndarray) -> float:
+    """Jensen-Shannon divergence base 2 (rango [0,1])."""
+    p, q = np.asarray(p, float), np.asarray(q, float)
+    m = 0.5 * (p + q)
+    return float(0.5 * (entropy(p, m, base=2) + entropy(q, m, base=2)))
+
+
+def mann_whitney_cliffs(x: Sequence[float], y: Sequence[float]) -> dict:
+    """Mann-Whitney U + Cliff's delta con interpretación (Romano et al.)."""
+    a = np.asarray(x, dtype=float); a = a[~np.isnan(a)]
+    b = np.asarray(y, dtype=float); b = b[~np.isnan(b)]
+    if not a.size or not b.size:
+        return {"mw_u": np.nan, "mw_p_value": np.nan,
+                "cliffs_delta": np.nan, "cliffs_interp": "SIN_DATOS"}
+    u, p = mannwhitneyu(a, b, alternative="two-sided")
+    delta = 2.0 * float(u) / (a.size * b.size) - 1.0
+    ad = abs(delta)
+    interp = ("NEGLIGIBLE" if ad < 0.147 else "PEQUENO" if ad < 0.33
+              else "MEDIANO" if ad < 0.474 else "GRANDE")
+    return {"mw_u": round(float(u), 4), "mw_p_value": round(float(p), 6),
+            "cliffs_delta": round(delta, 6), "cliffs_interp": interp}
+
+
+def l2_normalize(x: np.ndarray) -> np.ndarray:
+    """Normaliza L2 por fila con suelo numérico."""
+    x = np.asarray(x, dtype=float)
+    return x / np.clip(np.linalg.norm(x, axis=-1, keepdims=True), 1e-12, None)
+
+
+def max_cosine(docs: np.ndarray, refs: np.ndarray) -> np.ndarray:
+    """Coseno por fila y máximo sobre refs. docs (N,D), refs (M,D)."""
+    docs, refs = np.atleast_2d(docs), np.atleast_2d(refs)
+    if refs.shape[0] == 0:
+        return np.full(docs.shape[0], np.nan, dtype=float)
+    return np.asarray(l2_normalize(docs) @ l2_normalize(refs).T).max(axis=1)

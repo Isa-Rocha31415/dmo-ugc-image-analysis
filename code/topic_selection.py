@@ -27,11 +27,6 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import adjusted_rand_score
 
-try:
-    from nltk.corpus import stopwords as _nltk_stopwords
-except Exception:  # pragma: no cover - depende de recursos locales
-    _nltk_stopwords = None
-
 
 AUTO_ALIASES = {"auto", "automatic", "automatico", "automático"}
 OUTLIER_IDS = {-1, "-1"}
@@ -350,12 +345,11 @@ def _build_doc_term_matrix(
 
 
 def _stopword_list() -> Optional[List[str]]:
-    if _nltk_stopwords is None:
-        return None
-    words = set()
-    for language in ("spanish", "english"):
+    from text_preprocessing import get_stopwords
+    words: set[str] = set()
+    for lang in ("es", "en"):
         try:
-            words.update(_nltk_stopwords.words(language))
+            words.update(get_stopwords(lang))
         except Exception:  # pragma: no cover - recursos no descargados
             pass
     return sorted(words) if words else None

@@ -20,10 +20,11 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 from scipy.optimize import linprog
-from scipy.stats import chi2_contingency, entropy, fisher_exact
+from scipy.stats import chi2_contingency, fisher_exact
 from sklearn.preprocessing import normalize
 
-from comparison.common import append_metadata, print_header, save_csv
+from comparison.common import (append_metadata, bh_adjust, bootstrap_gap_ci,
+                               jsd_base2, print_header, save_csv)
 from io_corpus import CORPUS_COLUMN, SOURCE_COLUMN
 
 Q_LEVEL = 0.05
@@ -35,20 +36,6 @@ DIST_COLUMNS = ["scope", "jsd_base2", "emd_cosine", "n_topics"]
 
 
 # ─────────────────────────── Funciones puras ───────────────────────────
-def bh_adjust(p: np.ndarray) -> np.ndarray:
-    """Benjamini-Hochberg (q=0.05 se aplica al veredicto, no al ajuste)."""
-    p = np.asarray(p, dtype=float)
-    m = len(p)
-    if m == 0:
-        return np.empty(0, dtype=float)
-    order = np.argsort(p)
-    q = p[order] * m / np.arange(1, m + 1)
-    q = np.minimum.accumulate(q[::-1])[::-1]
-    out = np.empty(m)
-    out[order] = np.clip(q, 0, 1)
-    return out
-
-
 def cohens_h(p1: float, p2: float) -> float:
     """h = 2·arcsin(√p1) − 2·arcsin(√p2)."""
     return float(2 * np.arcsin(np.sqrt(p1)) - 2 * np.arcsin(np.sqrt(p2)))
@@ -75,13 +62,6 @@ def verdict(gap_pp: float, p_adj: float, q: float = Q_LEVEL) -> str:
     return "SIN_DIF"
 
 
-def jsd_base2(p: np.ndarray, q: np.ndarray) -> float:
-    """Jensen-Shannon divergence base 2 (rango [0,1])."""
-    p, q = np.asarray(p, float), np.asarray(q, float)
-    m = 0.5 * (p + q)
-    return float(0.5 * (entropy(p, m, base=2) + entropy(q, m, base=2)))
-
-
 def emd_cosine(p: np.ndarray, q: np.ndarray, cost: np.ndarray) -> float:
     """Earth Mover's Distance exacta con matriz de costo (linprog HiGHS)."""
     T = len(p)
@@ -90,21 +70,6 @@ def emd_cosine(p: np.ndarray, q: np.ndarray, cost: np.ndarray) -> float:
     res = linprog(cost.ravel(), A_eq=A, b_eq=np.concatenate([p, q]),
                   bounds=(0, None), method="highs")
     return float(res.fun) if res.success else float("nan")
-
-
-def bootstrap_gap_ci(lab_d: np.ndarray, lab_u: np.ndarray, T: int,
-                     B: int, seed: int) -> np.ndarray:
-    """CI 95% de gap_pp por tópico; remuestreo independiente dentro de cada corpus."""
-    nd, nu = len(lab_d), len(lab_u)
-    if B <= 0 or nd == 0 or nu == 0:
-        return np.full((2, T), np.nan)
-    rng = np.random.default_rng(seed)
-    gaps = np.empty((B, T))
-    for b in range(B):
-        cd = np.bincount(lab_d[rng.integers(0, nd, nd)], minlength=T) / nd
-        cu = np.bincount(lab_u[rng.integers(0, nu, nu)], minlength=T) / nu
-        gaps[b] = 100 * (cd - cu)
-    return np.percentile(gaps, [2.5, 97.5], axis=0)
 
 
 def _remap(labels: np.ndarray, topics: list[int]) -> np.ndarray:

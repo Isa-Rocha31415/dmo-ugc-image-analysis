@@ -35,6 +35,14 @@ EMBEDDING_MODELS = {
 # Mapeo de idiomas para la librería NLTK (stopwords)
 LANG_MAP_SW = {"es": "spanish", "en": "english", "fr": "french", "pt": "portuguese"}
 
+
+def get_stopwords(lang: str) -> set[str]:
+    """Stopwords NLTK del idioma: fuente única, sin descargas en runtime."""
+    lang = lang.lower()
+    if lang not in LANG_MAP_SW:
+        raise ValueError(f"Idioma no soportado: {lang}.")
+    return set(stopwords.words(LANG_MAP_SW[lang]))
+
 # --------------------- RECURSOS DE IDIOMA -----------------------
 def get_language_resources(lang: str):
     """

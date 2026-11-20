@@ -272,6 +272,8 @@ def run_base_task(
     base = pd.DataFrame({
         "doc_id": ids_clean,
         "text": df_sent[args.text_col].to_numpy(),
+        "text_norm": (df_sent["text_norm"].to_numpy() if "text_norm" in df_sent
+                      else df_sent[args.text_col].to_numpy()),
         "corpus": df_sent[CORPUS_COLUMN].to_numpy(),
         "source": df_sent[SOURCE_COLUMN].to_numpy(),
         "sentiment_label": df_sent["sentiment_label"].to_numpy(),

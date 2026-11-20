@@ -99,6 +99,8 @@ así que cambiar un parámetro invalida solo ese paso y sus dependientes.
 `--force-steps` recalcula los pasos indicados. El PASO 1 crea `text_norm` (stopwords/lemas
 solo ahí; `text_col` queda natural) y mete huella módulo+`--lang`+params en la clave de
 `embeddings_bert`: tras cambiar el preproc se recalculan embeddings y dependientes.
+`metrics_lexical` y `price_concept` (términos de contexto) leen `text_norm`; wordclouds,
+n-gramas, tópicos, hover y ejemplos conservan `text_col` natural.
 
 ## Validación de sentimiento (PASO 4.5)
 

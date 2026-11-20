@@ -32,6 +32,7 @@ from utils import palette_to_plot_colors
 TOKEN_RE = re.compile(r"(?u)\b[^\W\d_]{3,}\b")
 KS = (50, 100, 200)
 MIN_TYPE_FREQ = 2
+LEXICAL_CACHE_VERSION = 3  # 3: consume text_norm del PASO 1 (sin doble lema)
 
 
 # ─────────────────────────── Tokenización (sin stopwords) ───────────────────────────
@@ -214,19 +215,24 @@ def run_lexical_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     out_dir = results_dir / "comparison" / "lexical"
     out_dir.mkdir(parents=True, exist_ok=True)
     base = pd.read_csv(base_dir / "analysis_base.csv", encoding="utf-8-sig")
-    texts = base["text"].fillna("").astype(str).tolist()
+    if "text_norm" in base.columns:
+        texts = base["text_norm"].fillna("").astype(str).tolist()
+        nlp, lemma_model = None, "PASO 1 (text_norm, sin doble lema)"
+    else:
+        texts = base["text"].fillna("").astype(str).tolist()
+        nlp, lemma_model = ((None, "omitida") if args.disable_lemma else try_spacy())
     corpus = base[CORPUS_COLUMN].astype(str).to_numpy()
     source = base[SOURCE_COLUMN].astype(str).to_numpy()
     print(f"  🔤 Vocabulario: token alfabético len>=3, min_df={args.min_df}, "
           f"max_df={args.max_df} ")
 
-    nlp, lemma_model = (None, "none") if args.disable_lemma else try_spacy()
-    print(f"  Lematización: {'spaCy ' + lemma_model if nlp else 'omitida (spaCy no disponible offline)'}")
+    print(f"  Lematización: {lemma_model}")
 
     # Caché propia de la matriz documento-término
     key = hashlib.sha256(json.dumps({
         "texts_sha": hashlib.sha256("\n".join(texts).encode()).hexdigest(),
         "lemma": lemma_model, "min_df": args.min_df, "max_df": args.max_df,
+        "version": LEXICAL_CACHE_VERSION,
     }, sort_keys=True).encode()).hexdigest()[:20]
     cache = out_dir / "_cache"
     cache.mkdir(exist_ok=True)
