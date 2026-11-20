@@ -117,18 +117,7 @@ fi
 # 2. ARGUMENTOS COMUNES (idénticos en ambas fases)
 # ══════════════════════════════════════════════════════════════
 COMMON_ARGS=(
-  --csv-dmo "../data/processed/df_dmo.csv"
-  --csv-ugc "../data/processed/df_ugc.csv"
-  --text-col text
-  --lang es
-  --outlier-method IF
-  --contamination auto
-  --min-partition 50
-  --output-dir ../results
-  --model bertopic
-  --palette ejecutiva
-  --num-topicos automatico
-  --seed 42
+  
 )
 
 # ══════════════════════════════════════════════════════════════

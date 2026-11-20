@@ -1,0 +1,5 @@
+source,"negative: Topic 0: mexico, ciudad, mas","negative: Topic 1: mexico, film, mas","negative: Topic 2: visita, cle, iat",positive: Topic -1: outliers,"positive: Topic 0: ciudad, mexico, mas","positive: Topic 1: mexico, museo, ciudad","positive: Topic 2: museo, arte, gratis","positive: Topic 3: museo, diego, rivera"
+instagram,50.0,0.0,0.0,0.0,50.0,0.0,0.0,0.0
+reddit,66.67,0.0,0.0,0.0,0.0,33.33,0.0,0.0
+sectur,68.6,8.87,3.07,0.0,18.43,0.68,0.34,0.0
+tripadvisor,21.31,0.0,0.34,3.09,49.48,14.43,6.87,4.47

@@ -1,0 +1,27 @@
+{
+  "step": "topics",
+  "created_at": "2026-11-19T23:57:43.263416+00:00",
+  "inputs": {
+    "step": "topics",
+    "cache_version": 1,
+    "topics_version": 2,
+    "parent_key": "81b4877f9ee9dc11e452",
+    "text_column": "text",
+    "source_column": "source",
+    "min_partition_size": 50,
+    "topic_backend": "bertopic",
+    "use_xidoo_outliers": false,
+    "random_state": 42,
+    "num_topics": "auto",
+    "rows": 593,
+    "embeddings_shape": [
+      593,
+      384
+    ]
+  },
+  "outputs": {
+    "topics_df": "../results_smoke_p1/cache/topics/aa063531ddbd7303cdfc/topics_df.csv.gz",
+    "summary": "../results_smoke_p1/cache/topics/aa063531ddbd7303cdfc/topic_outputs_summary.json"
+  },
+  "rows_topics": 593
+}

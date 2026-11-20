@@ -1,0 +1,21 @@
+{
+  "step": "sentiment",
+  "created_at": "2026-11-19T23:57:01.966174+00:00",
+  "inputs": {
+    "step": "sentiment",
+    "cache_version": 1,
+    "sentiment_version": 1,
+    "parent_key": "c46536b8ba1e87edaa3b",
+    "text_column": "text",
+    "source_column": "source",
+    "lang": "es",
+    "backend": "transformers",
+    "threshold": 0.0,
+    "model_name": "",
+    "rows": 593
+  },
+  "outputs": {
+    "df_sentiment": "../results_smoke_p1/cache/sentiment/81b4877f9ee9dc11e452/df_sentiment.csv.gz"
+  },
+  "rows": 593
+}
