@@ -1,0 +1,213 @@
+{
+  "by_sentiment": {
+    "positive": {
+      "method": "bertopic",
+      "sentiment_label": "positive",
+      "count": 289,
+      "keywords": {
+        "0": [
+          "ciudad",
+          "mexico",
+          "mas",
+          "restaurantes",
+          "ademas",
+          "tambien",
+          "centro",
+          "san",
+          "parque",
+          "historia"
+        ],
+        "1": [
+          "mexico",
+          "museo",
+          "ciudad",
+          "historia",
+          "mas",
+          "visita",
+          "arte",
+          "mexicana",
+          "cultura",
+          "visitar"
+        ],
+        "2": [
+          "museo",
+          "arte",
+          "gratis",
+          "excelente",
+          "experiencia",
+          "mas",
+          "frida",
+          "recomendable",
+          "impresionante",
+          "pena"
+        ],
+        "3": [
+          "museo",
+          "diego",
+          "rivera",
+          "mural",
+          "historia",
+          "artista",
+          "alameda",
+          "murales",
+          "pequeno",
+          "pena"
+        ],
+        "-1": [
+          "murales",
+          "visitar",
+          "museo",
+          "es",
+          "recomendable",
+          "tienda",
+          "historia",
+          "impresiona",
+          "interpretacion",
+          "interesante"
+        ]
+      },
+      "topic_names": {
+        "0": "Topic 0: ciudad, mexico, mas",
+        "1": "Topic 1: mexico, museo, ciudad",
+        "2": "Topic 2: museo, arte, gratis",
+        "3": "Topic 3: museo, diego, rivera",
+        "-1": "Topic -1: outliers"
+      },
+      "topic_selection": {
+        "method": "merge_hierarchy_npmi_stability",
+        "requested": "auto",
+        "selected_k": 4,
+        "base_topics": 4,
+        "n_docs": 289,
+        "n_outliers": 9,
+        "reason": "Se eligió k=4 de 4 tópicos base (289 comentarios). Puntaje compuesto=0.828; mejor=0.828. Regla de parsimonia: de las soluciones dentro de 0.02 del mejor puntaje (k=4), se tomó la menor. Evidencia: coherencia NPMI=0.154, estabilidad ARI=1.000, diversidad=0.750, redundancia=0.126, balance=0.627.",
+        "candidates": [
+          {
+            "k": 2,
+            "coherence": 0.1149978286536277,
+            "diversity": 0.85,
+            "stability": 0.625,
+            "redundancy": 0.17647058823529413,
+            "balance": 0.533453356527922,
+            "min_topic_size": 34,
+            "eligible": true,
+            "selected": false,
+            "score": 0.2771574071520163,
+            "note": ""
+          },
+          {
+            "k": 3,
+            "coherence": 0.14042668196289484,
+            "diversity": 0.8333333333333334,
+            "stability": 0.55,
+            "redundancy": 0.1111111111111111,
+            "balance": 0.4100959895016206,
+            "min_topic_size": 13,
+            "eligible": true,
+            "selected": false,
+            "score": 0.4508519762262533,
+            "note": ""
+          },
+          {
+            "k": 4,
+            "coherence": 0.15440460652183458,
+            "diversity": 0.75,
+            "stability": 1.0,
+            "redundancy": 0.12565932805870886,
+            "balance": 0.6265358629767619,
+            "min_topic_size": 13,
+            "eligible": true,
+            "selected": true,
+            "score": 0.8277412280701756,
+            "note": ""
+          }
+        ]
+      }
+    },
+    "negative": {
+      "method": "bertopic",
+      "sentiment_label": "negative",
+      "count": 304,
+      "keywords": {
+        "0": [
+          "mexico",
+          "ciudad",
+          "mas",
+          "centro",
+          "museo",
+          "san",
+          "zona",
+          "pagina",
+          "nacional",
+          "historia"
+        ],
+        "1": [
+          "mexico",
+          "film",
+          "mas",
+          "cine",
+          "city",
+          "films",
+          "director",
+          "pagina",
+          "mexican",
+          "ciudad"
+        ],
+        "2": [
+          "visita",
+          "cle",
+          "iat",
+          "teese",
+          "mexico",
+          "ind",
+          "sombra",
+          "see",
+          "derechos",
+          "seg"
+        ]
+      },
+      "topic_names": {
+        "0": "Topic 0: mexico, ciudad, mas",
+        "1": "Topic 1: mexico, film, mas",
+        "2": "Topic 2: visita, cle, iat"
+      },
+      "topic_selection": {
+        "method": "merge_hierarchy_npmi_stability",
+        "requested": "auto",
+        "selected_k": 3,
+        "base_topics": 3,
+        "n_docs": 304,
+        "n_outliers": 0,
+        "reason": "Se eligió k=3 de 3 tópicos base (304 comentarios). Puntaje compuesto=0.750; mejor=0.750. Regla de parsimonia: de las soluciones dentro de 0.02 del mejor puntaje (k=3), se tomó la menor. Evidencia: coherencia NPMI=-0.058, estabilidad ARI=1.000, diversidad=0.833, redundancia=0.118, balance=0.395.",
+        "candidates": [
+          {
+            "k": 2,
+            "coherence": -0.22394967193450724,
+            "diversity": 0.95,
+            "stability": 1.0,
+            "redundancy": 0.05263157894736842,
+            "balance": 0.20870728208950035,
+            "min_topic_size": 10,
+            "eligible": true,
+            "selected": false,
+            "score": 0.5,
+            "note": ""
+          },
+          {
+            "k": 3,
+            "coherence": -0.05822614629120609,
+            "diversity": 0.8333333333333334,
+            "stability": 1.0,
+            "redundancy": 0.11842105263157894,
+            "balance": 0.3948029389200973,
+            "min_topic_size": 10,
+            "eligible": true,
+            "selected": true,
+            "score": 0.75,
+            "note": ""
+          }
+        ]
+      }
+    }
+  }
+}

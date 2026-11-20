@@ -1,0 +1,15 @@
+﻿topic_id,topic_name,keywords_top8,n_docs,n_dmo,n_ugc,share_total,share_dmo,share_ugc
+0,"ciudad mexico, san, cuauhtemoc",ciudad mexico; san; cuauhtemoc; cuauhtemoc ciudad; mexico mexico; museo; centro; plaza,202,175,27,0.340641,0.59727,0.09
+1,"mas, restaurantes, animales",mas; restaurantes; animales; ambiente; comida; zona; divertido; agradable,91,1,90,0.153457,0.003413,0.3
+2,"parque, san, ciudad mexico",parque; san; ciudad mexico; ambiental; cerro; aire; actividades; senderismo,53,50,3,0.089376,0.170648,0.01
+3,"museo, historia, mas",museo; historia; mas; ciudad mexico; arte; mexicana; visita; the,50,2,48,0.084317,0.006826,0.16
+4,"film, cine, director",film; cine; director; films; festival; mexican; filmes; pelicula,42,41,1,0.070826,0.139932,0.003333
+5,"hermoso, bonito, vistas",hermoso; bonito; vistas; edificio; visita; parque; castillo; impresionante,41,2,39,0.06914,0.006826,0.13
+6,"museo, frida, mas",museo; frida; mas; arte; salas; visitar; interesante; recomendable,26,1,25,0.043845,0.003413,0.083333
+7,"mural, murales, diego rivera",mural; murales; diego rivera; rivera; diego; museo; artista; genial,18,0,18,0.030354,0.0,0.06
+8,"catedral, virgen, palacio",catedral; virgen; palacio; basilica; mas; religiosos; virgen guadalupe; bonita,17,0,17,0.028668,0.0,0.056667
+9,"artesanias, mercado, artesania",artesanias; mercado; artesania; tienda; precios; tradicional; mas; comprar,15,1,14,0.025295,0.003413,0.046667
+10,"turismo, cdmx, salud",turismo; cdmx; salud; padre; innovadora; estrella; madre; santo,12,10,2,0.020236,0.03413,0.006667
+11,"espectaculo, concierto, conciertos",espectaculo; concierto; conciertos; gente; mejores; teatro; musica; pagar,15,0,15,0.025295,0.0,0.05
+12,"horas, lunes, costo",horas; lunes; costo; bosque; lunes viernes; viernes; linea; viernes horas,10,10,0,0.016863,0.03413,0.0
+-1,SIN_ASIGNAR,,1,0,1,0.001686,0.0,0.003333

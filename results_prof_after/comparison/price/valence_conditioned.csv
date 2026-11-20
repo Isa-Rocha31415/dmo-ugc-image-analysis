@@ -1,0 +1,5 @@
+﻿corpus,mention,n,mean_sentiment,share_positive,n_neutral_band,share_neutral,mean_sentiment_neutral
+DMO,1,0,,,0,,
+DMO,0,293,-0.041945,0.197952,285,0.972696,-0.042709
+UGC_total,1,37,0.241558,0.72973,1,0.027027,0.079741
+UGC_total,0,263,0.317521,0.779468,69,0.262357,0.012133

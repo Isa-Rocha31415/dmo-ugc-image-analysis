@@ -1,0 +1,66 @@
+﻿topic_id,topic_name,scope,n_docs_topic,n_docs_scope,prevalence
+0,"ciudad mexico, san, cuauhtemoc",DMO,175,293,0.59727
+1,"mas, restaurantes, animales",DMO,1,293,0.003413
+2,"parque, san, ciudad mexico",DMO,50,293,0.170648
+3,"museo, historia, mas",DMO,2,293,0.006826
+4,"film, cine, director",DMO,41,293,0.139932
+5,"hermoso, bonito, vistas",DMO,2,293,0.006826
+6,"museo, frida, mas",DMO,1,293,0.003413
+7,"mural, murales, diego rivera",DMO,0,293,0.0
+8,"catedral, virgen, palacio",DMO,0,293,0.0
+9,"artesanias, mercado, artesania",DMO,1,293,0.003413
+10,"turismo, cdmx, salud",DMO,10,293,0.03413
+11,"espectaculo, concierto, conciertos",DMO,0,293,0.0
+12,"horas, lunes, costo",DMO,10,293,0.03413
+0,"ciudad mexico, san, cuauhtemoc",UGC_total,27,299,0.090301
+1,"mas, restaurantes, animales",UGC_total,90,299,0.301003
+2,"parque, san, ciudad mexico",UGC_total,3,299,0.010033
+3,"museo, historia, mas",UGC_total,48,299,0.160535
+4,"film, cine, director",UGC_total,1,299,0.003344
+5,"hermoso, bonito, vistas",UGC_total,39,299,0.130435
+6,"museo, frida, mas",UGC_total,25,299,0.083612
+7,"mural, murales, diego rivera",UGC_total,18,299,0.060201
+8,"catedral, virgen, palacio",UGC_total,17,299,0.056856
+9,"artesanias, mercado, artesania",UGC_total,14,299,0.046823
+10,"turismo, cdmx, salud",UGC_total,2,299,0.006689
+11,"espectaculo, concierto, conciertos",UGC_total,15,299,0.050167
+12,"horas, lunes, costo",UGC_total,0,299,0.0
+0,"ciudad mexico, san, cuauhtemoc",instagram,1,6,0.166667
+1,"mas, restaurantes, animales",instagram,3,6,0.5
+2,"parque, san, ciudad mexico",instagram,2,6,0.333333
+3,"museo, historia, mas",instagram,0,6,0.0
+4,"film, cine, director",instagram,0,6,0.0
+5,"hermoso, bonito, vistas",instagram,0,6,0.0
+6,"museo, frida, mas",instagram,0,6,0.0
+7,"mural, murales, diego rivera",instagram,0,6,0.0
+8,"catedral, virgen, palacio",instagram,0,6,0.0
+9,"artesanias, mercado, artesania",instagram,0,6,0.0
+10,"turismo, cdmx, salud",instagram,0,6,0.0
+11,"espectaculo, concierto, conciertos",instagram,0,6,0.0
+12,"horas, lunes, costo",instagram,0,6,0.0
+0,"ciudad mexico, san, cuauhtemoc",reddit,0,2,0.0
+1,"mas, restaurantes, animales",reddit,0,2,0.0
+2,"parque, san, ciudad mexico",reddit,0,2,0.0
+3,"museo, historia, mas",reddit,1,2,0.5
+4,"film, cine, director",reddit,0,2,0.0
+5,"hermoso, bonito, vistas",reddit,0,2,0.0
+6,"museo, frida, mas",reddit,0,2,0.0
+7,"mural, murales, diego rivera",reddit,0,2,0.0
+8,"catedral, virgen, palacio",reddit,0,2,0.0
+9,"artesanias, mercado, artesania",reddit,0,2,0.0
+10,"turismo, cdmx, salud",reddit,0,2,0.0
+11,"espectaculo, concierto, conciertos",reddit,1,2,0.5
+12,"horas, lunes, costo",reddit,0,2,0.0
+0,"ciudad mexico, san, cuauhtemoc",tripadvisor,26,291,0.089347
+1,"mas, restaurantes, animales",tripadvisor,87,291,0.298969
+2,"parque, san, ciudad mexico",tripadvisor,1,291,0.003436
+3,"museo, historia, mas",tripadvisor,47,291,0.161512
+4,"film, cine, director",tripadvisor,1,291,0.003436
+5,"hermoso, bonito, vistas",tripadvisor,39,291,0.134021
+6,"museo, frida, mas",tripadvisor,25,291,0.085911
+7,"mural, murales, diego rivera",tripadvisor,18,291,0.061856
+8,"catedral, virgen, palacio",tripadvisor,17,291,0.058419
+9,"artesanias, mercado, artesania",tripadvisor,14,291,0.04811
+10,"turismo, cdmx, salud",tripadvisor,2,291,0.006873
+11,"espectaculo, concierto, conciertos",tripadvisor,14,291,0.04811
+12,"horas, lunes, costo",tripadvisor,0,291,0.0

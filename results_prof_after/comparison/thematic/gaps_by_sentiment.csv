@@ -1,0 +1,43 @@
+﻿topic_id,topic_name,scope,p_dmo,p_ugc,gap_pp,gap_ratio,ci_low_pp,ci_high_pp,test,p_value,p_adj,cohens_h,verdict
+0,"ciudad mexico, mexico mexico, museo",ugc_total_positive,0.0,0.0,0.0,,0.0,0.0,fisher,1.0,1.0,0.0,SIN_DIF
+1,"vistas, jardines, hermoso",ugc_total_positive,0.017241,0.051724,-3.4483,0.3333,-7.3491,1.5409,fisher,0.4764192200146086,0.5147135742008726,-0.1955,SIN_DIF
+2,"horas, lunes, costo",ugc_total_positive,0.017241,0.0,1.7241,,0.0,6.8966,fisher,0.2,0.26240633078857784,0.2634,SIN_DIF
+3,"espectaculo, concierto, conciertos",ugc_total_positive,0.0,0.038793,-3.8793,0.0,-6.6918,-1.4978,fisher,0.21242417254313445,0.26240633078857784,-0.3965,SIN_DIF
+4,"catedral, virgen, palacio",ugc_total_positive,0.0,0.051724,-5.1724,0.0,-8.1897,-2.5862,fisher,0.13316171130545018,0.1997425669581753,-0.4589,SIN_DIF
+5,"mural, murales, rivera",ugc_total_positive,0.0,0.068966,-6.8966,0.0,-9.7091,-3.653,fisher,0.04838103973436972,0.1016001834421764,-0.5315,SIN_DIF
+6,"precios, tienda, artesanias",ugc_total_positive,0.0,0.060345,-6.0345,0.0,-9.4828,-3.0172,fisher,0.08035933423950603,0.1298112322330482,-0.4964,SIN_DIF
+7,"turismo, salud, padre",ugc_total_positive,0.017241,0.00431,1.2931,4.0,-0.8621,4.7414,fisher,0.3605536332179931,0.42064590542099195,0.132,SIN_DIF
+8,"the, and, around",ugc_total_positive,0.0,0.068966,-6.8966,0.0,-9.4828,-3.8793,fisher,0.04838103973436972,0.1016001834421764,-0.5315,SIN_DIF
+9,"que, comida, por",ugc_total_positive,0.0,0.060345,-6.0345,0.0,-8.847,-3.4483,fisher,0.08035933423950603,0.1298112322330482,-0.4964,SIN_DIF
+10,"film, cine, director",ugc_total_positive,0.310345,0.00431,30.6034,72.0,20.4418,43.5991,fisher,3.835652782313037e-13,8.054870842857377e-12,1.0503,SOBRE_DMO
+11,"animales, acuario, ninos",ugc_total_positive,0.0,0.12069,-12.069,0.0,-15.3125,-7.7586,chi2,0.00537693310722194,0.028228898812915185,-0.7096,SOBRE_UGC
+12,"restaurantes, zona, bares",ugc_total_positive,0.0,0.064655,-6.4655,0.0,-9.7091,-3.4483,fisher,0.04744914675747745,0.1016001834421764,-0.5142,SIN_DIF
+13,"museo, historia, ciudad mexico",ugc_total_positive,0.034483,0.155172,-12.069,0.2222,-17.8987,-7.306,chi2,0.014837405745749462,0.05193092011012312,-0.4362,SIN_DIF
+14,"ciudad mexico, turismo, secretaria turismo",ugc_total_positive,0.051724,0.0,5.1724,,0.819,10.3448,fisher,0.007670126874279124,0.032214532871972325,0.4589,SOBRE_DMO
+15,"edificio, arquitectura, impresionante",ugc_total_positive,0.0,0.064655,-6.4655,0.0,-9.0517,-3.8793,fisher,0.04744914675747745,0.1016001834421764,-0.5142,SIN_DIF
+16,"museo, frida, mas",ugc_total_positive,0.017241,0.099138,-8.1897,0.1739,-12.5,-3.4267,fisher,0.058011669584477274,0.11074955102491116,-0.3772,SIN_DIF
+17,"parque, san, ciudad mexico",ugc_total_positive,0.275862,0.012931,26.2931,21.3333,14.6121,36.4547,fisher,6.177845795935949e-10,6.486738085732747e-09,0.878,SOBRE_DMO
+18,"san, cuauhtemoc, cuauhtemoc ciudad",ugc_total_positive,0.017241,0.0,1.7241,,0.0,5.1724,fisher,0.2,0.26240633078857784,0.2634,SIN_DIF
+19,"taco, ciudad mexico, tacos",ugc_total_positive,0.068966,0.043103,2.5862,1.6,-3.2435,9.278,fisher,0.49020340400083107,0.5147135742008726,0.1132,SIN_DIF
+20,"museo, plaza, ciudad mexico",ugc_total_positive,0.172414,0.030172,14.2241,5.7143,5.1509,24.6336,fisher,0.0003108565843541149,0.002175996090478804,0.5072,SOBRE_DMO
+0,"ciudad mexico, mexico mexico, museo",ugc_total_negative,0.2,0.0,20.0,,15.2979,26.6064,chi2,6.78527323425261e-05,0.0004749691263976827,0.9273,SOBRE_DMO
+1,"vistas, jardines, hermoso",ugc_total_negative,0.004255,0.0,0.4255,,0.0,1.2766,fisher,1.0,1.0,0.1306,SIN_DIF
+2,"horas, lunes, costo",ugc_total_negative,0.038298,0.0,3.8298,,1.7021,6.6064,fisher,0.2150411495896003,0.25088134118786704,0.3939,SIN_DIF
+3,"espectaculo, concierto, conciertos",ugc_total_negative,0.0,0.059701,-5.9701,0.0,-13.4328,-1.4925,fisher,0.0022560368404387714,0.005922096706151775,-0.4937,SOBRE_UGC
+4,"catedral, virgen, palacio",ugc_total_negative,0.0,0.074627,-7.4627,0.0,-13.4328,-2.2015,fisher,0.0004769473857303444,0.0016693158500562053,-0.5534,SOBRE_UGC
+5,"mural, murales, rivera",ugc_total_negative,0.0,0.029851,-2.9851,0.0,-8.2463,0.0,fisher,0.04864579437196101,0.06384760511319883,-0.3473,SIN_DIF
+6,"precios, tienda, artesanias",ugc_total_negative,0.004255,0.029851,-2.5595,0.1426,-7.2606,1.0745,fisher,0.12485753888803329,0.15423578333227642,-0.2167,SIN_DIF
+7,"turismo, salud, padre",ugc_total_negative,0.038298,0.014925,2.3372,2.566,-1.6123,5.3298,fisher,0.6977253339233973,0.7711701059153339,0.149,SIN_DIF
+8,"the, and, around",ugc_total_negative,0.0,0.044776,-4.4776,0.0,-9.7388,0.0,fisher,0.010539922113924884,0.018444863699368545,-0.4264,SOBRE_UGC
+9,"que, comida, por",ugc_total_negative,0.0,0.119403,-11.9403,0.0,-20.8955,-4.4776,fisher,4.173237211399757e-06,4.381899071969745e-05,-0.7056,SOBRE_UGC
+10,"film, cine, director",ugc_total_negative,0.097872,0.0,9.7872,,6.383,13.1915,chi2,0.00771689438074666,0.014732252908698168,0.6364,SOBRE_DMO
+11,"animales, acuario, ninos",ugc_total_negative,0.0,0.089552,-8.9552,0.0,-16.4179,-1.4925,fisher,9.956477412552641e-05,0.0005227150641590137,-0.6078,SOBRE_UGC
+12,"restaurantes, zona, bares",ugc_total_negative,0.004255,0.104478,-10.0222,0.0407,-18.694,-3.6265,fisher,0.0001349346698352588,0.000566725613308087,-0.5277,SOBRE_UGC
+13,"museo, historia, ciudad mexico",ugc_total_negative,0.0,0.134328,-13.4328,0.0,-20.8955,-4.4776,fisher,8.374863791584544e-07,1.7587213962327544e-05,-0.7505,SOBRE_UGC
+14,"ciudad mexico, turismo, secretaria turismo",ugc_total_negative,0.07234,0.0,7.234,,4.2553,10.6596,fisher,0.016518629933273958,0.026683940661442546,0.5446,SOBRE_DMO
+15,"edificio, arquitectura, impresionante",ugc_total_negative,0.0,0.059701,-5.9701,0.0,-11.9403,-1.4925,fisher,0.0022560368404387714,0.005922096706151775,-0.4937,SOBRE_UGC
+16,"museo, frida, mas",ugc_total_negative,0.0,0.029851,-2.9851,0.0,-7.4627,0.0,fisher,0.04864579437196101,0.06384760511319883,-0.3473,SIN_DIF
+17,"parque, san, ciudad mexico",ugc_total_negative,0.161702,0.029851,13.1851,5.417,6.8738,19.0568,chi2,0.004976846554093088,0.01161264195955054,0.4804,SOBRE_DMO
+18,"san, cuauhtemoc, cuauhtemoc ciudad",ugc_total_negative,0.089362,0.014925,7.4436,5.9872,1.5656,10.8617,fisher,0.03525957530372944,0.052889362955594155,0.3622,SIN_DIF
+19,"taco, ciudad mexico, tacos",ugc_total_negative,0.178723,0.044776,13.3947,3.9915,6.1226,19.7915,chi2,0.006606826155917158,0.013874334927426032,0.4465,SOBRE_DMO
+20,"museo, plaza, ciudad mexico",ugc_total_negative,0.110638,0.119403,-0.8765,0.9266,-9.7429,8.6143,chi2,0.841309639183462,0.8833751211426352,-0.0275,SIN_DIF

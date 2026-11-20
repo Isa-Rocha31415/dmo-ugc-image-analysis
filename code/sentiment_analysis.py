@@ -204,7 +204,7 @@ def _transformer_scores(
     texts: List[str],
     model_name: str,
     device: int = -1,
-    batch_size: int = 16,
+    batch_size: int = 32,
     max_length: int = 512,
     cache_dir: Optional[str] = None,
 ) -> List[float]:
@@ -262,7 +262,7 @@ def annotate_sentiment(
     threshold: float = 0.0,
     model_name: Optional[str] = None,
     device: int = -1,
-    batch_size: int = 16,
+    batch_size: int = 32,
     max_length: int = 512,
     cache_dir: Optional[str] = None,
 ) -> pd.DataFrame:

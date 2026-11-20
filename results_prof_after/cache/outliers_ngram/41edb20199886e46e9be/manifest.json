@@ -1,0 +1,29 @@
+{
+  "step": "outliers_ngram",
+  "created_at": "2026-11-20T04:25:50.834132+00:00",
+  "inputs": {
+    "step": "outliers_ngram",
+    "cache_version": 1,
+    "outlier_version": 2,
+    "parent_key": "44e16256faba13e96485",
+    "text_column": "text",
+    "source_column": "source",
+    "method": "IF",
+    "contamination": "auto",
+    "per_source": true,
+    "top_n": 50,
+    "min_samples_per_source": 10,
+    "rows": 600,
+    "embedding_shape": [
+      600,
+      384
+    ]
+  },
+  "outputs": {
+    "df_clean": "../results_prof_after/cache/outliers_ngram/41edb20199886e46e9be/df_clean.csv.gz",
+    "df_outliers": "../results_prof_after/cache/outliers_ngram/41edb20199886e46e9be/df_outliers.csv.gz",
+    "analysis": "../results_prof_after/cache/outliers_ngram/41edb20199886e46e9be/analysis.json"
+  },
+  "rows_clean": 593,
+  "rows_outliers": 7
+}

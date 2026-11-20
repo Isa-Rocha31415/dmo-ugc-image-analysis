@@ -202,11 +202,13 @@ def embed_anchor_texts(
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
     os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
     try:
+        import torch
         from sentence_transformers import SentenceTransformer
+        torch.set_num_threads(4)
         model = SentenceTransformer(model_name)
         emb = np.asarray(
-            model.encode(texts, batch_size=64, show_progress_bar=False,
-                         normalize_embeddings=True),
+            model.encode(texts, batch_size=128, show_progress_bar=False,
+                         normalize_embeddings=True, convert_to_numpy=True),
             dtype=np.float32,
         )
     except ImportError:
@@ -647,20 +649,22 @@ def score_distribution_tests(
     rng = np.random.default_rng(seed)
     diff = float(dmo.mean() - ugc.mean()) if len(dmo) and len(ugc) else np.nan
 
-    boots = []
-    for _ in range(max(0, bootstrap)):
-        db = rng.choice(dmo, size=len(dmo), replace=True)
-        ub = rng.choice(ugc, size=len(ugc), replace=True)
-        boots.append(db.mean() - ub.mean())
+    boots = np.empty(max(0, bootstrap))
+    for start in range(0, len(boots), 256):
+        b = min(256, len(boots) - start)
+        idx_d = rng.integers(0, len(dmo), size=(b, len(dmo)))
+        idx_u = rng.integers(0, len(ugc), size=(b, len(ugc)))
+        boots[start:start + b] = dmo[idx_d].mean(axis=1) - ugc[idx_u].mean(axis=1)
     ci = (float(np.quantile(boots, 0.025)), float(np.quantile(boots, 0.975))) \
-        if boots else (np.nan, np.nan)
+        if boots.size else (np.nan, np.nan)
 
     pool = np.concatenate([dmo, ugc]); n_d = len(dmo)
-    perms = []
-    for _ in range(max(0, permutations)):
-        perm = rng.permutation(pool)
-        perms.append(perm[:n_d].mean() - perm[n_d:].mean())
-    perms = np.asarray(perms)
+    perms = np.empty(max(0, permutations))
+    for start in range(0, len(perms), 128):
+        b = min(128, len(perms) - start)
+        order = np.argsort(rng.random((b, len(pool))), axis=1)
+        perms[start:start + b] = (pool[order[:, :n_d]].mean(axis=1)
+                                  - pool[order[:, n_d:]].mean(axis=1))
     p_perm = float((np.sum(np.abs(perms) >= abs(diff)) + 1) / (len(perms) + 1)) \
         if perms.size else np.nan
 

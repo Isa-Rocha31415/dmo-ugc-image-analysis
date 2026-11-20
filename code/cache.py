@@ -727,6 +727,7 @@ def step_sentiment(
     parent_key: str,
     use_cache: bool = True,
     force: bool = False,
+    sentiment_max_length: int = 512,
 ):
     step_name = "sentiment"
 
@@ -777,6 +778,7 @@ def step_sentiment(
         backend=sentiment_backend,
         threshold=sentiment_threshold,
         model_name=sentiment_model,
+        max_length=sentiment_max_length,
         cache_dir=cache_dir,
     )
 

@@ -7,6 +7,8 @@ Además imprime en consola los top-80 unigramas por grupo
 con su frecuencia y fuente predominante.
 """
 from __future__ import annotations
+import hashlib
+import json
 import re
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
@@ -94,6 +96,17 @@ def generar_wordcloud_ngramas(
         print(f"  ⚠️  No hay datos para wordcloud: {titulo}")
         return output_path / f"{titulo}.png"
 
+    safe = titulo.lower().replace(" ", "_").replace("—", "_").replace("(", "").replace(")", "")
+    out_file = output_path / f"{safe}.png"
+    digest = hashlib.sha256(json.dumps(
+        [titulo, colormap, max_words, width, height, ngramas],
+        sort_keys=True, ensure_ascii=False, default=str,
+    ).encode("utf-8")).hexdigest()[:16]
+    stamp = out_file.with_suffix(".sha")
+    if out_file.exists() and stamp.exists() and stamp.read_text(encoding="utf-8") == digest:
+        print(f"  ⏭️  Wordcloud reutilizada (contenido sin cambios): {out_file}")
+        return out_file
+
     freq = {w: c for w, c in ngramas}
 
     wc = WordCloud(
@@ -115,10 +128,9 @@ def generar_wordcloud_ngramas(
     ax.set_title(titulo, fontsize=16, fontweight="bold", pad=15)
     plt.tight_layout()
 
-    safe = titulo.lower().replace(" ", "_").replace("—", "_").replace("(", "").replace(")", "")
-    out_file = output_path / f"{safe}.png"
     fig.savefig(out_file, dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)
+    stamp.write_text(digest, encoding="utf-8")
     return out_file
 
 

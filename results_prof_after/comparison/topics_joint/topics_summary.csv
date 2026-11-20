@@ -1,0 +1,23 @@
+﻿topic_id,topic_name,keywords_top8,n_docs,n_dmo,n_ugc,share_total,share_dmo,share_ugc
+0,"ciudad mexico, mexico mexico, museo",ciudad mexico; mexico mexico; museo; cuauhtemoc; san; templo; cuauhtemoc ciudad; centro,47,47,0,0.079258,0.16041,0.0
+1,"vistas, jardines, hermoso",vistas; jardines; hermoso; castillo; bosque; hermosas; parque; desierto leones,14,2,12,0.023609,0.006826,0.04
+2,"horas, lunes, costo",horas; lunes; costo; lunes viernes; bosque; viernes; viernes horas; linea,10,10,0,0.016863,0.03413,0.0
+3,"espectaculo, concierto, conciertos",espectaculo; concierto; conciertos; musica; mejores; teatro; pagar; gente,13,0,13,0.021922,0.0,0.043333
+4,"catedral, virgen, palacio",catedral; virgen; palacio; basilica; bonita; mas; virgen guadalupe; religiosos,17,0,17,0.028668,0.0,0.056667
+5,"mural, murales, rivera",mural; murales; rivera; diego rivera; diego; museo; genial; artista,18,0,18,0.030354,0.0,0.06
+6,"precios, tienda, artesanias",precios; tienda; artesanias; artesania; mas; comprar; vale pena; vale,17,1,16,0.028668,0.003413,0.053333
+7,"turismo, salud, padre",turismo; salud; padre; acuario; innovadora; estrella; madre; ciudad innovadora,12,10,2,0.020236,0.03413,0.006667
+8,"the, and, around",the; and; around; mas; gente; ciudad mexico; day; ambiente,19,0,19,0.03204,0.0,0.063333
+9,"que, comida, por",que; comida; por; mercado; seguridad; espera; comer; tacos,22,0,22,0.037099,0.0,0.073333
+10,"film, cine, director",film; cine; director; films; festival; mexican; filmes; pelicula,42,41,1,0.070826,0.139932,0.003333
+11,"animales, acuario, ninos",animales; acuario; ninos; mas; fila; divertido; atracciones; entrar,34,0,34,0.057336,0.0,0.113333
+12,"restaurantes, zona, bares",restaurantes; zona; bares; mas; agradable; bares restaurantes; zona rosa; san,23,1,22,0.038786,0.003413,0.073333
+13,"museo, historia, ciudad mexico",museo; historia; ciudad mexico; mas; monumento; ninos; arte; visita,47,2,45,0.079258,0.006826,0.15
+14,"ciudad mexico, turismo, secretaria turismo",ciudad mexico; turismo; secretaria turismo; secretaria; salud; museo; centro; turistica,20,20,0,0.033727,0.068259,0.0
+15,"edificio, arquitectura, impresionante",edificio; arquitectura; impresionante; bonito; realmente; tomar fotos; estructura; casa,19,0,19,0.03204,0.0,0.063333
+16,"museo, frida, mas",museo; frida; mas; recomendable; visitar; gratis; interesante; arte,26,1,25,0.043845,0.003413,0.083333
+17,"parque, san, ciudad mexico",parque; san; ciudad mexico; aire; ambiental; aire libre; actividades; cerro,59,54,5,0.099494,0.1843,0.016667
+18,"san, cuauhtemoc, cuauhtemoc ciudad",san; cuauhtemoc; cuauhtemoc ciudad; mexico mexico; ciudad mexico; templo; plaza; siglo,23,22,1,0.038786,0.075085,0.003333
+19,"taco, ciudad mexico, tacos",taco; ciudad mexico; tacos; san; street; city; callejera; pastor,59,46,13,0.099494,0.156997,0.043333
+20,"museo, plaza, ciudad mexico",museo; plaza; ciudad mexico; san; centro; mas; siglo; zona,51,36,15,0.086003,0.122867,0.05
+-1,SIN_ASIGNAR,,1,0,1,0.001686,0.0,0.003333

@@ -106,6 +106,14 @@ def bh_adjust(p: np.ndarray) -> np.ndarray:
     return out
 
 
+def _bootstrap_counts(labels: np.ndarray, n: int, b: int, t: int,
+                      rng: np.random.Generator) -> np.ndarray:
+    """Conteos de tópico (b,t) mediante indexado fancy en bloque, sin loop por réplica."""
+    idx = rng.integers(0, n, size=(b, n))
+    flat = np.asarray(labels, dtype=int)[idx] + 1 + np.arange(b)[:, None] * (t + 1)
+    return np.bincount(flat.ravel(), minlength=b * (t + 1)).reshape(b, t + 1)[:, 1:] / n
+
+
 def bootstrap_gap_ci(lab_d: np.ndarray, lab_u: np.ndarray, T: int,
                      B: int, seed: int) -> np.ndarray:
     """CI 95% de gap_pp por tópico; remuestreo independiente dentro de cada corpus."""
@@ -114,10 +122,11 @@ def bootstrap_gap_ci(lab_d: np.ndarray, lab_u: np.ndarray, T: int,
         return np.full((2, T), np.nan)
     rng = np.random.default_rng(seed)
     gaps = np.empty((B, T))
-    for b in range(B):
-        cd = np.bincount(lab_d[rng.integers(0, nd, nd)], minlength=T) / nd
-        cu = np.bincount(lab_u[rng.integers(0, nu, nu)], minlength=T) / nu
-        gaps[b] = 100 * (cd - cu)
+    for start in range(0, B, 256):
+        b = min(256, B - start)
+        gaps[start:start + b] = 100 * (
+            _bootstrap_counts(lab_d, nd, b, T, rng)
+            - _bootstrap_counts(lab_u, nu, b, T, rng))
     return np.percentile(gaps, [2.5, 97.5], axis=0)
 
 

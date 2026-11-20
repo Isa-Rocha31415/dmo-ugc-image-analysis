@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import random
+import time
 import traceback
 from pathlib import Path
 
@@ -61,6 +62,27 @@ COMPARISON_STEP = {
     "base": 8, "topics": 9, "lexical": 10, "thematic": 11, "price": 12,
     "semantic": 13, "affective": 14, "figures": 16, "report": 18,
 }
+
+_TIMING_MARKS: list[tuple[str, float]] = []
+
+
+def _mark_step(step: str) -> None:
+    """Registra un hito monotónico para el informe de tiempos por paso."""
+    _TIMING_MARKS.append((step, time.perf_counter()))
+
+
+def _write_timings(output_dir: str) -> Path:
+    """Escribe <output-dir>/run_timings.csv con columnas (step,seconds)."""
+    rows = [
+        {"step": name, "seconds": round(t1 - t0, 3)}
+        for (name, t0), (_, t1) in zip(_TIMING_MARKS, _TIMING_MARKS[1:])
+    ]
+    path = Path(output_dir) / "run_timings.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows, columns=["step", "seconds"]).to_csv(
+        path, index=False, encoding="utf-8-sig")
+    print(f"  ⏱️  Tiempos por paso -> {path}")
+    return path
 
 
 def _parse_contamination(v: str):
@@ -151,6 +173,7 @@ def _run_comparison(
 
     for task in tasks:
         try:
+            _mark_step(f"PASO {COMPARISON_STEP[task]} {task}")
             if task == "base":
                 from comparison.base_builder import run_base_task
                 written += run_base_task(args, output_dir, inputs={
@@ -176,6 +199,7 @@ def _run_comparison(
             failed.append(task)
             print(f"\n  ❌ Error en la tarea '{task}': {exc}")
             traceback.print_exc()
+    _mark_step("PASO comparison-fin")
     return written, failed
 
 
@@ -205,6 +229,8 @@ def main():
                         help="Paleta de colores de los gráficos HTML")
     parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL,
                         help="Modelo de sentence-transformers para los embeddings")
+    parser.add_argument("--sent-max-length", type=int, default=512,
+                        help="Máximo de tokens para sentimiento (default científico 512)")
     parser.add_argument("--sentiment-model", default=None,
                         help="Modelo HF para el análisis de sentimiento")
 
@@ -305,6 +331,7 @@ def main():
         return ("all" in force_steps) or (step in force_steps)
 
     # ══ PASO 0: Cargar datos ══
+    _mark_step("PASO 0")
     print(f"\n{SEP}")
     print("   PASO 0: CARGA DE DATOS")
     print(SEP)
@@ -331,6 +358,7 @@ def main():
         print(f"    {src:<25s} {cnt:>6,d}")
 
     # ══ PASO 1: Preprocesamiento ══
+    _mark_step("PASO 1")
     print(f"\n{SEP}")
     print("   PASO 1: PREPROCESAMIENTO DE TEXTO")
     print(SEP)
@@ -353,6 +381,7 @@ def main():
     print(f"  Columna text_norm creada para la capa léxica (huella {prep_fp}).")
 
     # ══ PASO 2: Embeddings ══
+    _mark_step("PASO 2")
     print(f"\n{SEP}")
     print("   PASO 2: GENERACIÓN DE EMBEDDINGS")
     print(SEP)
@@ -369,6 +398,7 @@ def main():
     print(f"  Embeddings generados: {embeddings.shape}")
 
     # ══ PASO 3: Outliers + N-gramas ══
+    _mark_step("PASO 3")
     print(f"\n{SEP}")
     print("   PASO 3: DETECCIÓN DE OUTLIERS + N-GRAMAS")
     print(SEP)
@@ -390,6 +420,7 @@ def main():
     )
 
     # ══ PASO 4: Análisis de Sentimiento ══
+    _mark_step("PASO 4")
     print(f"\n{SEP}")
     print("   PASO 4: ANÁLISIS DE SENTIMIENTOS")
     print(SEP)
@@ -403,6 +434,7 @@ def main():
         sentiment_backend="transformers",
         sentiment_threshold=0.0,
         sentiment_model=args.sentiment_model,
+        sentiment_max_length=args.sent_max_length,
         cache_dir=cache_dir,
         parent_key=outliers_meta["key"],
         use_cache=use_cache,
@@ -417,7 +449,7 @@ def main():
     df_outliers = annotate_sentiment(
         df_outliers, text_column=args.text_col,
         source_column=SOURCE_COLUMN, lang=args.lang, backend="transformers",
-        model_name=args.sentiment_model,
+        model_name=args.sentiment_model, max_length=args.sent_max_length,
     )
     df_outliers = _asegurar_sentimiento_binario(df_outliers)
     print(f"  Sentimiento aplicado a {len(df_outliers):,} outliers.")
@@ -429,6 +461,7 @@ def main():
         print(f"  ✅ Embeddings alineados con df_clean: {embeddings_clean.shape}")
 
     # ══ PASO 4.5: Validación del sentimiento ══
+    _mark_step("PASO 4.5")
     if args.sentiment_validation:
         print(f"\n{SEP}")
         print("   PASO 4.5: VALIDACIÓN DEL ANÁLISIS DE SENTIMIENTO")
@@ -462,6 +495,7 @@ def main():
                   f"MAE (estrellas): {ext['mae_stars']:.3f}")
 
     # ══ PASO 5: Reporte sentimiento por fuente ══
+    _mark_step("PASO 5")
     from sentiment_report import reporte_sentimiento_por_fuente, reporte_sentimiento_outliers
 
     reporte_sentimiento_por_fuente(
@@ -473,6 +507,7 @@ def main():
     )
 
     # ══ PASO 6: Sentimiento de outliers ══
+    _mark_step("PASO 6")
     reporte_sentimiento_outliers(
         df_outliers,
         source_column=SOURCE_COLUMN,
@@ -482,6 +517,7 @@ def main():
     )
 
     # ══ PASO 6.5: Wordclouds por sentimiento ══
+    _mark_step("PASO 6.5")
     print(f"\n{SEP}")
     print("   PASO 6.5: WORDCLOUDS POR SENTIMIENTO")
     print(SEP)
@@ -501,6 +537,7 @@ def main():
     )
 
     # ══ PASO 7: Modelado de tópicos por sentimiento ══
+    _mark_step("PASO 7")
     print(f"\n{SEP}")
     print("   PASO 7: MODELADO DE TÓPICOS POR SENTIMIENTO")
     print(f"   Modelo: {backend}")
@@ -578,6 +615,9 @@ def main():
     print(f"       --output-dir {args.output_dir} --model {args.model} \\")
     print(f"       --palette {args.palette} --num-topicos {args.num_topicos}")
     print(f"{SEP}\n")
+
+    _mark_step("FIN")
+    _write_timings(args.output_dir)
 
     if failed:
         raise SystemExit(1)

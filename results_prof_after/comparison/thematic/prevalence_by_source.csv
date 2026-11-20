@@ -1,0 +1,106 @@
+﻿topic_id,topic_name,scope,n_docs_topic,n_docs_scope,prevalence
+0,"ciudad mexico, mexico mexico, museo",DMO,47,293,0.16041
+1,"vistas, jardines, hermoso",DMO,2,293,0.006826
+2,"horas, lunes, costo",DMO,10,293,0.03413
+3,"espectaculo, concierto, conciertos",DMO,0,293,0.0
+4,"catedral, virgen, palacio",DMO,0,293,0.0
+5,"mural, murales, rivera",DMO,0,293,0.0
+6,"precios, tienda, artesanias",DMO,1,293,0.003413
+7,"turismo, salud, padre",DMO,10,293,0.03413
+8,"the, and, around",DMO,0,293,0.0
+9,"que, comida, por",DMO,0,293,0.0
+10,"film, cine, director",DMO,41,293,0.139932
+11,"animales, acuario, ninos",DMO,0,293,0.0
+12,"restaurantes, zona, bares",DMO,1,293,0.003413
+13,"museo, historia, ciudad mexico",DMO,2,293,0.006826
+14,"ciudad mexico, turismo, secretaria turismo",DMO,20,293,0.068259
+15,"edificio, arquitectura, impresionante",DMO,0,293,0.0
+16,"museo, frida, mas",DMO,1,293,0.003413
+17,"parque, san, ciudad mexico",DMO,54,293,0.1843
+18,"san, cuauhtemoc, cuauhtemoc ciudad",DMO,22,293,0.075085
+19,"taco, ciudad mexico, tacos",DMO,46,293,0.156997
+20,"museo, plaza, ciudad mexico",DMO,36,293,0.122867
+0,"ciudad mexico, mexico mexico, museo",UGC_total,0,299,0.0
+1,"vistas, jardines, hermoso",UGC_total,12,299,0.040134
+2,"horas, lunes, costo",UGC_total,0,299,0.0
+3,"espectaculo, concierto, conciertos",UGC_total,13,299,0.043478
+4,"catedral, virgen, palacio",UGC_total,17,299,0.056856
+5,"mural, murales, rivera",UGC_total,18,299,0.060201
+6,"precios, tienda, artesanias",UGC_total,16,299,0.053512
+7,"turismo, salud, padre",UGC_total,2,299,0.006689
+8,"the, and, around",UGC_total,19,299,0.063545
+9,"que, comida, por",UGC_total,22,299,0.073579
+10,"film, cine, director",UGC_total,1,299,0.003344
+11,"animales, acuario, ninos",UGC_total,34,299,0.113712
+12,"restaurantes, zona, bares",UGC_total,22,299,0.073579
+13,"museo, historia, ciudad mexico",UGC_total,45,299,0.150502
+14,"ciudad mexico, turismo, secretaria turismo",UGC_total,0,299,0.0
+15,"edificio, arquitectura, impresionante",UGC_total,19,299,0.063545
+16,"museo, frida, mas",UGC_total,25,299,0.083612
+17,"parque, san, ciudad mexico",UGC_total,5,299,0.016722
+18,"san, cuauhtemoc, cuauhtemoc ciudad",UGC_total,1,299,0.003344
+19,"taco, ciudad mexico, tacos",UGC_total,13,299,0.043478
+20,"museo, plaza, ciudad mexico",UGC_total,15,299,0.050167
+0,"ciudad mexico, mexico mexico, museo",instagram,0,6,0.0
+1,"vistas, jardines, hermoso",instagram,0,6,0.0
+2,"horas, lunes, costo",instagram,0,6,0.0
+3,"espectaculo, concierto, conciertos",instagram,0,6,0.0
+4,"catedral, virgen, palacio",instagram,0,6,0.0
+5,"mural, murales, rivera",instagram,0,6,0.0
+6,"precios, tienda, artesanias",instagram,0,6,0.0
+7,"turismo, salud, padre",instagram,0,6,0.0
+8,"the, and, around",instagram,1,6,0.166667
+9,"que, comida, por",instagram,2,6,0.333333
+10,"film, cine, director",instagram,0,6,0.0
+11,"animales, acuario, ninos",instagram,0,6,0.0
+12,"restaurantes, zona, bares",instagram,0,6,0.0
+13,"museo, historia, ciudad mexico",instagram,0,6,0.0
+14,"ciudad mexico, turismo, secretaria turismo",instagram,0,6,0.0
+15,"edificio, arquitectura, impresionante",instagram,0,6,0.0
+16,"museo, frida, mas",instagram,0,6,0.0
+17,"parque, san, ciudad mexico",instagram,2,6,0.333333
+18,"san, cuauhtemoc, cuauhtemoc ciudad",instagram,0,6,0.0
+19,"taco, ciudad mexico, tacos",instagram,1,6,0.166667
+20,"museo, plaza, ciudad mexico",instagram,0,6,0.0
+0,"ciudad mexico, mexico mexico, museo",reddit,0,2,0.0
+1,"vistas, jardines, hermoso",reddit,0,2,0.0
+2,"horas, lunes, costo",reddit,0,2,0.0
+3,"espectaculo, concierto, conciertos",reddit,1,2,0.5
+4,"catedral, virgen, palacio",reddit,0,2,0.0
+5,"mural, murales, rivera",reddit,0,2,0.0
+6,"precios, tienda, artesanias",reddit,0,2,0.0
+7,"turismo, salud, padre",reddit,0,2,0.0
+8,"the, and, around",reddit,1,2,0.5
+9,"que, comida, por",reddit,0,2,0.0
+10,"film, cine, director",reddit,0,2,0.0
+11,"animales, acuario, ninos",reddit,0,2,0.0
+12,"restaurantes, zona, bares",reddit,0,2,0.0
+13,"museo, historia, ciudad mexico",reddit,0,2,0.0
+14,"ciudad mexico, turismo, secretaria turismo",reddit,0,2,0.0
+15,"edificio, arquitectura, impresionante",reddit,0,2,0.0
+16,"museo, frida, mas",reddit,0,2,0.0
+17,"parque, san, ciudad mexico",reddit,0,2,0.0
+18,"san, cuauhtemoc, cuauhtemoc ciudad",reddit,0,2,0.0
+19,"taco, ciudad mexico, tacos",reddit,0,2,0.0
+20,"museo, plaza, ciudad mexico",reddit,0,2,0.0
+0,"ciudad mexico, mexico mexico, museo",tripadvisor,0,291,0.0
+1,"vistas, jardines, hermoso",tripadvisor,12,291,0.041237
+2,"horas, lunes, costo",tripadvisor,0,291,0.0
+3,"espectaculo, concierto, conciertos",tripadvisor,12,291,0.041237
+4,"catedral, virgen, palacio",tripadvisor,17,291,0.058419
+5,"mural, murales, rivera",tripadvisor,18,291,0.061856
+6,"precios, tienda, artesanias",tripadvisor,16,291,0.054983
+7,"turismo, salud, padre",tripadvisor,2,291,0.006873
+8,"the, and, around",tripadvisor,17,291,0.058419
+9,"que, comida, por",tripadvisor,20,291,0.068729
+10,"film, cine, director",tripadvisor,1,291,0.003436
+11,"animales, acuario, ninos",tripadvisor,34,291,0.116838
+12,"restaurantes, zona, bares",tripadvisor,22,291,0.075601
+13,"museo, historia, ciudad mexico",tripadvisor,45,291,0.154639
+14,"ciudad mexico, turismo, secretaria turismo",tripadvisor,0,291,0.0
+15,"edificio, arquitectura, impresionante",tripadvisor,19,291,0.065292
+16,"museo, frida, mas",tripadvisor,25,291,0.085911
+17,"parque, san, ciudad mexico",tripadvisor,3,291,0.010309
+18,"san, cuauhtemoc, cuauhtemoc ciudad",tripadvisor,1,291,0.003436
+19,"taco, ciudad mexico, tacos",tripadvisor,12,291,0.041237
+20,"museo, plaza, ciudad mexico",tripadvisor,15,291,0.051546

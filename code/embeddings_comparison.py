@@ -29,20 +29,24 @@ from sklearn.decomposition import PCA
 def obtener_embeddings_bert(
     textos: list[str],
     model_name: str = "paraphrase-multilingual-MiniLM-L12-v2",
-    batch_size: int = 32,
+    batch_size: int = 128,
     device: int = -1,
 ) -> np.ndarray:
     """
     Genera embeddings con sentence-transformers (offline si ya está descargado).
+    Fija 4 hilos de torch para evitar sobre-suscripción en CPU de 4 núcleos.
     """
     try:
+        import torch
         from sentence_transformers import SentenceTransformer
+        torch.set_num_threads(4)
         model = SentenceTransformer(model_name)
         embs = model.encode(
             textos,
             batch_size=batch_size,
             show_progress_bar=True,
             normalize_embeddings=True,
+            convert_to_numpy=True,
         )
         return np.asarray(embs, dtype=np.float32)
     except ImportError:
@@ -50,6 +54,7 @@ def obtener_embeddings_bert(
         from transformers import AutoTokenizer, AutoModel
         import torch
 
+        torch.set_num_threads(4)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(model_name)
         model.eval()
