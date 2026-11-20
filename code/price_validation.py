@@ -1,21 +1,11 @@
 """
-price_validation.py — F4.3: validación humana del detector Precio/Valor/Costo.
+price_validation.py — F4.3: validación del detector Precio/Valor/Costo.
 
-Flujo
------
-1. `make_stratified_sample`: muestreo estratificado (5 bandas de score × corpus)
-   de `price_scores.csv`, con pesos w_h = N_h/n_h para estimaciones poblacionales.
-2. Plantilla de anotación: annotations/precio_valor_labels.csv
-   (doc_id, annotator, label, note). Guía: docs/ANNOTATION_GUIDE.md.
-3. Si el archivo de anotaciones está vacío o no existe → se escribe la muestra,
-   se imprime "validación pendiente de anotación" y NO se falla.
-4. Si hay etiquetas: precisión/recall/F1/MCC (muestrales y ponderados por w_h),
-   matriz de confusión, κ de Cohen si hay ≥2 anotadores, CI bootstrap y
-   ablaciones (lexical-only, resena-only, promo-only, raw-max, centered-max,
-   hybrid, tau_fijo_0.5).
-
-Etiquetas válidas: "precio" (mención), "no_precio" (no mención). Otras
-("ambiguo", errores de dedo) se descartan del conteo y se reportan.
+La corrida estándar es automática: `run_price_validation` devuelve
+`status="no_realizada"` y NO escribe muestras ni anotaciones. La calibración
+de τ por placebo sigue en `price_concept.py`. Las funciones de muestreo y
+consenso se conservan como utilidades legadas (fuera del flujo principal).
+Etiquetas legadas válidas: "precio" / "no_precio"; el resto se descarta.
 """
 from __future__ import annotations
 
@@ -295,12 +285,16 @@ def run_price_validation(
     tau: float,
     tau_quantile: float | None = None,
 ) -> dict:
-    """Tarea F4.3: muestreo + (si hay etiquetas) métricas y ablaciones.
+    """F4.3 en modo automático: sin anotaciones humanas ni escrituras.
 
-    Nunca lanza error por falta de anotaciones: degrada elegantemente.
-    Returns: dict con keys 'sample_path', 'template_path', 'validated', 'paths'.
+    La calibración de τ por placebo se conserva aguas arriba (price_concept).
+    Returns: dict con estado 'no_realizada' y sin rutas escritas.
     """
-    print_header("PASO 12.5 (F4.3): VALIDACIÓN DEL DETECTOR PRECIO/VALOR")
+    print_header("PASO 12.5 (F4.3): VALIDACIÓN NO REALIZADA")
+    print("  Modo automático: sin exportación de muestras ni anotaciones.")
+    print(f"  τ por placebo conservado: {tau:.4f} (cuantil {tau_quantile}).")
+    return {"status": "no_realizada", "validated": False, "paths": [],
+            "tau": float(tau), "tau_quantile": tau_quantile}
     price_dir = results_dir / "comparison" / "price"
     price_dir.mkdir(parents=True, exist_ok=True)
     repo_dir = Path(__file__).resolve().parents[1]

@@ -7,7 +7,8 @@
 #SBATCH --time=12:00:00
 #SBATCH --output=salida_%x_%j.out
 #SBATCH --error=error_%x_%j.err
-### --gres=gpu:1        <-- descomenta SOLO si vas a procesar un dataset nuevo (sin caché)
+# GPU obligatoria: esta corrida recalcula embeddings y tópicos.
+#SBATCH --gres=gpu:1
 ###SBATCH --mail-type=END,FAIL
 ###SBATCH --mail-user=tucorreo@cimat.mx
 
@@ -59,7 +60,8 @@ command -v nvidia-smi >/dev/null && nvidia-smi || true
 echo ""
 echo "██ PREFLIGHT 1/3: compilación sintáctica"
 python -m py_compile \
-  run_analysis.py joint_topic_model.py metrics_lexical.py metrics_thematic.py \
+  run_analysis.py text_preprocessing.py cache.py price_concept.py \
+  joint_topic_model.py metrics_lexical.py metrics_thematic.py \
   comparison/common.py comparison/base_builder.py
 rc=$?
 if [[ $rc -ne 0 ]]; then echo "❌ SINTAXIS INVÁLIDA (rc=$rc). Aborto."; exit 3; fi
@@ -99,36 +101,60 @@ rc=$?
 if [[ $rc -ne 0 ]]; then echo "❌ Imports propios fallaron (rc=$rc). Aborto."; exit 4; fi
 
 echo ""
+echo "██ PREFLIGHT 2b/3: modelos locales offline (sin descargas)"
+python - <<'PY'
+import spacy
+from sentence_transformers import SentenceTransformer
+spacy.load("es_core_news_sm", disable=["parser", "ner"])
+SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+print("✅ MODELOS LOCALES OK")
+PY
+rc=$?
+if [[ $rc -ne 0 ]]; then
+  echo "❌ Faltan modelos locales (spacy es_core_news_sm / MiniLM). Aborto (offline)."
+  exit 4
+fi
+
+echo ""
 echo "██ PREFLIGHT 3/3: tests unitarios"
-if [[ "${SKIP_TESTS:-0}" == "1" ]]; then
-  echo "  ⏭️  SKIP_TESTS=1: tests omitidos"
-elif python -c "import pytest" >/dev/null 2>&1; then
+# known-red: en full_py no está bertopic (en nlp_rodri sí). Se deselecciona
+# explícitamente ese nodo; NUNCA se omiten todos los tests con SKIP_TESTS.
+if python -c "import pytest" >/dev/null 2>&1; then
   python -m pytest ../tests/test_joint_topic_model.py \
                    ../tests/test_metrics_thematic.py \
-                   ../tests/test_metrics_lexical.py -q
+                   ../tests/test_metrics_lexical.py \
+                   ../tests/test_topic_modeling_backends.py -q \
+    --deselect tests/test_topic_modeling_backends.py::TestBackends::test_backend_bertopic_produce_topicos
   rc=$?
   if [[ $rc -ne 0 ]]; then echo "❌ Tests fallaron (rc=$rc). Aborto antes de gastar horas GPU."; exit 5; fi
   echo "✅ TESTS OK"
 else
-  echo "  ⚠️ pytest no disponible; se omiten los tests"
+  echo "❌ pytest no disponible en el entorno; aborto (sin atajo SKIP_TESTS)."
+  exit 5
 fi
 
 # ══════════════════════════════════════════════════════════════
 # 2. ARGUMENTOS COMUNES (idénticos en ambas fases)
 # ══════════════════════════════════════════════════════════════
 COMMON_ARGS=(
-  
+  --csv-dmo ../data/processed/df_dmo.csv
+  --csv-ugc ../data/processed/df_ugc.csv
+  --text-col text --lang es
+  --outlier-method IF --contamination auto --min-partition 50
+  --model bertopic --num-topicos automatico
+  --palette ejecutiva --seed 42
+  --output-dir ../results
 )
 
 # ══════════════════════════════════════════════════════════════
-# 3. FASE A — SMOKE TEST (base + topics + thematic, B=300)
+# 3. FASE A — SMOKE TEST (base + topics + lexical + thematic + price, B=300)
 # ══════════════════════════════════════════════════════════════
 echo ""
 echo "████████████████████████████████████████████████████████████"
-echo "  FASE A: validación rápida (base, topics, thematic | B=300)"
+echo "  FASE A: validación rápida (base, topics, lexical, thematic, price | B=300)"
 echo "████████████████████████████████████████████████████████████"
 python -u run_analysis.py "${COMMON_ARGS[@]}" \
-  --comparison-tasks base topics thematic \
+  --comparison-tasks base topics lexical thematic price \
   --bootstrap 300
 rc_smoke=$?
 echo ">>> FASE A terminó con código $rc_smoke"
@@ -139,16 +165,17 @@ if [[ $rc_smoke -ne 0 ]]; then
 fi
 
 # ══════════════════════════════════════════════════════════════
-# 4. FASE B — CORRIDA COMPLETA (todas las tareas, B=2000)
+# 4. FASE B — CORRIDA COMPLETA (solo tareas implementadas, B=2000)
 #    RUN_FULL=0 para ejecutar solo la validación.
 # ══════════════════════════════════════════════════════════════
 rc_full=0
 if [[ "${RUN_FULL:-1}" == "1" ]]; then
   echo ""
   echo "████████████████████████████████████████████████████████████"
-  echo "  FASE B: análisis completo (todas las tareas | B=2000)"
+  echo "  FASE B: análisis completo (base, topics, lexical, thematic, price | B=2000)"
   echo "████████████████████████████████████████████████████████████"
   python -u run_analysis.py "${COMMON_ARGS[@]}" \
+    --comparison-tasks base topics lexical thematic price \
     --bootstrap 2000 --permutations 1000
   rc_full=$?
   echo ">>> FASE B terminó con código $rc_full"

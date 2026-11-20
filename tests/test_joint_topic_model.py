@@ -47,10 +47,13 @@ def test_parsimonia_elige_menor_k():
         "diversity": [0.8, 0.7, 0.69], "stability": [0.9, 0.9, 0.9],
         "stability_ami": [0.9, 0.9, 0.9], "min_topic_size": [50, 40, 39],
         "unassigned_share": [0.1, 0.1, 0.1], "n_assigned": [900, 900, 900],
+        "max_share": [0.18, 0.17, 0.16],
+        "balance_entropy": [0.95, 0.90, 0.88],
+        "n_effective": [3.6, 3.3, 3.1],
     })
     grid["composite_score"] = composite_score(grid)
     k, just = select_k(grid)
-    assert k <= 12 and "parsimonia" in just
+    assert k <= 12 and "parsimonia" in just.lower()
 
 
 def test_reasignacion_por_umbral():

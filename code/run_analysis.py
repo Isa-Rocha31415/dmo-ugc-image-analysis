@@ -10,7 +10,7 @@ Pipeline COMPLETO en una sola ejecución:
                          9  tópicos conjuntos DMO+UGC con selección de k
                          10 capa léxica L1 (Jaccard, cobertura, log-odds Monroe 2008)
                          11 capa temática L2 (gaps, χ²/Fisher, BH, JSD/EMD)
-                         (semantic, affective, ias, figures, qualitative, report: P4+)
+                         (semantic, affective, figures, report: PENDIENTE; huecos 15/17)
 
 Uso (una sola corrida, desde ~/ac_4/code/):
     python run_analysis.py \
@@ -52,14 +52,14 @@ MODEL_CHOICES = (BACKEND_BERTOPIC, BACKEND_XIDOO + "topic", BACKEND_XIDOO)
 DEFAULT_EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 CACHE_STEPS = ("load", "embeddings", "outliers", "sentiment", "topics", "all")
 
+# Tareas de comparación. Los pasos 15 y 17 quedan como hueco documentado.
 COMPARISON_TASKS = [
     "base", "topics", "lexical", "thematic", "price",
-    "semantic", "affective", "ias", "figures", "qualitative", "report",
+    "semantic", "affective", "figures", "report",
 ]
 COMPARISON_STEP = {
     "base": 8, "topics": 9, "lexical": 10, "thematic": 11, "price": 12,
-    "semantic": 13, "affective": 14, "ias": 15, "figures": 16,
-    "qualitative": 17, "report": 18,
+    "semantic": 13, "affective": 14, "figures": 16, "report": 18,
 }
 
 
@@ -218,11 +218,12 @@ def main():
     # ── Validación de sentimiento ──
     parser.add_argument("--no-sentiment-validation", dest="sentiment_validation",
                         action="store_false", help="Omitir la validación del sentimiento")
-    parser.add_argument("--gold-csv", default=None, help="CSV con etiquetas humanas")
+    parser.add_argument("--gold-csv", default=None,
+                        help="Opcional, OFF: CSV con etiquetas humanas")
     parser.add_argument("--sentiment-ablation", action="store_true",
-                        help="Ejecutar la ablación (léxico / TF-IDF / linear probe)")
+                        help="Opcional, OFF: ablación léxico / TF-IDF / linear probe")
     parser.add_argument("--sentiment-finetune", action="store_true",
-                        help="Incluir transformer afinado en la ablación (costoso)")
+                        help="Opcional, OFF: transformer afinado (costoso)")
     parser.add_argument("--finetune-model", default="pysentimiento/robertuito-sentiment-analysis",
                         help="Modelo a afinar en la ablación")
 
@@ -278,11 +279,10 @@ def main():
                     help="Docs aleatorios del corpus en el placebo de τ")
     pg.add_argument("--price-sample-size", "--price-validation-n", dest="price_sample_size",
                     type=int, default=100,
-                    help="Tamaño de la muestra estratificada de anotación (F4.3)")
+                    help="Compatibilidad legacy: sin uso (validación no realizada)")
     pg.add_argument("--price-annotation-file",
-                    default="../annotations/precio_valor_labels.csv",
-                    help="CSV de anotaciones F4.3 "
-                         "(default: ../annotations/precio_valor_labels.csv)")
+                    default="../legacy/annotation/precio_valor_labels.csv",
+                    help="Compatibilidad legacy: sin uso (validación no realizada)")
     pg.add_argument("--price-top-k", type=int, default=5,
                     help="Top-k ejemplos por corpus/fuente (F4.4)")
 

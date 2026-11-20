@@ -15,6 +15,7 @@ if str(CODE_DIR) not in sys.path:
 from price_validation import (  # noqa: E402
     ablation_predictions, bootstrap_metrics_ci, classification_metrics,
     cohen_kappa, consensus_labels, load_annotations, make_stratified_sample,
+    run_price_validation,
 )
 
 
@@ -147,3 +148,11 @@ def test_ablation_rules():
     assert list(preds["centered_max"]) == [True, False, True, False]
     assert list(preds["hybrid"]) == [True, True, True, False]  # lex>=2 activa b2
     assert list(preds["tau_fijo_0.5"]) == [True, False, True, False]
+
+
+def test_validacion_automatica_sin_escrituras(tmp_path):
+    args = type("Args", (), {"bootstrap": 10, "seed": 42})()
+    out = run_price_validation(args, tmp_path, _synth_scores(20), 0.42, 0.95)
+    assert out["status"] == "no_realizada" and out["validated"] is False
+    assert out["paths"] == [] and out["tau"] == 0.42
+    assert not list(tmp_path.rglob("annotation_sample.csv"))

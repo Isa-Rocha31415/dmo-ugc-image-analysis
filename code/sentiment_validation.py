@@ -10,8 +10,8 @@ Tres fuentes de evidencia:
    Accuracy, macro-F1, F1 por clase, matriz de confusión y MCC
    (global y desglosado por fuente → domain shift).
 
-2. Gold set humano opcional (`--gold-csv`): mismas métricas contra
-   etiquetas anotadas.
+2. Gold set humano opcional (`--gold-csv`, OFF): desactivado por defecto;
+   la corrida estándar usa solo validación automática por rating.
 
 3. Correlación score↔rating (Spearman) y MAE en escala de 1–5 estrellas:
    evidencia de que el score ordena bien las reseñas, sin anotar nada.

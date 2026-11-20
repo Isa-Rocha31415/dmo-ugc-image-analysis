@@ -41,17 +41,17 @@ python run_analysis.py \
 | `--no-cache` | flag | — | Ignora la caché. |
 | `--force-steps` | lista | `[]` | `load`, `embeddings`, `outliers`, `sentiment`, `topics`, `all`. |
 | `--no-sentiment-validation` | flag | — | Omite el PASO 4.5 (validación de sentimiento). |
-| `--gold-csv` | str | — | CSV con etiquetas humanas (texto + etiqueta). |
-| `--sentiment-ablation` | flag | — | Ejecuta la ablación (léxico / TF-IDF / linear probe). |
-| `--sentiment-finetune` | flag | — | Añade el transformer afinado a la ablación (costoso). |
+| `--gold-csv` | str | — | Opcional, OFF: CSV con etiquetas humanas (no se usa por defecto). |
+| `--sentiment-ablation` | flag | OFF | Opcional: ablación léxico / TF-IDF / linear probe. |
+| `--sentiment-finetune` | flag | OFF | Opcional: transformer afinado (costoso). |
 | `--finetune-model` | str | `pysentimiento/robertuito-sentiment-analysis` | Modelo a afinar. |
 | `--price-anchor-file` | str | `resources/anchors/precio_valor.json` | JSON de anchors (F4.2). Alias: `--price-anchors`. |
 | `--price-tau-quantile` | float | `0.95` | Cuantil del placebo usado como τ. |
 | `--price-placebo-docs` | int | `200` | Docs aleatorios en el placebo de τ. |
 | `--price-mode` | `semantic`/`lexical`/`hybrid` | `semantic` | Regla del detector: `>=τ`, `lex>0`, o `>=τ`/`lex>=2`. |
 | `--price-center` / `--no-price-center` | flag | centrado | Score semántico centrado (`--no-price-center` = raw). |
-| `--price-sample-size` | int | `100` | Muestra estratificada de anotación (F4.3). Alias: `--price-validation-n`. |
-| `--price-annotation-file` | str | `../annotations/precio_valor_labels.csv` | CSV de anotaciones F4.3. |
+| `--price-sample-size` | int | `100` | Legacy, sin uso: no se exportan muestras. Alias: `--price-validation-n`. |
+| `--price-annotation-file` | str | `../legacy/annotation/precio_valor_labels.csv` | Legacy, sin uso: no se leen anotaciones. |
 | `--price-top-k` | int | `5` | Top-k ejemplos por corpus/fuente (F4.4). |
 
 ## Tarea `price` (PASO 12, F4.2–F4.4)
@@ -65,11 +65,9 @@ python run_analysis.py \
    `price_context_logodds.csv`, `price_top_examples.csv`,
    `price_scatter_prototypes.html`/`_data.csv`, `price_scatter_valence.html`/`_data.csv`,
    `price_summary.html`, `price_density.csv`.
-3. Validación F4.3: escribe `annotation_sample.csv`; si
-   `annotations/precio_valor_labels.csv` está vacío imprime
-   "validación pendiente de anotación" y NO falla (guía: `docs/ANNOTATION_GUIDE.md`).
-   Con etiquetas añade `price_validation.csv`, `price_ablations.csv`,
-   `confusion_matrix.csv`.
+3. Validación F4.3 automática: `run_price_validation` devuelve `status="no_realizada"`,
+   sin escribir muestras ni leer anotaciones (guía y plantilla en `legacy/annotation/`).
+   τ por placebo sigue calibrándose en F4.2.
 4. Comparación F4.4b en el mismo subdir: `price_comparison.csv` (tasas DMO vs
    UGC_total y por fuente con CI bootstrap `--bootstrap`/`--seed`, χ² o Fisher + BH,
    Mann-Whitney + KS + Cliff's delta, banda neutra `|sentiment|<0.15`),
@@ -115,4 +113,12 @@ Se escribe en `<output-dir>/sentiment_validation/`:
 | `ablation.csv` | Tabla de ablación (si `--sentiment-ablation`). |
 
 Etiquetas: rating externo 1–2 = negative, 3 = neutral (excluido), 4–5 = positive.
-Además: Spearman y MAE del score contra el rating, y (opcional) un gold set humano.
+Además: Spearman y MAE del score contra el rating (automático); el gold set humano,
+la ablación y el finetuning son opcionales y están OFF por defecto.
+
+## Tareas y SLURM
+
+`--comparison-tasks`: `base topics lexical thematic price` (implementadas) y `semantic
+affective figures report` (PENDIENTE, sin fallar). Pasos 15/17 = huecos; no existen `ias`/`qualitative`.
+Wrapper activo: `../slurm_script_CUDA.sh` (raíz; `_copy`/`_test` en `legacy/slurm/`).
+Envío desde la raíz: `sbatch slurm_script_CUDA.sh`; hace `cd code/`, usa GPU y fija las cinco tareas en A/B.

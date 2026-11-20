@@ -1274,7 +1274,7 @@ def run_price_comparison_step(
               f"DMO={100 * r0['neutral_share_dmo']:.1f}% | "
               f"UGC={100 * r0['neutral_share_ugc']:.1f}%")
     print(f"  Contexto top-5: {terms['term'].head(5).tolist() if len(terms) else []}")
-    print(f"  F4.3={'validada' if valid.get('validated') else 'pendiente'} | "
+    print(f"  F4.3={valid.get('status', 'pendiente')} | "
           f"figura={path_val.name} | caché={manifest_path} (fp {fp[:12]})")
     print(f"  Archivos: {[p.name for p in written]}")
     return written
