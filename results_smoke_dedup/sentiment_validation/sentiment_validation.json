@@ -1,0 +1,83 @@
+{
+  "n_rows": 593,
+  "modelo_pipeline": "transformers",
+  "weak_labels": {
+    "descripcion": "Etiqueta débil externa: rating 1-2 = negative, 4-5 = positive (3 = neutral, excluido).",
+    "global": {
+      "n": 267,
+      "accuracy": 0.8352059925093633,
+      "macro_f1": 0.5985511208310552,
+      "f1_per_class": {
+        "negative": 0.2903225806451613,
+        "positive": 0.9067796610169491
+      },
+      "mcc": 0.3129105056540259,
+      "confusion_matrix": [
+        [
+          9,
+          3
+        ],
+        [
+          41,
+          214
+        ]
+      ],
+      "labels": [
+        "negative",
+        "positive"
+      ],
+      "support_real": {
+        "negative": 12,
+        "positive": 255
+      },
+      "support_pred": {
+        "negative": 50,
+        "positive": 217
+      },
+      "accuracy_balanced_baseline": 0.9550561797752809
+    },
+    "por_fuente": {
+      "tripadvisor": {
+        "n": 267,
+        "accuracy": 0.8352059925093633,
+        "macro_f1": 0.5985511208310552,
+        "f1_per_class": {
+          "negative": 0.2903225806451613,
+          "positive": 0.9067796610169491
+        },
+        "mcc": 0.3129105056540259,
+        "confusion_matrix": [
+          [
+            9,
+            3
+          ],
+          [
+            41,
+            214
+          ]
+        ],
+        "labels": [
+          "negative",
+          "positive"
+        ],
+        "support_real": {
+          "negative": 12,
+          "positive": 255
+        },
+        "support_pred": {
+          "negative": 50,
+          "positive": 217
+        },
+        "accuracy_balanced_baseline": 0.9550561797752809
+      }
+    }
+  },
+  "validacion_externa": {
+    "n": 291,
+    "spearman": 0.31434824222360164,
+    "p_value": 4.282005192558355e-08,
+    "mae_stars": 0.9966425095969664,
+    "score_mean": 0.3142101122098383,
+    "rating_mean": 4.419243986254296
+  }
+}
