@@ -1,5 +1,0 @@
-﻿scope,group_dmo,group_ugc,n_docs_dmo,n_mentions_dmo,rate_dmo,ci_low_dmo,ci_high_dmo,n_docs_ugc,n_mentions_ugc,rate_ugc,ci_low_ugc,ci_high_ugc,gap_pp,test,p_value,mw_u,mw_p_value,cliffs_delta,cliffs_interp,ks_statistic,ks_p_value,neutral_share_dmo,neutral_share_ugc,p_adj,verdict
-DMO_vs_UGC_total,DMO,UGC_total,293,0,0.0,0.0,0.0,300,37,0.123333,0.08825,0.1635,-12.3333,chi2,5.360322084867014e-10,10614.0,0.0,-0.758498,GRANDE,0.610933,0.0,0.972696,0.236667,1.0720644169734028e-09,SOBRE_UGC
-DMO_vs_instagram,DMO,instagram,293,0,0.0,0.0,0.0,6,1,0.166667,0.0,0.5,-16.6667,fisher,0.020066889632107024,43.0,6.7e-05,-0.951081,GRANDE,0.945392,0.0,0.972696,0.333333,0.026755852842809364,SOBRE_UGC
-DMO_vs_reddit,DMO,reddit,293,0,0.0,0.0,0.0,3,0,0.0,0.0,0.0,0.0,fisher,1.0,9.0,0.003553,-0.979522,GRANDE,0.986348,1.6e-05,0.972696,1.0,1.0,SIN_DIF
-DMO_vs_tripadvisor,DMO,tripadvisor,293,0,0.0,0.0,0.0,291,36,0.123711,0.092612,0.161512,-12.3711,chi2,5.126117825002838e-10,10562.0,0.0,-0.752249,GRANDE,0.6065,0.0,0.972696,0.226804,1.0720644169734028e-09,SOBRE_UGC

@@ -117,7 +117,6 @@ class BertopicModeler:
             kwargs["hdbscan_model"] = HDBSCAN(
                 min_cluster_size=self.min_topic_size,
                 min_samples=self.min_samples_per_topic,
-                core_dist_n_jobs=4,
             )
         except ImportError:
             pass

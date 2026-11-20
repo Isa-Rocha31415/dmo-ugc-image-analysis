@@ -1,5 +1,0 @@
-source,negative: Topic -1: outliers,"negative: Topic 0: mas, mexico, ciudad","negative: Topic 10: zona, museo, centro","negative: Topic 11: mexico, mas, horas","negative: Topic 12: iat, mexico, pagina","negative: Topic 1: mexico, ciudad, guia","negative: Topic 2: mexico, ciudad, parque","negative: Topic 3: mas, restaurantes, tambien","negative: Topic 4: mexico, film, mas","negative: Topic 5: ciudad, siglo, san","negative: Topic 6: mexico, ciudad, centro","negative: Topic 7: mexico, ciudad, turismo","negative: Topic 8: mexico, ciudad, museo","negative: Topic 9: ciudad, mexico, mas",positive: Topic -1: outliers,"positive: Topic 0: mexico, ciudad, mas","positive: Topic 1: film, cine, mexico"
-instagram,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,3,0
-reddit,2,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0
-sectur,34,7,15,10,9,26,25,1,22,20,19,15,16,16,1,39,18
-tripadvisor,10,22,0,0,1,1,0,22,0,2,2,2,1,0,30,197,1

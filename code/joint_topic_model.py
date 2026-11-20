@@ -373,8 +373,7 @@ def _stability_runs(
     runs = []
     for _ in range(args.stability_runs):
         idx = rng.choice(n, size=int(args.subsample * n), replace=False)
-        lab = HDBSCAN(min_cluster_size=mcs, min_samples=ms,
-                      core_dist_n_jobs=4).fit_predict(reduction[idx])
+        lab = HDBSCAN(min_cluster_size=mcs, min_samples=ms).fit_predict(reduction[idx])
         full = np.full(n, -2, dtype=int)  # -2 = no muestreado
         full[idx] = lab
         runs.append((idx, full))

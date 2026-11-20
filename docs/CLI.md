@@ -37,6 +37,7 @@ python run_analysis.py \
 | `--palette` | `ejecutiva`/`naturaleza`/`accesible`/`tecnologica`/`hospitalidad` | `ejecutiva` | Paleta de colores de todos los HTML. |
 | `--embedding-model` | str | `paraphrase-multilingual-MiniLM-L12-v2` | Modelo de sentence-transformers. |
 | `--sentiment-model` | str | modelo por defecto de `sentiment_analysis` | Modelo HF de sentimiento. |
+| `--sent-max-length` | int | `512` | Máximo de tokens del pipeline de sentimiento. No entra en la clave de caché: con caché existente, cambiar este valor no invalida el sentimiento guardado; usa `--no-cache` o `--force-steps sentiment all`. |
 | `--cache-dir` | str | `<output-dir>/cache` | Carpeta de caché. |
 | `--no-cache` | flag | — | Ignora la caché. |
 | `--force-steps` | lista | `[]` | `load`, `embeddings`, `outliers`, `sentiment`, `topics`, `all`. |

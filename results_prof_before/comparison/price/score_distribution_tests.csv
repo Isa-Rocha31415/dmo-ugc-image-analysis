@@ -1,2 +1,0 @@
-﻿n_dmo,n_ugc,mean_dmo,mean_ugc,mean_diff,ci_low,ci_high,ks_statistic,ks_p_value,wasserstein_1d,perm_p_value,bootstrap,permutations
-293,300,-6.9e-05,0.245154,-0.245223,-0.263674,-0.217694,0.610933,0.0,0.245223,0.019608,100,50

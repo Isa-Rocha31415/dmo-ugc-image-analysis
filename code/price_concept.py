@@ -202,13 +202,11 @@ def embed_anchor_texts(
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
     os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
     try:
-        import torch
         from sentence_transformers import SentenceTransformer
-        torch.set_num_threads(4)
         model = SentenceTransformer(model_name)
         emb = np.asarray(
-            model.encode(texts, batch_size=128, show_progress_bar=False,
-                         normalize_embeddings=True, convert_to_numpy=True),
+            model.encode(texts, batch_size=64, show_progress_bar=False,
+                         normalize_embeddings=True),
             dtype=np.float32,
         )
     except ImportError:
