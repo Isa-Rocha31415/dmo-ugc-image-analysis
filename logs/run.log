@@ -19,3 +19,27 @@
 ██████████████████████████████████████████████████████████████████████
    PASO 1: PREPROCESAMIENTO DE TEXTO
 ██████████████████████████████████████████████████████████████████████
+  Comentarios válidos tras limpieza: 23,280 (de 23,280)
+  Filas descartadas por fuente:
+    (ninguna)                      0
+  Filas descartadas por corpus:
+    (ninguna)                      0
+  Columna text_norm creada para la capa léxica (huella 28fc950c822b).
+
+██████████████████████████████████████████████████████████████████████
+   PASO 2: GENERACIÓN DE EMBEDDINGS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [embeddings_bert] -> ../results/cache/embeddings_bert/2d6b6ca2861d67afca80
+  Embeddings generados: (23280, 384)
+
+██████████████████████████████████████████████████████████████████████
+   PASO 3: DETECCIÓN DE OUTLIERS + N-GRAMAS
+██████████████████████████████████████████████████████████████████████
+✅ Caché hit [outliers_ngram] -> ../results/cache/outliers_ngram/5c2194437faa3ce3bdbb
+
+██████████████████████████████████████████████████████████████████████
+   PASO 4: ANÁLISIS DE SENTIMIENTOS
+██████████████████████████████████████████████████████████████████████
+🧮 Ejecutando [sentiment] con backend [transformers]...
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 13469.92it/s]
+[transformers] The tokenizer you are loading from 'cardiffnlp/twitter-xlm-roberta-base-sentiment' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
