@@ -39,7 +39,6 @@ class BertopicModeler:
         texts: Sequence[str],
         metadata: Optional[pd.DataFrame] = None,
         embeddings: Optional[np.ndarray] = None,
-        precomputed_knn: Optional[tuple[np.ndarray, np.ndarray]] = None,
     ) -> Dict[str, Any]:
         """
         Ajusta BERTopic sobre `texts` y devuelve:
@@ -76,7 +75,6 @@ class BertopicModeler:
 
         model = self._build_model(
             has_embeddings=embeddings is not None, n_docs=len(texts),
-            precomputed_knn=precomputed_knn,
         )
         topics, _ = model.fit_transform(texts, embeddings=embeddings)
 
@@ -98,8 +96,7 @@ class BertopicModeler:
         }
 
     # ------------------------------------------------------------------
-    def _build_model(self, has_embeddings: bool, n_docs: int = 10,
-                     precomputed_knn: Optional[tuple[np.ndarray, np.ndarray]] = None):
+    def _build_model(self, has_embeddings: bool, n_docs: int = 10):
         """Instancia BERTopic con semillas explícitas."""
         from bertopic import BERTopic
 
@@ -129,16 +126,13 @@ class BertopicModeler:
         try:
             import umap
 
-            umap_kwargs: Dict[str, Any] = dict(
+            kwargs["umap_model"] = umap.UMAP(
                 n_neighbors=15,
                 n_components=min(5, max(2, n_docs)),
                 min_dist=0.0,
                 metric="cosine",
                 random_state=self.random_state,
             )
-            if precomputed_knn is not None:
-                umap_kwargs["precomputed_knn"] = precomputed_knn
-            kwargs["umap_model"] = umap.UMAP(**umap_kwargs)
         except ImportError:
             pass
 

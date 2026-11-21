@@ -34,7 +34,7 @@ OUTLIER_VERSION = 2
 
 SENTIMENT_VERSION = 1
 # v2: selección/fijado de número de tópicos (num_topicos).
-TOPICS_VERSION = 3
+TOPICS_VERSION = 2
 VISUALS_VERSION = 1
 
 
@@ -823,7 +823,6 @@ def step_topics(
     force: bool = False,
     embeddings: Optional[np.ndarray] = None,
     num_topics: Any = "auto",
-    knn_k_mult: float = 1.3,
 ):
     step_name = "topics"
 
@@ -836,7 +835,6 @@ def step_topics(
         "step": step_name,
         "cache_version": CACHE_VERSION,
         "topics_version": TOPICS_VERSION,
-        "knn_version": 1,
         "parent_key": parent_key,
         "text_column": topic_text_column,
         "source_column": source_column,
@@ -898,7 +896,6 @@ def step_topics(
         random_state=random_state,
         embeddings=embeddings,
         num_topics=num_topics,
-        knn_k_mult=knn_k_mult,
     )
 
     topics_df = topic_outputs.get("topics_df", pd.DataFrame())

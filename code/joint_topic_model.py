@@ -32,7 +32,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +51,7 @@ from utils import palette_to_plot_colors
 UNASSIGNED = "SIN_ASIGNAR"
 TOKEN_PATTERN = r"(?u)\b[^\W\d_]{3,}\b"
 PARSIMONY_TOL = 0.02
-GRID_VERSION = 6         # 6: grafo NN compartido (perf-2)
+GRID_VERSION = 5         # 5: analysis_base incluye text_norm; representación sin cambio
 MAX_TOPIC_SHARE = 0.20   # ningún tópico puede acaparar >20% de los docs asignados
 MIN_TOPIC_FLOOR = 50     # tamaño mínimo absoluto de tópico
 
@@ -299,12 +298,8 @@ class JointBertopicModeler(BertopicModeler):
         self.ngram_max = ngram_max
         self._model: Any = None
 
-    def _build_model(self, has_embeddings: bool, n_docs: int = 10,
-                     precomputed_knn=None):
-        model = super()._build_model(
-            has_embeddings=has_embeddings, n_docs=n_docs,
-            precomputed_knn=precomputed_knn,
-        )
+    def _build_model(self, has_embeddings: bool, n_docs: int = 10):
+        model = super()._build_model(has_embeddings=has_embeddings, n_docs=n_docs)
         model.vectorizer_model = build_count_vectorizer(
             self.min_df, self.max_df, self.ngram_max
         )
@@ -314,8 +309,7 @@ class JointBertopicModeler(BertopicModeler):
 
 
 def _fit_base_cached(
-    texts: list[str], emb: np.ndarray, args: argparse.Namespace, cache_dir: Path,
-    knn_graph=None,
+    texts: list[str], emb: np.ndarray, args: argparse.Namespace, cache_dir: Path
 ) -> tuple[np.ndarray, np.ndarray, int, int, str]:
     """Ajusta (o reusa) el modelo base: reducción UMAP, labels base, params HDBSCAN.
 
@@ -326,7 +320,6 @@ def _fit_base_cached(
         "rows": emb.shape[0], "dim": emb.shape[1], "seed": args.seed,
         "base_min_topic_size": args.base_min_topic_size,
         "min_df": args.min_df, "max_df": args.max_df, "ngram_max": args.ngram_max,
-        "knn_version": 1,
         "emb_sha": hashlib.sha256(emb.tobytes()).hexdigest(),
     }
     key = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:20]
@@ -351,7 +344,7 @@ def _fit_base_cached(
         random_state=args.seed, min_topic_size=args.base_min_topic_size,
         min_samples_per_topic=3, top_n_words=10,
     )
-    res = modeler.fit_transform(texts, embeddings=emb, precomputed_knn=knn_graph)
+    res = modeler.fit_transform(texts, embeddings=emb)
     base_labels = np.asarray(res["topic_id"], dtype=int)
     reduction = np.asarray(modeler._model.umap_model.embedding_, dtype=np.float32)
     mcs = int(getattr(modeler._model.hdbscan_model, "min_cluster_size",
@@ -433,25 +426,8 @@ def run_topics_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         print(f"  ⚖️ --dmo-weight={args.dmo_weight}: pondera centroides/c-TF-IDF, SIN remuestreo.")
     print("  ℹ️ Comparación DMO vs UGC: por proporciones con bootstrap (tarea P3).")
 
-    # ── Grafo NN compartido (perf-2): una sola construcción ──
-    from knn_shared import build_global_knn, knn_k, subset_knn
-
-    base_knn = None
-    if not os.environ.get("PERF2_NO_KNN") and not os.environ.get("PERF2_KNN_FORCE"):
-        print("  ⚠️ Puerta ARI<1 detectada: UMAP usa kNN interna (grafo compartido inactivo).")
-    if os.environ.get("PERF2_KNN_FORCE") and not os.environ.get("PERF2_NO_KNN"):
-        labels = base["sentiment_label"].astype(str)
-        frac = min(float((labels == c).mean()) for c in ("positive", "negative"))
-        k_global = knn_k(15, min(args.subsample, frac), args.knn_k_mult)
-        graph = build_global_knn(emb, k_global, args.seed)
-        base_knn, cov = subset_knn(graph, np.arange(n), 15)
-        print(f"  🔗 Grafo NN: K={k_global} | cobertura base min={cov.min_survivors}/15 "
-              f"({'ok' if cov.ok else 'fallback interno'})")
-        if not cov.ok:
-            print("  ⚠️ Cobertura insuficiente: UMAP usa kNN interna en el fit base.")
-
     reduction, base_labels, mcs, ms, base_key = _fit_base_cached(
-        texts, emb, args, out_dir / "_cache", knn_graph=base_knn
+        texts, emb, args, out_dir / "_cache"
     )
     n_base = len(set(base_labels.tolist()) - {-1})
     if n_base < 2:

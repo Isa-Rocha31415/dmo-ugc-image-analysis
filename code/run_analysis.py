@@ -60,6 +60,9 @@ DEFAULT_EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 CACHE_STEPS = ("load", "embeddings", "outliers", "sentiment", "topics", "all")
 
 # Tareas de comparación. Los pasos 15 y 17 quedan como hueco documentado.
+# Crossover 5k: 0.58x con pools -> paralelo solo bajo petición explícita.
+AUTO_PARALLEL = False
+
 COMPARISON_TASKS = [
     "base", "topics", "lexical", "thematic", "price",
     "semantic", "affective", "figures", "report",
@@ -197,7 +200,10 @@ def _run_comparison(
     failed: list[str] = []
 
     if (not os.environ.get("PERF2_COMPARISON_SERIAL")
-            and not os.environ.get("PERF2_SERIAL")):
+            and not os.environ.get("PERF2_SERIAL")
+            and bool({t for t in tasks if t in ("lexical", "thematic", "price")})
+            and ((AUTO_PARALLEL and len(df_clean) >= 5000)
+                 or getattr(args, "force_parallel", False))):
         par = [t for t in tasks if t in ("lexical", "thematic", "price")]
         seq = [t for t in tasks if t not in par]
         if par:
@@ -210,10 +216,13 @@ def _run_comparison(
                         sub, output_dir, df, embeddings, df_clean, df_outliers)
                     written += w
                     failed += f
-                print("  ⚡ Comparación en paralelo: 3 procesos (léxica, temática, precio).")
+                workers = min(3, max(1, (os.cpu_count() or 1) // 2))
+                print(f"  ⚡ Comparación en paralelo: {workers} procesos "
+                      "(léxica, temática, precio).")
                 try:
                     with ProcessPoolExecutor(
-                            max_workers=3, mp_context=get_context("spawn")) as pool:
+                            max_workers=workers,
+                            mp_context=get_context("spawn")) as pool:
                         results = list(pool.map(
                             _comparison_worker, par,
                             [args] * len(par), [output_dir] * len(par)))
@@ -231,6 +240,10 @@ def _run_comparison(
                 return written, failed
             finally:
                 os.environ.pop("PERF2_COMPARISON_SERIAL", None)
+    elif (tasks and not os.environ.get("PERF2_SERIAL")
+          and not os.environ.get("PERF2_COMPARISON_SERIAL")):
+        print("  🐢 Comparación secuencial: corpus pequeño: modo serial "
+              "(overhead de pools no justificado).")
 
     for task in tasks:
         try:
@@ -332,8 +345,8 @@ def main():
                    help="Corridas de estabilidad (antes 5; pasar 5 para restaurar)")
     g.add_argument("--subsample", type=float, default=0.75,
                    help="Fracción por corrida (antes 0.8; pasar 0.8 para restaurar)")
-    g.add_argument("--knn-k-mult", type=float, default=1.3,
-                   help="Multiplicador de cobertura del grafo NN global")
+    g.add_argument("--force-parallel", action="store_true",
+                   help="Fuerza pools aunque el corpus sea pequeño")
     g.add_argument("--dmo-weight", type=float, default=1.0,
                    help="Peso DMO en centroides/c-TF-IDF (sin remuestreo). Default 1.0")
     g.add_argument("--reassign-threshold", type=float, default=0.30)
@@ -379,6 +392,8 @@ def main():
 
     parser.set_defaults(per_source=True, sentiment_validation=True)
     args = parser.parse_args()
+    if args.force_parallel:
+        os.environ["PERF2_FORCE_PARALLEL"] = "1"
 
     backend = _normalize_model(args.model)
     force_steps = set(args.force_steps or [])
@@ -624,7 +639,6 @@ def main():
         force=_force("topics"),
         embeddings=embeddings_clean,
         num_topics=args.num_topicos,
-        knn_k_mult=args.knn_k_mult,
     )
 
     reporte_topicos_consola(
