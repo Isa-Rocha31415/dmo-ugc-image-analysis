@@ -210,7 +210,7 @@ def _wordcloud_html(terms: pd.DataFrame, path: Path, title: str, colors: list[st
 # ─────────────────────────── Tarea 'lexical' ───────────────────────────
 def run_lexical_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     """Tarea P2: capa léxica L1 con CI bootstrap y log-odds con prior."""
-    print_header("PASO 10: CAPA LÉXICA L1 — JACCARD, COBERTURA Y LOG-ODDS (DMO vs UGC)")
+    print_header("PASO 10: CAPA LÉXICA L1 — COBERTURA Y LOG-ODDS (Jaccard auxiliar en consola)")
     base_dir = results_dir / "comparison" / "base"
     out_dir = results_dir / "comparison" / "lexical"
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -28,19 +28,11 @@ def replicate_pipeline_filter(df: pd.DataFrame, text_column: str) -> pd.DataFram
     return df[df[text_column].str.strip().str.len() > 5].reset_index(drop=True)
 
 
-def binarize_sentiment(df: pd.DataFrame, threshold: float = 0.0) -> pd.DataFrame:
-    """Misma regla binaria que run_analysis._asegurar_sentimiento_binario."""
-    df = df.copy()
-    if "sentiment_score" in df.columns:
-        df["sentiment_label"] = np.where(
-            df["sentiment_score"] >= threshold, "positive", "negative"
-        )
-    else:
-        df["sentiment_label"] = (
-            df["sentiment_label"].astype(str).str.lower()
-            .map(lambda x: "positive" if x.startswith(("pos", "posi")) else "negative")
-        )
-    return df
+def apply_ternary_sentiment(df: pd.DataFrame, neutral_tau: float = 0.15) -> pd.DataFrame:
+    """Misma regla POS/NEU/NEG que run_analysis, sin tocar el score cacheado."""
+    from sentiment_labels import apply_sentiment_labels
+
+    return apply_sentiment_labels(df, neutral_tau=neutral_tau)
 
 
 def _row_keys(df: pd.DataFrame, cols: list[str]) -> list[tuple]:
@@ -153,8 +145,11 @@ def _annotate_outlier_sentiment(df_outliers: pd.DataFrame, args: argparse.Namesp
         df = annotate_sentiment(
             df_outliers, text_column=args.text_col, source_column=SOURCE_COLUMN,
             lang=args.lang, backend="transformers", model_name=None,
+            neutral_tau=float(getattr(args, "sentiment_neutral_tau", 0.15)),
         )
-        return binarize_sentiment(df)
+        return apply_ternary_sentiment(
+            df, neutral_tau=float(getattr(args, "sentiment_neutral_tau", 0.15))
+        )
     except Exception as exc:
         print(f"  ⚠️ No se pudo anotar sentimiento de outliers ({exc}); se guarda NaN.")
         df = df_outliers.copy()
@@ -175,9 +170,12 @@ def _print_summary(base: pd.DataFrame, out_base: pd.DataFrame, emb: np.ndarray) 
     tab = base.groupby("source").agg(
         total=("doc_id", "size"),
         pos=("sentiment_label", lambda s: (s == "positive").sum()),
+        neu=("sentiment_label", lambda s: (s == "neutral").sum()),
         neg=("sentiment_label", lambda s: (s == "negative").sum()),
     )
     tab["%pos"] = (100 * tab["pos"] / tab["total"]).round(1)
+    tab["%neu"] = (100 * tab["neu"] / tab["total"]).round(1)
+    tab["%neg"] = (100 * tab["neg"] / tab["total"]).round(1)
     print(tab.to_string())
     print("\n  Distribución global por sentimiento:")
     for lbl, cnt in base["sentiment_label"].value_counts().items():
@@ -206,10 +204,11 @@ def run_base_task(
         print("  ♻️ Usando objetos en memoria del pipeline (pasos 0–4); sin recargar caché.")
         df = inputs["df"]
         embeddings = np.asarray(inputs["embeddings"])
-        df_sent = binarize_sentiment(inputs["df_clean"].reset_index(drop=True))
+        tau = float(getattr(args, "sentiment_neutral_tau", 0.15))
+        df_sent = apply_ternary_sentiment(inputs["df_clean"].reset_index(drop=True), tau)
         df_out = inputs["df_outliers"].reset_index(drop=True)
         if "sentiment_label" in df_out.columns:
-            df_out = binarize_sentiment(df_out)
+            df_out = apply_ternary_sentiment(df_out, tau)
         else:
             df_out["sentiment_label"] = pd.NA
             df_out["sentiment_score"] = np.nan
@@ -257,7 +256,9 @@ def run_base_task(
             use_cache=True, force=False,
         )
         _require_cache_hit(sent_meta, "sentiment", args.allow_recompute)
-        df_sent = binarize_sentiment(df_sent)
+        df_sent = apply_ternary_sentiment(
+            df_sent, float(getattr(args, "sentiment_neutral_tau", 0.15))
+        )
         key_cols = [c for c in df.columns
                     if c in df_sent.columns and c in df_outliers.columns]
         if not df_sent[key_cols].reset_index(drop=True).equals(
@@ -277,6 +278,11 @@ def run_base_task(
         "corpus": df_sent[CORPUS_COLUMN].to_numpy(),
         "source": df_sent[SOURCE_COLUMN].to_numpy(),
         "sentiment_label": df_sent["sentiment_label"].to_numpy(),
+        "sentiment_label_id": df_sent.get(
+            "sentiment_label_id",
+            pd.Series([{"positive": 1, "neutral": 0, "negative": -1}.get(x, 0)
+                       for x in df_sent["sentiment_label"]]),
+        ).to_numpy(),
         "sentiment_score": df_sent["sentiment_score"].astype(float).to_numpy(),
         "is_outlier": False,
     }).sort_values("doc_id").reset_index(drop=True)
@@ -292,6 +298,11 @@ def run_base_task(
         "corpus": df_out[CORPUS_COLUMN].to_numpy(),
         "source": df_out[SOURCE_COLUMN].to_numpy(),
         "sentiment_label": df_out["sentiment_label"].to_numpy(),
+        "sentiment_label_id": df_out.get(
+            "sentiment_label_id",
+            pd.Series([{"positive": 1, "neutral": 0, "negative": -1}.get(x, 0)
+                       for x in df_out["sentiment_label"]]),
+        ).to_numpy(),
         "sentiment_score": df_out["sentiment_score"].astype(float).to_numpy(),
         "is_outlier": True,
     }).sort_values("doc_id").reset_index(drop=True)

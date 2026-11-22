@@ -94,6 +94,11 @@ body {
 .figure-box--short iframe { height:320px; }
 .placeholder { color:var(--muted); font-style:italic; padding:24px; }
 .placeholder__title { font-weight:600; color:var(--dark); display:block; margin-bottom:6px; }
+.topic-block {
+  background:#fff; border:1px solid var(--line); border-radius:12px;
+  padding:18px; overflow-x:auto; font-family:'SFMono-Regular',Consolas,monospace;
+  font-size:13px; line-height:1.55; white-space:pre; color:var(--dark);
+}
 /* ---------- Texto ---------- */
 .prose p { margin-bottom:10px; }
 .prose ul { margin:0 0 10px 20px; }
@@ -144,19 +149,42 @@ body {
   <section class="row" id="ejecutivo">
     <div class="panel">
       <h2 class="panel__title">Resumen ejecutivo</h2>
-      <ul class="bullets">{{EXECUTIVE_BULLETS}}</ul>
+      <div class="table-wrap">{{EXECUTIVE_METRICS_TABLE}}</div>
+      <ul class="bullets" style="margin-top:16px">{{EXECUTIVE_BULLETS}}</ul>
     </div>
   </section>
 
-  <!-- ============ 3. Sentimiento ============ -->
-  <section class="row row--2col" id="sentimiento">
+  <!-- ============ 3. Métricas descriptivas de polaridad ============ -->
+  <section class="row" id="polaridad-descriptiva">
     <div class="panel">
-      <h2 class="panel__title">Sentimiento por fuente</h2>
-      <div class="figure-box">{{SENTIMENT_FIGURE}}</div>
+      <h2 class="panel__title">Métricas descriptivas de polaridad (POS / NEU / NEG)</h2>
+      <p class="section-note">Distribución descriptiva únicamente. No se usa como evidencia de la brecha DMO vs UGC.</p>
+      <div class="row--2col cols">
+        <div>{{SENTIMENT_FIGURE}}</div>
+        <div>{{SENTIMENT_HIST}}</div>
+      </div>
+      <div style="margin-top:16px">{{SENTIMENT_DESCRIPTIVE_TABLE}}</div>
     </div>
+  </section>
+
+  <!-- ============ N-gramas interactivos ============ -->
+  {{NGRAM_SECTION}}
+
+  <!-- ============ Bloques de tópicos ============ -->
+  <section class="row" id="topicos">
     <div class="panel">
-      <h2 class="panel__title">Distribución de sentimiento</h2>
-      <div class="figure-box">{{SENTIMENT_HIST}}</div>
+      <h2 class="panel__title">Tópicos retenidos (comparación DMO vs UGC)</h2>
+      <p class="section-note">Cobertura = documentos asignados / total de comentarios en análisis.</p>
+      {{TOPIC_REPORT_BLOCK}}
+    </div>
+  </section>
+
+  <!-- ============ UMAP 3D ============ -->
+  <section class="row" id="umap-3d">
+    <div class="panel">
+      <h2 class="panel__title">Distribución semántica de comentarios (UMAP 3D)</h2>
+      <p class="section-note">Rotar con arrastrar, acercar con la rueda. El hover muestra tópico, fuente, sentimiento y texto.</p>
+      {{UMAP_3D_FIGURE}}
     </div>
   </section>
 
@@ -172,11 +200,12 @@ body {
     </div>
   </section>
 
-  <!-- ============ 5. Brechas ============ -->
+  <!-- ============ 5. Pruebas estadísticas de brecha ============ -->
   <section class="row" id="brechas">
-    <div class="panel">
-      <h2 class="panel__title">Brechas DMO vs UGC</h2>
+    <div class="panel" id="pruebas-estadisticas">
+      <h2 class="panel__title">Pruebas estadísticas de brecha (temática y precio/valencia)</h2>
       <div class="table-wrap">{{GAPS_TABLE}}</div>
+      <div class="table-wrap" style="margin-top:16px">{{STAT_TESTS_TABLE}}</div>
     </div>
   </section>
 
@@ -210,6 +239,31 @@ body {
       <h2 class="panel__title">Apéndice: figuras y datos generados</h2>
       <p class="muted">Sección | archivo | enlace | CSV de datos</p>
       <div class="table-wrap">{{ALL_FIGURES_TABLE}}</div>
+    </div>
+  </section>
+
+  <!-- ============ Tareas pendientes (sin artefactos) ============ -->
+  <section class="row row--2col" id="pendientes">
+    <div class="panel" id="semantico-pendiente">
+      <h2 class="panel__title">Análisis semántico</h2>
+      <div class="placeholder">Sin artefactos generados en esta corrida (tarea semántica pendiente).</div>
+    </div>
+    <div class="panel" id="afectivo-pendiente">
+      <h2 class="panel__title">Análisis afectivo</h2>
+      <div class="placeholder">Sin artefactos generados en esta corrida (tarea afectiva pendiente).</div>
+    </div>
+    <div class="panel" id="figuras-pendiente">
+      <h2 class="panel__title">Figuras adicionales</h2>
+      <div class="placeholder">Sin artefactos generados en esta corrida (tarea figures pendiente).</div>
+    </div>
+  </section>
+
+  <!-- ============ 11. Metadata del run ============ -->
+  <section class="row" id="metadatos-run">
+    <div class="panel">
+      <h2 class="panel__title">Metadata del run</h2>
+      <p class="section-note">Versiones de caché, flags usados, timestamp y tamaños de muestra.</p>
+      {{RUN_METADATA_SECTION}}
     </div>
   </section>
 

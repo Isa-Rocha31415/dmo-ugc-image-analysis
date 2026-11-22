@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import pandas as pd
 
+from sentiment_labels import NEUTRAL_TAU, label_from_score
+
 
 DEFAULT_MULTILINGUAL_MODEL = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
 
@@ -260,6 +262,7 @@ def annotate_sentiment(
     lang: str = "es",
     backend: str = "auto",
     threshold: float = 0.0,
+    neutral_tau: float = NEUTRAL_TAU,
     model_name: Optional[str] = None,
     device: int = -1,
     batch_size: int = 32,
@@ -269,9 +272,11 @@ def annotate_sentiment(
     """
     Agrega columnas:
       - sentiment_score
-      - sentiment_label
+      - sentiment_label (positive/neutral/negative, banda |score| < neutral_tau)
+      - sentiment_label_id (1/0/-1)
       - sentiment_backend
 
+    ``threshold`` se conserva por compatibilidad; la polaridad usa ``neutral_tau``.
     La etiqueta de fuente no se modifica.
     
     Usa exclusivamente modelo transformer (BERT/XLM-RoBERTa).
@@ -287,6 +292,7 @@ def annotate_sentiment(
     if out.empty:
         out["sentiment_score"] = []
         out["sentiment_label"] = []
+        out["sentiment_label_id"] = []
         out["sentiment_backend"] = []
         return out
 
@@ -319,10 +325,10 @@ def annotate_sentiment(
 
     out["sentiment_score"] = scores
 
-    out["sentiment_label"] = [
-        "positive" if float(score) > threshold else "negative"
-        for score in scores
-    ]
+    labels = [label_from_score(score, neutral_tau) for score in scores]
+    out["sentiment_label"] = labels
+    out["sentiment_label_id"] = [1 if x == "positive" else (-1 if x == "negative" else 0)
+                                 for x in labels]
 
     out["sentiment_backend"] = backend_used
 

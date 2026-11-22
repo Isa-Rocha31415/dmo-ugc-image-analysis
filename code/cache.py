@@ -34,7 +34,8 @@ OUTLIER_VERSION = 2
 
 SENTIMENT_VERSION = 1
 # v2: selección/fijado de número de tópicos (num_topicos).
-TOPICS_VERSION = 2
+# v3: tercera partición (neutral) en el modelado por sentimiento.
+TOPICS_VERSION = 3
 VISUALS_VERSION = 1
 
 

@@ -324,6 +324,7 @@ def palette_to_plot_colors(
         "text": palette.get("texto", "#1A202C"),
         "title": palette.get("titulo", "#2D3748"),
         "positive": _closest_color(candidatos, "#009E73"),
+        "neutral": _closest_color(candidatos, "#7F8C8D"),
         "negative": _closest_color(candidatos, "#D55E00"),
         "categorical": get_categorical_colors(palette_name, vision_type, n_colors=8),
     }

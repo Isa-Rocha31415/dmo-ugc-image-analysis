@@ -1,7 +1,7 @@
 """
 topic_console_report.py
 ─────────────────────────────────────────────────────────────
-Modelado de tópicos por sentimiento (pos / neg)
+Modelado de tópicos por sentimiento (pos / neu / neg)
 + salida a consola para IA.
 Usa topic_modeling.run_topic_modeling() existente.
 """
@@ -86,6 +86,15 @@ def reporte_topicos_consola(
     _imprimir_particion(neg, source_column, "NEGATIVO")
 
     # ──────────────────────────────────
+    # NEUTROS
+    # ──────────────────────────────────
+    print(f"\n{SEP}")
+    print("   ⚪  MODELADO DE TÓPICOS – COMENTARIOS NEUTROS")
+    print(f"{SEP}")
+    neu = by_sentiment.get("neutral", {})
+    _imprimir_particion(neu, source_column, "NEUTRO")
+
+    # ──────────────────────────────────
     # DISTRIBUCIÓN DE TÓPICOS POR FUENTE
     # ──────────────────────────────────
     if not topics_df.empty and "topic_name" in topics_df.columns:
@@ -122,9 +131,10 @@ def reporte_topicos_consola(
     # Generar visualizaciones 3D
     from visualization import plot_topics_3d_umap, plot_topic_distribution_by_source_3d
 
-    # Recolectar embeddings de ambos sentimientos
+    # Recolectar embeddings de las tres particiones
     embeddings_dict = {}
-    for sentiment_label in ["positive", "negative"]:
+    labels_pos = ["positive", "neutral", "negative"]
+    for sentiment_label in labels_pos:
         part = by_sentiment.get(sentiment_label, {})
         if "embeddings" in part and part["embeddings"] is not None:
             embeddings_dict[sentiment_label] = part["embeddings"]
@@ -132,7 +142,7 @@ def reporte_topicos_consola(
     # Si no vienen en el resultado, se alinean desde el DataFrame + embeddings
     if not embeddings_dict and embeddings is not None and len(df) == len(embeddings):
         labels = df["sentiment_label"].astype(str).to_numpy()
-        for sentiment_label in ["positive", "negative"]:
+        for sentiment_label in labels_pos:
             mask = labels == sentiment_label
             if mask.sum() > 0:
                 embeddings_dict[sentiment_label] = np.asarray(embeddings)[mask]

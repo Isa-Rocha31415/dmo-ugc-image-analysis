@@ -159,7 +159,7 @@ def run_topic_modeling(
                     seleccionarlo con `topic_selection.select_num_topics`.
 
     Devuelve:
-      by_sentiment: diccionario con resultados para positive/negative
+      by_sentiment: diccionario con resultados para positive/neutral/negative
       topics_df: DataFrame combinado con topic_id, topic_name, etc.
     """
     if "sentiment_label" not in df.columns:
@@ -176,7 +176,9 @@ def run_topic_modeling(
     print(f"     min_partition_size: {min_partition_size}")
     print(f"     num_topicos: {num_topics}")
 
-    labels = list(labels or ["positive", "negative"])
+    from sentiment_labels import SENTIMENT_LABELS
+
+    labels = list(labels or SENTIMENT_LABELS)
     sizes = [int((df["sentiment_label"] == c).sum()) for c in labels]
     use_pool = (parallel and len(labels) > 1 and embeddings is not None
                 and not os.environ.get("PERF2_SERIAL")

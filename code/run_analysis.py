@@ -8,9 +8,10 @@ Pipeline COMPLETO en una sola ejecución:
   Bloque II (pasos 8–11): comparación imagen proyectada (DMO) vs percibida (UGC)
                          8  base analítica consolidada
                          9  tópicos conjuntos DMO+UGC con selección de k
-                         10 capa léxica L1 (Jaccard, cobertura, log-odds Monroe 2008)
+                         10 capa léxica L1 (cobertura/log-odds; Jaccard solo en consola)
                          11 capa temática L2 (gaps, χ²/Fisher, BH, JSD/EMD)
-                         (semantic, affective, figures, report: PENDIENTE; huecos 15/17)
+                         18 informe HTML (incluye n-gramas interactivos)
+                         (semantic, affective, figures: PENDIENTE; huecos 15/17)
 
 Uso (una sola corrida, desde ~/ac_4/code/):
     python run_analysis.py \
@@ -33,6 +34,7 @@ import hashlib
 import io
 import os
 import random
+import sys
 import time
 import traceback
 from concurrent.futures import ProcessPoolExecutor
@@ -121,18 +123,11 @@ def _normalize_model(value: str) -> str:
     raise ValueError(f"Modelo de topicos no soportado: {value}")
 
 
-def _asegurar_sentimiento_binario(df: pd.DataFrame, threshold: float = 0.0) -> pd.DataFrame:
-    """Garantiza etiquetas binarias positive/negative."""
-    if "sentiment_score" in df.columns:
-        df["sentiment_label"] = np.where(
-            df["sentiment_score"] >= threshold, "positive", "negative"
-        )
-    else:
-        df["sentiment_label"] = (
-            df["sentiment_label"].astype(str).str.lower()
-            .map(lambda x: "positive" if x.startswith(("pos", "posi")) else "negative")
-        )
-    return df
+def _asegurar_sentimiento_ternario(df: pd.DataFrame, neutral_tau: float = 0.15) -> pd.DataFrame:
+    """Reetiqueta la caché binaria como POS/NEU/NEG sin recalcular el modelo."""
+    from sentiment_labels import apply_sentiment_labels
+
+    return apply_sentiment_labels(df, neutral_tau=neutral_tau)
 
 
 def _alinear_embeddings_clean(
@@ -184,6 +179,187 @@ def _comparison_worker(task: str, args: argparse.Namespace, output_dir: Path):
     return task, written, failed, buf.getvalue(), time.perf_counter() - t0, take_metadata()
 
 
+def _write_ngram_interactive(
+    args: argparse.Namespace,
+    output_dir: Path,
+    df_clean: pd.DataFrame,
+    df_outliers: pd.DataFrame,
+) -> list[Path]:
+    """Genera el bloque HTML de n-gramas con hover de comentarios normalizados."""
+    if not args.ngram_interactive:
+        return []
+
+    from comparison.common import append_metadata
+    from ngram_visualization import build_all_ngram_figures
+    from report_sections import ngram_section_html
+
+    sep = "█" * 70
+    print(f"\n{sep}")
+    print("   PASO 7.5: VISUALIZACIÓN INTERACTIVA DE N-GRAMAS")
+    print(sep)
+
+    figures = build_all_ngram_figures(
+        df_clean, df_outliers, palette=args.palette
+    )
+    block = ngram_section_html(figures)
+    path = output_dir / "ngram_interactive.html"
+    path.write_text(block, encoding="utf-8")
+
+    print(f"  ✅ Uni/bi/trigramas con muestras en hover -> {path}")
+    print(f"     Normales: {len(df_clean):,} | Outliers: {len(df_outliers):,}")
+    written = [path]
+    written.append(append_metadata(
+        output_dir / "comparison" / "base" / "run_metadata.csv",
+        task="ngram_interactive",
+        params={
+            "top_n": 15, "max_samples": 3, "sample_chars": 120,
+            "text_column": "text_norm", "palette": args.palette, "seed": args.seed,
+        },
+        repo_dir=Path(__file__).resolve().parents[1],
+    ))
+    return written
+
+
+def _write_topic_report_block(args: argparse.Namespace, output_dir: Path) -> list[Path]:
+    """Bloques de tópicos (consola, HTML y CSV canónico) desde artefactos cacheados."""
+    from comparison.common import append_metadata, save_csv
+    from topic_report import build_topic_report_block
+
+    topics_dir = output_dir / "comparison" / "topics_joint"
+    summary_path = topics_dir / "topics_summary.csv"
+    if not summary_path.exists():
+        print("  ⚠️ Sin topics_summary.csv; bloque de tópicos omitido.")
+        return []
+
+    summary = pd.read_csv(summary_path, encoding="utf-8-sig")
+    doc_path = topics_dir / "doc_topics.csv"
+    doc_topics = (pd.read_csv(doc_path, encoding="utf-8-sig")
+                  if doc_path.exists() else None)
+    base_path = output_dir / "comparison" / "base" / "analysis_base.csv"
+    total_docs = None
+    if base_path.exists():
+        total_docs = len(pd.read_csv(base_path, encoding="utf-8-sig"))
+
+    block = build_topic_report_block(summary, doc_topics, total_docs=total_docs)
+    sep = "█" * 70
+    print(f"\n{sep}")
+    print("   PASO 9.5: BLOQUES DE TÓPICOS")
+    print(sep)
+    print(block["console"])
+
+    csv_path = save_csv(
+        block["table"], output_dir / "comparison" / "report" / "topics_summary.csv")
+    html_path = output_dir / "topic_report_section.html"
+    html_path.write_text(block["html"], encoding="utf-8")
+    print(f"  ✅ Bloques de tópicos -> {html_path}")
+    print(f"  ✅ Tabla canónica -> {csv_path}")
+    meta = append_metadata(
+        output_dir / "comparison" / "base" / "run_metadata.csv",
+        task="topic_report",
+        params={"seed": args.seed, "n_topics": len(block["table"]),
+                "total_docs": total_docs},
+        repo_dir=Path(__file__).resolve().parents[1],
+    )
+    return [csv_path, html_path, meta]
+
+
+def _write_umap_section(
+    args: argparse.Namespace,
+    output_dir: Path,
+    embeddings_clean: np.ndarray | None,
+) -> list[Path]:
+    """Scatter UMAP 3D con embeddings cacheados y tabla de puntos exportada."""
+    import plotly.io as pio
+    from comparison.common import append_metadata, save_csv
+    from visualization import build_umap_3d_plot
+
+    sep = "█" * 70
+    html_path = output_dir / "umap_section.html"
+    if not args.umap_3d:
+        html_path.write_text(
+            '<div class="placeholder">UMAP 3D desactivado (--no-umap-3d)</div>',
+            encoding="utf-8",
+        )
+        return [html_path]
+
+    print(f"\n{sep}")
+    print("   PASO 9.6: DISTRIBUCIÓN SEMÁNTICA (UMAP 3D)")
+    print(sep)
+
+    base_path = output_dir / "comparison" / "base" / "analysis_base.csv"
+    doc_path = output_dir / "comparison" / "topics_joint" / "doc_topics.csv"
+    if not base_path.exists() or not doc_path.exists():
+        html_path.write_text(
+            '<div class="placeholder">UMAP 3D no disponible: faltan base o tópicos</div>',
+            encoding="utf-8",
+        )
+        print("  ⚠️ UMAP 3D omitido: faltan analysis_base.csv o doc_topics.csv.")
+        return [html_path]
+    if embeddings_clean is None:
+        npy_path = output_dir / "comparison" / "base" / "embeddings_clean.npy"
+        if not npy_path.exists():
+            html_path.write_text(
+                '<div class="placeholder">UMAP 3D no disponible: faltan embeddings</div>',
+                encoding="utf-8",
+            )
+            print("  ⚠️ UMAP 3D omitido: no hay embeddings cacheados.")
+            return [html_path]
+        embeddings_clean = np.load(npy_path)
+
+    base = pd.read_csv(base_path, encoding="utf-8-sig")
+    doc_topics = pd.read_csv(doc_path, encoding="utf-8-sig")
+    if "topic_name" not in doc_topics.columns:
+        doc_topics["topic_name"] = doc_topics["topic_id"].astype(str)
+    df = base.merge(doc_topics[["doc_id", "topic_name"]], on="doc_id", how="inner")
+    emb = np.asarray(embeddings_clean)
+    if "embedding_row" in df.columns:
+        rows = df["embedding_row"].astype(int).to_numpy()
+        if rows.max() >= len(emb):
+            raise ValueError("embedding_row fuera de rango en embeddings_clean.npy")
+        emb = emb[rows]
+    elif len(emb) >= len(df):
+        emb = emb[:len(df)]
+    else:
+        raise ValueError("Los embeddings no cubren los comentarios del análisis.")
+
+    fig = build_umap_3d_plot(
+        df,
+        emb,
+        text_column="text_norm" if "text_norm" in df.columns else "text",
+        source_column="source" if "source" in df.columns else "corpus",
+        topic_column="topic_name",
+        sentiment_column="sentiment_label" if "sentiment_label" in df.columns else "corpus",
+        random_state=args.seed,
+    )
+    html_path.write_text(
+        pio.to_html(fig, full_html=False, include_plotlyjs="cdn"), encoding="utf-8")
+
+    records = []
+    for trace in fig.data:
+        for x, y, z, custom in zip(trace.x, trace.y, trace.z, trace.customdata):
+            records.append({
+                "topic": custom[0], "source": custom[1],
+                "sentiment": custom[2], "text": custom[3],
+                "umap_1": float(x), "umap_2": float(y), "umap_3": float(z),
+            })
+    points = pd.DataFrame(records, columns=[
+        "topic", "source", "sentiment", "text", "umap_1", "umap_2", "umap_3"])
+    csv_path = save_csv(
+        points, output_dir / "comparison" / "report" / "umap_3d_points.csv")
+
+    print(f"  ✅ Scatter 3D -> {html_path}")
+    print(f"  ✅ Tabla de puntos -> {csv_path}")
+    print(f"     Comentarios proyectados: {len(df):,} | Tópicos: {len(fig.data)}")
+    meta = append_metadata(
+        output_dir / "comparison" / "base" / "run_metadata.csv",
+        task="umap_3d",
+        params={"n_components": 3, "random_state": args.seed,
+                "n_neighbors": 15, "n_points": len(df)},
+        repo_dir=Path(__file__).resolve().parents[1],
+    )
+    return [html_path, csv_path, meta]
+
+
 def _run_comparison(
     args: argparse.Namespace,
     output_dir: Path,
@@ -191,6 +367,7 @@ def _run_comparison(
     embeddings: np.ndarray,
     df_clean: pd.DataFrame,
     df_outliers: pd.DataFrame,
+    embeddings_clean: np.ndarray | None = None,
 ) -> tuple[list[Path], list[str]]:
     """Ejecuta las tareas de comparación (PASO 8+) con los objetos ya calculados."""
     from comparison.common import print_header
@@ -257,6 +434,8 @@ def _run_comparison(
             elif task == "topics":
                 from joint_topic_model import run_topics_task
                 written += run_topics_task(args, output_dir)
+                written += _write_topic_report_block(args, output_dir)
+                written += _write_umap_section(args, output_dir, embeddings_clean)
             elif task == "lexical":
                 from metrics_lexical import run_lexical_task
                 written += run_lexical_task(args, output_dir)
@@ -266,6 +445,12 @@ def _run_comparison(
             elif task == "price":
                 from price_concept import run_price_task
                 written += run_price_task(args, output_dir)
+            elif task == "report":
+                legacy_dir = Path(__file__).resolve().parents[1] / "legacy"
+                if str(legacy_dir) not in sys.path:
+                    sys.path.insert(0, str(legacy_dir))
+                from report_generator import run_report_task
+                written += run_report_task(args, output_dir)
             else:
                 print_header(f"PASO {COMPARISON_STEP[task]}: {task.upper()} (PENDIENTE)")
                 print("  ⏳ Se implementará en la siguiente fase del plan (P4+).")
@@ -291,6 +476,8 @@ def main():
                         help="float (0-0.5) o 'auto'")
     parser.add_argument("--min-partition", type=int, default=50)
     parser.add_argument("--output-dir", default="results")
+    parser.add_argument("--title", default="Imagen proyectada (DMO) vs imagen percibida (UGC)",
+                        help="Título del informe HTML")
     parser.add_argument("--top-n", type=int, default=50, help="Top n-gramas a imprimir")
     parser.add_argument("--global-outliers", dest="per_source", action="store_false",
                         help="Detección global (no por fuente)")
@@ -307,6 +494,12 @@ def main():
                         help="Máximo de tokens para sentimiento (default científico 512)")
     parser.add_argument("--sentiment-model", default=None,
                         help="Modelo HF para el análisis de sentimiento")
+    parser.add_argument("--sentiment-neutral-tau", type=float, default=0.15,
+                        help="Banda |score| < tau para la clase NEUTRO (default 0.15; "
+                             "no recalcula la caché de sentimiento)")
+    parser.add_argument("--verbose-jaccard", action="store_true",
+                        help="Imprime Jaccard auxiliar en consola al generar el informe; "
+                             "nunca se muestra en el HTML")
 
     # ── Caché ──
     parser.add_argument("--cache-dir", default=None,
@@ -329,6 +522,16 @@ def main():
 
     # ── BLOQUE II: comparación DMO vs UGC (pasos 8+) ──
     g = parser.add_argument_group("Comparación DMO vs UGC (pasos 8+)")
+    g.add_argument("--ngram-interactive", action=argparse.BooleanOptionalAction,
+                   default=True,
+                   help="Genera n-gramas interactivos con muestras en hover (default ON). "
+                        "Desactivar con --no-ngram-interactive")
+    g.add_argument("--umap-3d", action=argparse.BooleanOptionalAction,
+                   default=True,
+                   help="Scatter UMAP 3D de comentarios por tópico (default ON). "
+                        "Requiere umap-learn; desactivar con --no-umap-3d")
+    g.add_argument("--generate-wordclouds", action="store_true",
+                   help="Genera las imágenes PNG de wordclouds (default OFF; costoso)")
     g.add_argument("--skip-comparison", action="store_true",
                    help="Ejecuta solo el bloque I (pasos 0–7)")
     g.add_argument("--comparison-tasks", nargs="+", choices=COMPARISON_TASKS,
@@ -520,7 +723,7 @@ def main():
         use_cache=use_cache,
         force=_force("sentiment"),
     )
-    df_clean = _asegurar_sentimiento_binario(df_clean)
+    df_clean = _asegurar_sentimiento_ternario(df_clean, args.sentiment_neutral_tau)
     print(f"  Sentimiento aplicado a {len(df_clean):,} comentarios normales.")
     print(f"  Rango sentiment_score: [{df_clean['sentiment_score'].min():.3f}, "
           f"{df_clean['sentiment_score'].max():.3f}]")
@@ -530,8 +733,9 @@ def main():
         df_outliers, text_column=args.text_col,
         source_column=SOURCE_COLUMN, lang=args.lang, backend="transformers",
         model_name=args.sentiment_model, max_length=args.sent_max_length,
+        neutral_tau=args.sentiment_neutral_tau,
     )
-    df_outliers = _asegurar_sentimiento_binario(df_outliers)
+    df_outliers = _asegurar_sentimiento_ternario(df_outliers, args.sentiment_neutral_tau)
     print(f"  Sentimiento aplicado a {len(df_outliers):,} outliers.")
     print(f"  Distribución outliers: {df_outliers['sentiment_label'].value_counts().to_dict()}")
 
@@ -578,6 +782,7 @@ def main():
     _mark_step("PASO 5")
     from sentiment_report import reporte_sentimiento_por_fuente, reporte_sentimiento_outliers
 
+    print("  ℹ️  Polaridad POS/NEU/NEG: métrica descriptiva, NO prueba de la brecha DMO vs UGC.")
     reporte_sentimiento_por_fuente(
         df_clean,
         source_column=SOURCE_COLUMN,
@@ -601,20 +806,26 @@ def main():
     print(f"\n{SEP}")
     print("   PASO 6.5: WORDCLOUDS POR SENTIMIENTO")
     print(SEP)
-    from sentiment_wordclouds import generar_wordclouds_sentimiento
+    # [OPTIMIZACIÓN-2026] Wordclouds comentadas — no se usan en HTML.
+    # Descomentar si se necesitan para reporte offline.
+    if args.generate_wordclouds:
+        from sentiment_wordclouds import generar_wordclouds_sentimiento
 
-    wordcloud_results = generar_wordclouds_sentimiento(
-        df_clean=df_clean,
-        df_outliers=df_outliers,
-        text_column=args.text_col,
-        source_column=SOURCE_COLUMN,
-        output_dir=f"{args.output_dir}/sentiment/wordclouds",
-        lang=args.lang,
-        colormap_pos="Greens",
-        colormap_neg="Reds",
-        top_n=80,
-        palette=colors,
-    )
+        wordcloud_results = generar_wordclouds_sentimiento(
+            df_clean=df_clean,
+            df_outliers=df_outliers,
+            text_column=args.text_col,
+            source_column=SOURCE_COLUMN,
+            output_dir=f"{args.output_dir}/sentiment/wordclouds",
+            lang=args.lang,
+            colormap_pos="Greens",
+            colormap_neg="Reds",
+            top_n=80,
+            palette=colors,
+        )
+        print(f"  ✅ Wordclouds PNG -> {args.output_dir}/sentiment/wordclouds")
+    else:
+        print("  ⏭️  Wordclouds omitidas (--generate-wordclouds desactivado).")
 
     # ══ PASO 7: Modelado de tópicos por sentimiento ══
     _mark_step("PASO 7")
@@ -667,9 +878,11 @@ def main():
         print(f"   Tareas: {', '.join(args.comparison_tasks)}")
         print(f"   seed={args.seed} | bootstrap={args.bootstrap} | paleta={args.palette}")
         print(SEP)
-        written, failed = _run_comparison(
-            args, output_dir, df, embeddings, df_clean, df_outliers
+        ngram_written = _write_ngram_interactive(args, output_dir, df_clean, df_outliers)
+        comparison_written, failed = _run_comparison(
+            args, output_dir, df, embeddings, df_clean, df_outliers, embeddings_clean
         )
+        written += ngram_written + comparison_written
 
     # ══ RESUMEN FINAL ══
     print(f"\n{SEP}")
@@ -690,7 +903,10 @@ def main():
     print(f"       --csv-dmo {args.csv_dmo} \\")
     for u in args.csv_ugc:
         print(f"       --csv-ugc {u} \\")
-    print(f"       --text-col {args.text_col} --lang {args.lang} \\")
+    print(f"       --text-col {args.text_col} --lang {args.lang} --title \"{args.title}\" \\")
+    print(f"       --sentiment-neutral-tau {args.sentiment_neutral_tau} \\")
+    print("       --ngram-interactive \\" if args.ngram_interactive
+          else "       --no-ngram-interactive \\")
     print(f"       --outlier-method {args.outlier_method} --contamination {args.contamination} \\")
     print(f"       --output-dir {args.output_dir} --model {args.model} \\")
     print(f"       --palette {args.palette} --num-topicos {args.num_topicos}")

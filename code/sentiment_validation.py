@@ -191,7 +191,12 @@ def validar_sentimiento(
     }
 
     # ── 1. Validación con etiquetas débiles externas ──
+    # La validación de rating es binaria: las predicciones neutras se excluyen
+    # del cálculo (se reportan aparte), no se cuentan como fallos.
     weak = df_val[df_val["weak_label"].notna()].copy()
+    neutral_excluidos = int((weak[label_column] == "neutral").sum())
+    weak = weak[weak[label_column].isin(LABELS)].copy()
+    results["predicciones_neutras_excluidas"] = neutral_excluidos
 
     if len(weak) >= 10:
         y_true = weak["weak_label"].tolist()
@@ -217,6 +222,8 @@ def validar_sentimiento(
         merged = df_val.assign(_text=df_val[text_column].astype(str)).merge(
             gold, left_on="_text", right_on="gold_text", how="inner"
         )
+
+        merged = merged[merged[label_column].isin(LABELS)].copy()
 
         if len(merged) >= 5:
             results["gold"] = {

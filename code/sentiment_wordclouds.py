@@ -221,12 +221,13 @@ def generar_wordclouds_sentimiento(
     output_dir: str = "results/sentiment/wordclouds",
     lang: str = "es",
     colormap_pos: str = "Greens",
+    colormap_neu: str = "Blues",
     colormap_neg: str = "Reds",
     top_n: int = 80,
     palette: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """
-    Genera 4 wordclouds + imprime top-80 unigramas en consola.
+    Genera 6 wordclouds (normales/outliers × POS/NEU/NEG) + top-80 en consola.
     Devuelve un diccionario con las rutas de los PNG generados.
     """
     out = Path(output_dir)
@@ -236,6 +237,9 @@ def generar_wordclouds_sentimiento(
         colormap_pos = _colormap_from_colors(
             palette.get("positive", "#009E73"), palette.get("tertiary", "#E2E8F0")
         )
+        colormap_neu = _colormap_from_colors(
+            palette.get("neutral", "#7F8C8D"), palette.get("tertiary", "#E2E8F0")
+        )
         colormap_neg = _colormap_from_colors(
             palette.get("negative", "#D55E00"), palette.get("tertiary", "#E2E8F0")
         )
@@ -243,8 +247,10 @@ def generar_wordclouds_sentimiento(
     resultados: Dict[str, Any] = {}
     grupos = [
         ("Normales — Positivos",   df_clean, "positive", colormap_pos),
+        ("Normales — Neutrales",   df_clean, "neutral", colormap_neu),
         ("Normales — Negativos",   df_clean, "negative", colormap_neg),
         ("Outliers — Positivos",   df_outliers, "positive", colormap_pos),
+        ("Outliers — Neutrales",   df_outliers, "neutral", colormap_neu),
         ("Outliers — Negativos",   df_outliers, "negative", colormap_neg),
     ]
 

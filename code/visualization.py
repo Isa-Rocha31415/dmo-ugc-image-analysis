@@ -1,11 +1,10 @@
+import html
 import re
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from collections import Counter
 from typing import List
-import spacy
-from nltk.corpus import stopwords
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
@@ -25,19 +24,18 @@ from utils import (
 # EXTRACCIÓN DE N-GRAMAS
 # ============================================================
 def extraer_ngramas(textos: List[str], n: int) -> Counter:
-    """Extrae n-gramas de una lista de textos filtrando stopwords en español."""
-    ngramas = []
-    nlp_es = spacy.load("es_core_news_sm")
-    stop_words_es = set(stopwords.words('spanish'))
-    
+    """Extrae n-gramas con ``metrics_lexical.tokenize`` sobre ``text_norm``.
+
+    Misma tokenización que log-odds/cobertura: sin NLTK/spaCy y sin descargas.
+    """
+    from metrics_lexical import tokenize
+
+    counter: Counter = Counter()
     for texto in textos:
-        words = re.findall(r'\b\w+\b', str(texto).lower())
-        words = [w for w in words if w not in stop_words_es and len(w) > 2]
-        
-        for i in range(len(words) - n + 1):
-            ngramas.append(" ".join(words[i:i+n]))
-    
-    return Counter(ngramas)
+        tokens = tokenize(texto)
+        for i in range(len(tokens) - n + 1):
+            counter[" ".join(tokens[i:i + n])] += 1
+    return counter
 
 
 # ============================================================
@@ -189,6 +187,7 @@ def _td_palette(palette: Any) -> Dict[str, Any]:
             resolved["primary"] = colors[0]
             resolved["secondary"] = colors[1] if len(colors) > 1 else colors[0]
             resolved["positive"] = colors[0]
+            resolved["neutral"] = colors[2] if len(colors) > 2 else colors[0]
             resolved["negative"] = colors[1] if len(colors) > 1 else colors[0]
             resolved["categorical"] = colors
     else:
@@ -202,7 +201,8 @@ def _td_palette(palette: Any) -> Dict[str, Any]:
         for color in resolved.get("categorical", [])
         if isinstance(color, str)
     ]
-    for key in ("primary", "secondary", "tertiary", "quaternary", "positive", "negative"):
+    for key in ("primary", "secondary", "tertiary", "quaternary",
+                "positive", "neutral", "negative"):
         color = resolved.get(key)
         if isinstance(color, str) and color not in categorical:
             categorical.append(color)
@@ -1260,7 +1260,7 @@ def plot_topics_3d_umap(
         all_sources = []
         all_sentiments = []
         
-        for sentiment in ["positive", "negative"]:
+        for sentiment in ["positive", "neutral", "negative"]:
             if sentiment not in embeddings_dict:
                 continue
             
@@ -1303,6 +1303,7 @@ def plot_topics_3d_umap(
         fig = go.Figure()
         
         color_pos = pal["positive"]
+        color_neu = pal["neutral"]
         color_neg = pal["negative"]
 
         # Agregar puntos positivos (verde)
@@ -1323,7 +1324,21 @@ def plot_topics_3d_umap(
             ),
             hovertemplate="%{text}<extra></extra>",
         ))
-        
+
+        neu_mask = df_plot["sentiment"] == "neutral"
+        fig.add_trace(go.Scatter3d(
+            x=df_plot.loc[neu_mask, "x"],
+            y=df_plot.loc[neu_mask, "y"],
+            z=df_plot.loc[neu_mask, "z"],
+            mode="markers",
+            marker=dict(size=4, color=color_neu, opacity=0.6),
+            name="Neutro",
+            text=df_plot.loc[neu_mask, ["topic_name", "source"]].apply(
+                lambda x: f"{x['topic_name']}<br>Fuente: {x['source']}", axis=1
+            ),
+            hovertemplate="%{text}<extra></extra>",
+        ))
+
         # Agregar puntos negativos (rojo)
         neg_mask = df_plot["sentiment"] == "negative"
         fig.add_trace(go.Scatter3d(
@@ -1401,11 +1416,11 @@ def plot_topic_distribution_by_source_3d(
     # Mapear a coordenadas numéricas
     sources = sorted(grouped[source_column].unique())
     topics = sorted(grouped["topic_name"].unique())
-    sentiments = ["positive", "negative"]
+    sentiments = ["positive", "neutral", "negative"]
     
     source_idx = {s: i for i, s in enumerate(sources)}
     topic_idx = {t: i for i, t in enumerate(topics)}
-    sentiment_idx = {"positive": 0, "negative": 1}
+    sentiment_idx = {"positive": 0, "neutral": 1, "negative": 2}
     
     grouped["x"] = grouped[source_column].map(source_idx)
     grouped["y"] = grouped["topic_name"].map(topic_idx)
@@ -1416,10 +1431,9 @@ def plot_topic_distribution_by_source_3d(
     
     for sentiment in sentiments:
         subset = grouped[grouped["sentiment_label"] == sentiment]
-        if sentiment == "positive":
-            color = pal["positive"]
-        else:
-            color = pal["negative"]
+        if subset.empty:
+            continue
+        color = pal[sentiment]
         
         fig.add_trace(go.Scatter3d(
             x=subset["x"],
@@ -1465,3 +1479,122 @@ def plot_topic_distribution_by_source_3d(
     html_path = out / "topic_distribution_3d.html"
     fig.write_html(str(html_path))
     print(f"     ✅ Distribución 3D guardada: {html_path}")
+
+
+# ============================================================
+# UMAP 3D — comparación DMO vs UGC
+# ============================================================
+def _escaped_sample(value: Any, max_chars: int) -> str:
+    """Escapa HTML y trunca la celda final a ``max_chars`` sin romper entidades."""
+    escaped = html.escape(str(value))[:max_chars]
+    if "&" in escaped and escaped.rfind("&") > escaped.rfind(";"):
+        escaped = escaped[:escaped.rfind("&")]
+    return escaped.strip()
+
+
+def build_umap_3d_plot(
+    df_with_topics: pd.DataFrame,
+    embeddings: np.ndarray,
+    text_column: str = "text_norm",
+    source_column: str = "source",
+    topic_column: str = "topic_name",
+    sentiment_column: str = "sentiment_label",
+    coords_3d: Optional[np.ndarray] = None,
+    random_state: int = 42,
+    max_chars: int = 200,
+) -> go.Figure:
+    """Scatter 3D de comentarios: un trace por tópico y hover con el texto.
+
+    Los embeddings son los ya calculados en caché: esta función solo reduce a 3D
+    con UMAP (random_state explícito). ``coords_3d`` permite inyectar coordenadas
+    ya calculadas, útil en tests y para reutilizar reducciones cacheadas.
+    """
+    from plotly.colors import qualitative
+
+    n_rows = len(df_with_topics)
+    emb = np.asarray(embeddings)
+    if emb.ndim != 2 or emb.shape[0] != n_rows:
+        raise ValueError(
+            f"embeddings debe tener forma ({n_rows}, dim); se recibió {emb.shape}"
+        )
+    for col in (source_column, topic_column, sentiment_column):
+        if col not in df_with_topics.columns:
+            raise KeyError(f"No existe la columna: {col}")
+    text_col = text_column if text_column in df_with_topics.columns else "text"
+    if text_col not in df_with_topics.columns:
+        raise KeyError(f"No existe la columna de texto: {text_column}")
+
+    if coords_3d is None:
+        try:
+            import umap
+        except ImportError as exc:
+            raise ImportError(
+                "Se necesita umap-learn para la visualización 3D. "
+                "Instálalo con: pip install umap-learn. "
+                "O desactiva la sección con --no-umap-3d."
+            ) from exc
+        coords_3d = umap.UMAP(
+            n_components=3,
+            random_state=random_state,
+            n_neighbors=15,
+        ).fit_transform(emb)
+
+    coords = np.asarray(coords_3d)
+    if coords.ndim != 2 or coords.shape != (n_rows, 3):
+        raise ValueError(
+            "coords_3d/UMAP debe producir exactamente 3 componentes por comentario; "
+            f"se recibió {coords.shape}"
+        )
+
+    topics = sorted(df_with_topics[topic_column].astype(str).unique().tolist())
+    colors = qualitative.Plotly
+    fig = go.Figure()
+    for i, topic in enumerate(topics):
+        mask = df_with_topics[topic_column].astype(str).to_numpy() == topic
+        rows = df_with_topics.loc[mask]
+        points = coords[mask]
+        customdata = [
+            [
+                str(row[topic_column]),
+                str(row[source_column]),
+                str(row[sentiment_column]),
+                _escaped_sample(row[text_col], max_chars),
+            ]
+            for _, row in rows.iterrows()
+        ]
+        fig.add_trace(go.Scatter3d(
+            x=points[:, 0],
+            y=points[:, 1],
+            z=points[:, 2],
+            mode="markers",
+            name=topic,
+            customdata=customdata,
+            marker=dict(
+                size=5,
+                color=colors[i % len(colors)],
+                opacity=0.75,
+                line=dict(width=0),
+            ),
+            hovertemplate=(
+                "<b>%{customdata[0]}</b><br>"
+                "Fuente: %{customdata[1]}<br>"
+                "Sentimiento: %{customdata[2]}<br>"
+                "Texto: %{customdata[3]}"
+                "<extra></extra>"
+            ),
+            showlegend=True,
+        ))
+
+    fig.update_layout(
+        title="Distribución semántica de comentarios (UMAP 3D)",
+        scene=dict(
+            xaxis_title="UMAP 1",
+            yaxis_title="UMAP 2",
+            zaxis_title="UMAP 3",
+        ),
+        legend=dict(title="Tópico", orientation="h", yanchor="bottom", y=1.02),
+        margin=dict(l=0, r=0, b=0, t=80),
+        template="plotly_white",
+        height=820,
+    )
+    return fig

@@ -31,12 +31,18 @@ python run_analysis.py \
 | `--contamination` | float o `auto` | `auto` | Proporción de outliers. |
 | `--min-partition` | int | `50` | Mínimo de comentarios para modelar tópicos (si no, frecuencia de palabras). |
 | `--output-dir` | str | `results` | Salida (artefactos + caché). |
+| `--title` | str | `Imagen proyectada (DMO) vs imagen percibida (UGC)` | Título del informe HTML. |
 | `--top-n` | int | `50` | Top n-gramas en reportes. |
 | `--global-outliers` | flag | per-fuente | Detección global en vez de por fuente. |
 | `--model` | `bertopic` / `bidootopic` / `bidoo` | `bertopic` | Backend de modelado de tópicos. |
 | `--palette` | `ejecutiva`/`naturaleza`/`accesible`/`tecnologica`/`hospitalidad` | `ejecutiva` | Paleta de colores de todos los HTML. |
 | `--embedding-model` | str | `paraphrase-multilingual-MiniLM-L12-v2` | Modelo de sentence-transformers. |
 | `--sentiment-model` | str | modelo por defecto de `sentiment_analysis` | Modelo HF de sentimiento. |
+| `--sentiment-neutral-tau` | float | `0.15` | Banda `|sentiment_score| < τ` para la clase NEUTRO. Reetiqueta la caché existente; no recalcula el modelo. |
+| `--verbose-jaccard` | flag | OFF | Imprime Jaccard@100 auxiliar en consola al generar el informe HTML. Jaccard nunca aparece en el dashboard principal. |
+| `--ngram-interactive` / `--no-ngram-interactive` | flag | ON | Uni/bi/trigramas interactivos: cada barra muestra hasta 3 comentarios de `text_norm` en el hover. Desactivar con `--no-ngram-interactive`. |
+| `--umap-3d` / `--no-umap-3d` | flag | ON | Scatter 3D de comentarios por tópico sobre los embeddings cacheados. Requiere `umap-learn`; con `--no-umap-3d` se omite la sección. |
+| `--generate-wordclouds` | flag | OFF | Genera las imágenes PNG de wordclouds. Costoso; el HTML no las usa. Por defecto no se crea ningún `.png`/`.jpg`. |
 | `--stability-runs` | int | `3` | Corridas de estabilidad (antes 5; pasar 5 restaura el valor previo). |
 | `--subsample` | float | `0.75` | Fracción por corrida (antes 0.8; pasar 0.8 restaura el valor previo). |
 | `--force-parallel` | flag | — | Activa los pools del PASO 7 y del dispatcher (default serial: crossover 5k dio 0.58×). |
@@ -118,11 +124,65 @@ Se escribe en `<output-dir>/sentiment_validation/`:
 
 Etiquetas: rating externo 1–2 = negative, 3 = neutral (excluido), 4–5 = positive.
 Además: Spearman y MAE del score contra el rating (automático); el gold set humano,
-la ablación y el finetuning son opcionales y están OFF por defecto.
+la ablación y el finetuning son opcionales y están OFF por defecto. Las predicciones
+`neutral` se excluyen de esta validación binaria y se cuentan en
+`predicciones_neutras_excluidas`.
+
+## Polaridad POS / NEU / NEG
+
+El etiquetado usa la banda `|sentiment_score| < --sentiment-neutral-tau` (τ=0.15)
+sobre el score ya cacheado: `>τ` → positive, `<-τ` → negative, resto → neutral.
+No se descarga ni se recalcula ningún modelo. Columnas producidas:
+`sentiment_label` (`positive`/`neutral`/`negative`) y `sentiment_label_id` (1/0/-1).
+
+La polaridad se reporta **solo como métrica descriptiva**: tabla POS/NEU/NEG por
+corpus y fuente en `comparison/report/sentiment_descriptive.csv` y en la sección
+"Métricas descriptivas de polaridad" del HTML. No se usa como prueba de la brecha
+DMO vs UGC; las pruebas temáticas, de precio y los tópicos por sentimiento siguen
+corriendo con sus artefactos habituales (ahora con la partición neutral añadida).
+
+## Jaccard (auxiliar)
+
+`metrics_lexical.csv` conserva `jaccard_freq`/`jaccard_tfidf` y `metrics_lexical.py`
+sigue imprimiéndolos en consola. El generador del informe HTML no renderiza Jaccard
+en el bloque principal; con `--verbose-jaccard` solo los imprime también en consola.
 
 ## Tareas y SLURM
 
-`--comparison-tasks`: `base topics lexical thematic price` (implementadas) y `semantic
-affective figures report` (PENDIENTE, sin fallar). Pasos 15/17 = huecos; no existen `ias`/`qualitative`.
+`--comparison-tasks`: `base topics lexical thematic price report` (implementadas; `report`
+genera `informe_final.html`) y `semantic affective figures` (PENDIENTE, sin fallar).
+Pasos 15/17 = huecos; no existen `ias`/`qualitative`.
+
+## N-gramas interactivos
+
+`run_analysis.py` genera `results/ngram_interactive.html` antes de la tarea `report` y
+lo inyecta en `informe_final.html` (marcador `{{NGRAM_SECTION}}`). Cada orden (uni/bi/tri)
+es una única figura Plotly con dos botones ("Comentarios Normales" / "Comentarios Outliers")
+que alternan las dos trazas. El hover de cada barra muestra frecuencia y hasta tres
+comentarios de `text_norm` (120 chars, escapados para HTML), obtenidos de
+`analysis_base.csv` y `outliers_base.csv`. La tokenización es `metrics_lexical.tokenize`.
+Con `--no-ngram-interactive` se omite el bloque y el HTML muestra un placeholder.
+
+## Tópicos y UMAP 3D en el informe
+
+La tarea `topics` escribe `comparison/report/topics_summary.csv` con columnas
+`topic_id,title,top5_words,all_keywords,coverage_pct,n_docs`. La cobertura es
+`n_docs_asignados / total_comentarios_en_análisis * 100`; el título es el nombre
+auto-generado del tópico (o la primera palabra si no hay nombre). El mismo bloque
+con formato de caja se imprime en consola y se inyecta en `informe_final.html`.
+
+El scatter `Distribución semántica de comentarios (UMAP 3D)` usa
+`comparison/base/embeddings_clean.npy` (ya cacheados), `n_components=3` y
+`random_state=--seed`. Un trace por tópico, leyenda visible y hover con tópico,
+fuente, sentimiento y texto truncado a 200 caracteres. La tabla de puntos se
+exporta a `comparison/report/umap_3d_points.csv`. Si falta `umap-learn`, el error
+indica usar `--no-umap-3d`.
+
+## Secciones del dashboard
+
+`informe_final.html` incluye ocho secciones con IDs estables: `ejecutivo`,
+`polaridad-descriptiva`, `lexico`, `ngramas`, `topicos`, `umap-3d`,
+`pruebas-estadisticas` y `metadatos-run`. Las tareas sin artefactos (`semantic`,
+`affective`, `figures`) dejan placeholders con ID propio.
 Wrapper activo: `../slurm_script_CUDA.sh` (raíz; `_copy`/`_test` en `legacy/slurm/`).
 Envío desde la raíz: `sbatch slurm_script_CUDA.sh`; hace `cd code/`, usa GPU y fija las cinco tareas en A/B.
