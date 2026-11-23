@@ -582,14 +582,13 @@ def main():
                          "(--no-price-center = raw; default: centrado)")
     pg.add_argument("--price-tau-quantile", type=float, default=0.95,
                     help="Cuantil del placebo usado como τ (F4.2)")
-    pg.add_argument("--price-placebo-docs", type=int, default=200,
-                    help="Docs aleatorios del corpus en el placebo de τ")
+    pg.add_argument("--price-placebo-docs", type=int, default=500,
+                    help="Alias legacy de --price-sample-size (docs aleatorios del placebo)")
     pg.add_argument("--price-sample-size", "--price-validation-n", dest="price_sample_size",
-                    type=int, default=100,
-                    help="Compatibilidad legacy: sin uso (validación no realizada)")
-    pg.add_argument("--price-annotation-file",
-                    default="../legacy/annotation/precio_valor_labels.csv",
-                    help="Compatibilidad legacy: sin uso (validación no realizada)")
+                    type=int, default=500,
+                    help="Docs aleatorios del corpus para calibrar τ por placebo (F4.3)")
+    pg.add_argument("--price-annotation-file", default=None,
+                    help="Legacy ignorado: la validación es automática, sin anotación humana")
     pg.add_argument("--price-top-k", type=int, default=5,
                     help="Top-k ejemplos por corpus/fuente (F4.4)")
 

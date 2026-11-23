@@ -12,6 +12,11 @@ CODE_DIR = Path(__file__).resolve().parents[1] / "code"
 if str(CODE_DIR) not in sys.path:
     sys.path.insert(0, str(CODE_DIR))
 
+from price_concept import (  # noqa: E402
+    DEFAULT_ANCHORS, filtrar_normales, load_price_anchors,
+    price_traceability_context, propagate_price_traceability,
+    synthetic_anchor_centroid,
+)
 from price_validation import (  # noqa: E402
     ablation_predictions, bootstrap_metrics_ci, classification_metrics,
     cohen_kappa, consensus_labels, load_annotations, make_stratified_sample,
@@ -151,8 +156,134 @@ def test_ablation_rules():
 
 
 def test_validacion_automatica_sin_escrituras(tmp_path):
-    args = type("Args", (), {"bootstrap": 10, "seed": 42})()
+    """La rama automática sustituye a la antigua salida 'no_realizada'."""
+    args = type("Args", (), {"bootstrap": 10, "seed": 42,
+                             "price_sample_size": 40})()
     out = run_price_validation(args, tmp_path, _synth_scores(20), 0.42, 0.95)
-    assert out["status"] == "no_realizada" and out["validated"] is False
-    assert out["paths"] == [] and out["tau"] == 0.42
-    assert not list(tmp_path.rglob("annotation_sample.csv"))
+    assert out["status"] == "validada_automaticamente"
+    assert out["validated"] is True
+    assert out["tau"] == 0.42
+    assert out["detector_primario"] == "semantic"
+    auto = tmp_path / "comparison" / "price" / "price_validation_auto.csv"
+    assert auto.exists()
+
+
+# ── F4.3 automática (sin intervención humana) ──
+def _auto_args(**extra):
+    base = {"bootstrap": 10, "seed": 42, "price_sample_size": 60,
+            "price_jackknife_replicas": 5, "price_tau_quantile": 0.95}
+    base.update(extra)
+    return type("Args", (), base)()
+
+
+def test_no_hay_rama_humana():
+    src = (CODE_DIR / "price_validation.py").read_text(encoding="utf-8")
+    assert "human_label" not in src
+    assert "annotation_sample.csv" not in src
+    assert 'status="no_realizada"' not in src
+    cli = (CODE_DIR / "run_analysis.py").read_text(encoding="utf-8")
+    assert "--price-annotation-file" in cli  # se conserva, ignorado
+
+
+def test_run_price_validation_no_retorna_no_realizada(tmp_path):
+    out = run_price_validation(_auto_args(), tmp_path, _synth_scores(60), 0.42, 0.95)
+    assert out["status"] == "validada_automaticamente"
+    price_dir = tmp_path / "comparison" / "price"
+    for name in ("price_validation_auto.csv", "price_threshold_sensitivity.csv",
+                 "price_anchor_jackknife.csv", "price_validation_status.json"):
+        assert (price_dir / name).exists(), name
+
+
+def test_kappa_semantic_vs_lexical_se_calcula_y_esta_etiquetado_como_referencia_debil(tmp_path):
+    df = _synth_scores(80)
+    df["score_semantic"] = np.where(df["lex_count"] > 1, 0.8, 0.1)
+    df["score_lexical"] = df["lex_count"].astype(float)
+    out = run_price_validation(_auto_args(), tmp_path, df, 0.5, 0.95)
+    auto = pd.read_csv(tmp_path / "comparison" / "price" / "price_validation_auto.csv",
+                       encoding="utf-8-sig")
+    assert "kappa_semantic_vs_lexical" in auto.columns
+    assert auto["kappa_semantic_vs_lexical"].notna().any()
+    assert (auto["reference_type"] == "weak_lexical_reference_not_gold_standard").any()
+    assert "accuracy" not in [str(c).lower() for c in auto.columns]
+    assert out["reference_type"] == "weak_lexical_reference_not_gold_standard"
+
+
+def test_sensibilidad_tau_reporta_gap_sign_stable(tmp_path):
+    placebo = np.linspace(0, 1, 300)
+    out = run_price_validation(_auto_args(), tmp_path, _synth_scores(80), 0.42, 0.95,
+                               placebo_scores=placebo)
+    sens = pd.read_csv(
+        tmp_path / "comparison" / "price" / "price_threshold_sensitivity.csv",
+        encoding="utf-8-sig")
+    assert len(sens) == 3
+    assert {"tau_quantile", "tau", "rate_dmo", "rate_ugc", "gap_sign",
+            "gap_sign_stable"} <= set(sens.columns)
+    assert set(sens["gap_sign_stable"].unique()) <= {True, False}
+    assert out["checks_ejecutados"] and "threshold_sensitivity" in out["checks_ejecutados"]
+
+
+def test_jackknife_es_reproducible_con_seed_42(tmp_path):
+    rng = np.random.default_rng(7)
+    df = _synth_scores(60)
+    doc_emb = rng.normal(size=(60, 8)).astype(np.float32)
+    anchor_emb = rng.normal(size=(20, 8)).astype(np.float32)
+    kw = dict(doc_emb=doc_emb, anchor_emb=anchor_emb,
+              placebo_scores=np.linspace(0, 1, 100))
+    run_price_validation(_auto_args(), tmp_path / "a", df, 0.42, 0.95, **kw)
+    run_price_validation(_auto_args(), tmp_path / "b", df, 0.42, 0.95, **kw)
+    a = pd.read_csv(tmp_path / "a" / "comparison" / "price" / "price_anchor_jackknife.csv",
+                    encoding="utf-8-sig")
+    b = pd.read_csv(tmp_path / "b" / "comparison" / "price" / "price_anchor_jackknife.csv",
+                    encoding="utf-8-sig")
+    pd.testing.assert_frame_equal(a, b)
+    assert len(a) == 5
+    assert {"replicate", "spearman_top5", "rate_delta"} <= set(a.columns)
+
+
+def test_placebo_fpr_se_reporta(tmp_path):
+    placebo = np.linspace(0, 1, 200)
+    components = {"neg_control_seguridad": np.linspace(0, 0.4, 50),
+                  "random_docs": placebo}
+    out = run_price_validation(_auto_args(), tmp_path, _synth_scores(80), 0.42, 0.95,
+                               placebo_scores=placebo, placebo_components=components)
+    auto = pd.read_csv(tmp_path / "comparison" / "price" / "price_validation_auto.csv",
+                       encoding="utf-8-sig")
+    assert {"placebo_fpr_controls", "placebo_fpr_random"} <= set(auto.columns)
+    assert 0.0 <= float(out["placebo_fpr_random"]) <= 1.0
+    assert "placebo_fpr" in out["checks_ejecutados"]
+
+
+def test_anchors_sha256_se_propaga_a_todos_los_csv(tmp_path):
+    anchors = load_price_anchors(DEFAULT_ANCHORS)
+    scores = _synth_scores(20)
+    ctx = price_traceability_context(anchors, DEFAULT_ANCHORS, scores, 0.42, 42)
+    price_dir = tmp_path / "comparison" / "price"
+    price_dir.mkdir(parents=True)
+    for name in ("price_scores.csv", "price_comparison.csv"):
+        pd.DataFrame({"doc_id": [1]}).to_csv(
+            price_dir / name, index=False, encoding="utf-8-sig")
+    written = propagate_price_traceability(tmp_path, ctx)
+    assert len(written) == 2
+    for path in written:
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        for col in ("anchors_version", "anchors_sha256", "seed", "tau",
+                    "detector_primario", "n_normales", "n_por_fuente"):
+            assert col in df.columns, (path.name, col)
+        assert df["anchors_sha256"].iloc[0] == ctx["anchors_sha256"]
+
+
+def test_precio_excluye_outliers():
+    base = pd.DataFrame({"doc_id": [0, 1, 2], "is_outlier": [False, True, False]})
+    emb = np.arange(12, dtype=np.float32).reshape(3, 4)
+    clean, clean_emb = filtrar_normales(base, emb)
+    assert clean["doc_id"].tolist() == [0, 2]
+    assert clean_emb.shape == (2, 4)
+
+
+def test_synthetic_centroid_es_unitario_y_puro():
+    rng = np.random.default_rng(42)
+    emb = rng.normal(size=(9, 6))
+    centroid = synthetic_anchor_centroid(emb)
+    assert centroid.shape == (6,)
+    assert np.linalg.norm(centroid) == pytest.approx(1.0)
+

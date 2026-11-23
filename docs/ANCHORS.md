@@ -32,6 +32,27 @@ los trata como parámetros de entrada, no como salidas de datos.
 - La ancla léxica (`terms_*`, `patterns`) se aplica con la tokenización regex ya
   existente; `patterns` son regex compatibles con `re` (case-insensitive).
 
+## Validación automática (F4.3, sin anotación humana)
+El detector primario es `semantic`: coseno entre el embedding del documento y el
+centroide L2 del ancla sintética (media normalizada de los embeddings de sus
+términos/frases). `lexical` e `hybrid` se conservan solo como ablación de
+robustez; los scores de registro (reseña vs promocional) son una variable
+secundaria de encuadre.
+
+F4.3 se ejecuta sin intervención humana sobre scores ya calculados:
+`kappa_semantic_vs_lexical` (κ de Cohen contra una referencia débil —
+`reference_type="weak_lexical_reference_not_gold_standard"`; NO es exactitud ni
+acuerdo inter-anotador), FPR sobre controles negativos y docs aleatorios,
+sensibilidad de τ en {p90, p95, p97.5} con `gap_sign_stable`, jackknife del
+ancla (200 réplicas quitando 20% de términos, seed 42) e IC bootstrap 95% de
+tasas y cosenos por fuente (n_boot ≥ 1000 por defecto).
+
+**Limitación declarada:** no hay anotación humana. El JSON registra
+`provenance.review.status = "validacion_automatica"` y `review.method` con las
+cinco comprobaciones. El flag CLI `--price-annotation-file` queda aceptado pero
+ignorado con `DeprecationWarning`. `anchors_version` y `anchors_sha256` se
+propagan a todos los CSV de `comparison/price/` para trazabilidad.
+
 ## Cómo revisar / editar
 1. Cambia el JSON (o el prompt) y **sube `version`** (1.0 → 1.1). Nunca edites
    una versión publicada sin bump: la caché de scores clavea por `concept_id`

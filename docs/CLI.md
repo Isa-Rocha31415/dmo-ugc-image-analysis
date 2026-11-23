@@ -57,11 +57,11 @@ python run_analysis.py \
 | `--finetune-model` | str | `pysentimiento/robertuito-sentiment-analysis` | Modelo a afinar. |
 | `--price-anchor-file` | str | `resources/anchors/precio_valor.json` | JSON de anchors (F4.2). Alias: `--price-anchors`. |
 | `--price-tau-quantile` | float | `0.95` | Cuantil del placebo usado como τ. |
-| `--price-placebo-docs` | int | `200` | Docs aleatorios en el placebo de τ. |
-| `--price-mode` | `semantic`/`lexical`/`hybrid` | `semantic` | Regla del detector: `>=τ`, `lex>0`, o `>=τ`/`lex>=2`. |
+| `--price-placebo-docs` | int | `500` | Alias legacy de `--price-sample-size`. |
+| `--price-mode` | `semantic`/`lexical`/`hybrid` | `semantic` | Detector primario SIEMPRE `semantic`; los otros dos solo son ablaciones. |
 | `--price-center` / `--no-price-center` | flag | centrado | Score semántico centrado (`--no-price-center` = raw). |
-| `--price-sample-size` | int | `100` | Legacy, sin uso: no se exportan muestras. Alias: `--price-validation-n`. |
-| `--price-annotation-file` | str | `../legacy/annotation/precio_valor_labels.csv` | Legacy, sin uso: no se leen anotaciones. |
+| `--price-sample-size` | int | `500` | Docs aleatorios del corpus para calibrar τ por placebo (alias: `--price-validation-n`). |
+| `--price-annotation-file` | str | — | Legacy aceptado pero IGNORADO: avisa `DeprecationWarning`; no se leen anotaciones. |
 | `--price-top-k` | int | `5` | Top-k ejemplos por corpus/fuente (F4.4). |
 
 ## Tarea `price` (PASO 12, F4.2–F4.4)
@@ -75,9 +75,18 @@ python run_analysis.py \
    `price_context_logodds.csv`, `price_top_examples.csv`,
    `price_scatter_prototypes.html`/`_data.csv`, `price_scatter_valence.html`/`_data.csv`,
    `price_summary.html`, `price_density.csv`.
-3. Validación F4.3 automática: `run_price_validation` devuelve `status="no_realizada"`,
-   sin escribir muestras ni leer anotaciones (guía y plantilla en `legacy/annotation/`).
-   τ por placebo sigue calibrándose en F4.2.
+3. Validación F4.3 automática (sin intervención humana): el detector primario es
+   `semantic` (coseno contra el centroide L2 del ancla sintética; `lexical` e
+   `hybrid` solo son ablaciones). Escribe `price_validation_auto.csv`,
+   `price_threshold_sensitivity.csv`, `price_anchor_jackknife.csv` y
+   `price_validation_status.json` (`status="validada_automaticamente"`).
+   Comprobaciones: κ `semantic_vs_lexical` (referencia débil, NO gold standard),
+   FPR placebo, sensibilidad τ∈{p90,p95,p97.5} con `gap_sign_stable`, jackknife
+   del ancla (200 réplicas, 20% de términos, seed 42) e IC bootstrap 95%.
+   Solo docs normales: outliers excluidos. Todos los CSV llevan
+   `anchors_version`, `anchors_sha256`, `seed`, `tau`, `detector_primario`,
+   `n_normales` y `n_por_fuente`. Ver `docs/ANCHORS.md` (limitación: sin anotación
+   humana).
 4. Comparación F4.4b en el mismo subdir: `price_comparison.csv` (tasas DMO vs
    UGC_total y por fuente con CI bootstrap `--bootstrap`/`--seed`, χ² o Fisher + BH,
    Mann-Whitney + KS + Cliff's delta, banda neutra `|sentiment|<0.15`),
@@ -89,6 +98,31 @@ python run_analysis.py \
    Caché propia idempotente: `<cache-dir>/price/manifest.json` guarda un
    fingerprint de (parámetros, scores); si no cambia y los outputs existen la
    segunda corrida no recalcula (`--no-cache` fuerza el recálculo).
+5. PASO 12.8 (informe del concepto): `price_density.csv` (histograma normalizado
+   por fuente), `price_distribution_tests.csv` (EMD/Wasserstein + JSD,
+   histogramas normalizados DMO vs UGC), `price_alignment.csv` (media/mediana de
+   coseno, coseno de centroides entre menciones, gaps),
+   `price_valence_conditioned.csv`, `price_context_logodds.csv` (top-15),
+   `price_topic_crosstab.csv`, `price_examples.csv` (top-5 global/DMO/UGC/plataforma
+   con fuente visible), `price_comparison.csv` enriquecido con `test_used` y
+   `test_reason`, `price_scatter_similarity.html` (todos los normales; x=coseno,
+   y=sentiment_score; color+símbolo por fuente, 3 modos de color, línea τ),
+   `price_umap_concept.html` (color continuo de coseno, concepto = baricentro
+   k-NN etiquetado como aproximado), sus `_data.csv`, `price_findings.md` y
+   `<output-dir>/price_section.html`. La tarea `report` inyecta esa sección en
+   `{{PRICE_SECTION}}`. Si hay <10 menciones DMO se imprime WARNING y aparece
+   el aviso de tasas inestables en el HTML.
+
+Corrida real sobre el corpus completo (CPU, reutilizando caché):
+
+```bash
+cd ~/ac_4/code
+CUDA_VISIBLE_DEVICES='' python run_analysis.py \
+  --csv-dmo ../data/processed/df_dmo.csv \
+  --csv-ugc ../data/processed/df_ugc.csv \
+  --text-col text --output-dir ../results \
+  --comparison-tasks base topics price report --seed 42 --price-sample-size 500
+```
 
 ## Caché
 

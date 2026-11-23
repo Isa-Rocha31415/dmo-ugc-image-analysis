@@ -277,7 +277,10 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
             )
 
     price_html = '<div class="placeholder">No hay datos de precio/valor</div>'
-    if price_scores is not None and not price_scores.empty:
+    price_section_path = results_dir / "price_section.html"
+    if price_section_path.exists():
+        price_html = price_section_path.read_text(encoding="utf-8")
+    elif price_scores is not None and not price_scores.empty:
         price_fig = _make_figure_box(
             Path("comparison/price/price_scatter_valence.html"), results_dir,
             "Scatter de valencia no disponible",

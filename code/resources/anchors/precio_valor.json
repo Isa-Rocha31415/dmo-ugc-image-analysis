@@ -1,6 +1,7 @@
 {
   "concept_id": "precio_valor",
   "version": "1.0",
+  "anchors_sha256": "74c5e60f9562008a08749f3fed699b857a891994cee53c5655d48755ef332a45",
   "description": "Anchors estaticos para el concepto PRECIO / VALOR / COSTO: percepcion de cuanto se pago y si valio lo que costo (UGC) y proyeccion de valor por precio (DMO).",
   "provenance": {
     "generator": "GLM-5.3-Flash (opencode)",
@@ -12,10 +13,17 @@
     "authors": ["Isabel Rocha", "GLM-5.3-Flash"],
     "corpus_seen": false,
     "review": {
-      "status": "pendiente_revision_humana",
+      "status": "validacion_automatica",
       "reviewer": null,
       "reviewed_utc": null,
-      "notes": "Revision manual pendiente: validar tono, cobertura dialectal (ES/EN) y ausencia de leakage contra el corpus."
+      "method": [
+        "kappa_semantic_vs_lexical",
+        "placebo_fpr",
+        "threshold_sensitivity",
+        "anchor_jackknife",
+        "bootstrap_ci"
+      ],
+      "notes": "Sin anotacion humana: F4.3 usa validacion automatica sobre scores cacheados. La ausencia de anotacion humana se declara como limitacion metodologica; lexical es referencia debil, no gold standard."
     }
   },
   "prototypes": {

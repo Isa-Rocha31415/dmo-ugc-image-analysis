@@ -8,21 +8,21 @@ Diseño
   El pipeline solo lee el JSON; nunca lo regenera ni llama APIs externas.
 - Embeddings de prototipos/controles: sentence-transformers local ya cacheado
   (mismo modelo que el PASO 2); se fuerza modo offline (HF_HUB_OFFLINE).
-- Score por documento:
-    sim_resena  = max coseno contra prototipos de registro reseña (es+en)
-    sim_promo   = max coseno contra prototipos de registro promocional (es+en)
-    score       = max(sim_resena, sim_promo)
-  Dos modos: "raw" (espacio original) y "centered" (centrado por media del
+- Detector PRIMARIO: coseno contra el centroide L2 del ancla sintética
+  (media normalizada de los embeddings de sus términos/frases). Define la
+  mención del concepto. `lexical`/`hybrid` y los scores de registro quedan
+  como ablaciones de robustez, nunca como criterio principal.
+- Dos modos: "raw" (espacio original) y "centered" (centrado por media del
   corpus y renormalizado; default) → se guardan ambos para ablación.
 - Calibración de τ por placebo: τ = cuantil q de los scores placebo
   (controles negativos + N documentos aleatorios del corpus, seed fija).
-  No hay etiquetas humanas ni leakage del corpus en los anchors.
+  No hay anotación humana ni leakage del corpus en los anchors.
 
 Outputs (results/comparison/price/): price_scores.csv, tau_calibration.csv,
 tau_sensitivity.csv, panel F4.4 (mention_rate_by_source, score_distribution_tests,
 valence_conditioned, price_context_logodds, price_top_examples, scatters, summary),
 F4.4b (price_comparison, price_context_terms, price_kpis, price_examples_topk),
-F4.3 (annotation_sample + price_validation si hay etiquetas) + caché propia
+F4.3 automática (validación sin anotación humana) + caché propia
 (<cache-dir>/price/manifest.json, idempotente) + filas en run_metadata.csv.
 """
 from __future__ import annotations
@@ -32,6 +32,7 @@ import hashlib
 import json
 import re
 import unicodedata
+import warnings
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -282,6 +283,106 @@ def calibrate_tau(placebo_scores: np.ndarray, quantile: float) -> float:
     return float(np.quantile(scores, quantile))
 
 
+def filtrar_normales(
+    base: pd.DataFrame, embeddings: np.ndarray,
+) -> tuple[pd.DataFrame, np.ndarray]:
+    """Descarta outliers antes de cualquier score o prueba (función pura)."""
+    emb = np.asarray(embeddings)
+    if "is_outlier" not in base.columns:
+        return base.reset_index(drop=True), emb
+    mask = ~base["is_outlier"].fillna(False).astype(bool).to_numpy()
+    return base.loc[mask].reset_index(drop=True), emb[mask]
+
+
+def anchors_sha256(anchors_path: str | Path) -> str:
+    """SHA256 canónico del JSON de anclas, sin el campo autorreferencial."""
+    data = json.loads(Path(anchors_path).read_text(encoding="utf-8"))
+    data.pop("anchors_sha256", None)
+    payload = json.dumps(data, sort_keys=True, ensure_ascii=False,
+                         separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def synthetic_anchor_texts(anchors: Mapping[str, Any]) -> list[str]:
+    """Términos/frases del ancla sintético: todos los prototipos versionados."""
+    texts: list[str] = []
+    for group in REQUIRED_PROTOTYPE_GROUPS:
+        texts.extend(str(t) for t in (anchors["prototypes"].get(group) or []))
+    return texts
+
+
+def synthetic_anchor_centroid(anchor_emb: np.ndarray) -> np.ndarray:
+    """Centroide del ancla: media normalizada de embeddings ya normalizados."""
+    vectors = l2_normalize(np.asarray(anchor_emb, dtype=float))
+    if vectors.ndim != 2 or vectors.shape[0] == 0:
+        raise ValueError("Se necesitan embeddings de ancla para el centroide.")
+    return l2_normalize(vectors.mean(axis=0, keepdims=True))[0]
+
+
+def centroid_scores(
+    doc_emb: np.ndarray,
+    centroid: np.ndarray,
+    mode: str = "centered",
+    mean: np.ndarray | None = None,
+) -> np.ndarray:
+    """Coseno documento↔centroide del ancla (función pura)."""
+    if mode not in SCORE_MODES:
+        raise ValueError(f"mode debe ser uno de {SCORE_MODES}: {mode!r}")
+    docs = np.asarray(doc_emb, dtype=float)
+    center = np.asarray(centroid, dtype=float).reshape(1, -1)
+    if mode == "centered":
+        mu = np.asarray(docs.mean(axis=0)) if mean is None else np.asarray(mean, dtype=float)
+        return _max_cosine(docs - mu, center - mu)
+    return _max_cosine(docs, center)
+
+
+def score_bands(score: np.ndarray, tau: float) -> np.ndarray:
+    """Banda de stratificación: alto / medio / bajo / placebo_bajo."""
+    s = np.asarray(score, dtype=float)
+    t = float(tau)
+    return np.where(
+        s >= t, "alto",
+        np.where(s >= 0.8 * t, "medio",
+                 np.where(s >= 0.5 * t, "bajo", "placebo_bajo")),
+    )
+
+
+def price_traceability_context(
+    anchors: Mapping[str, Any],
+    anchors_path: str | Path,
+    scores: pd.DataFrame,
+    tau: float,
+    seed: int,
+    detector_primario: str = "semantic",
+) -> dict[str, Any]:
+    """Contexto común de trazabilidad para todos los artefactos de price."""
+    counts = scores[SOURCE_COLUMN].astype(str).value_counts().sort_index()
+    return {
+        "anchors_version": str(anchors.get("version", "")),
+        "anchors_sha256": anchors_sha256(anchors_path),
+        "seed": int(seed),
+        "tau": round(float(tau), 6),
+        "detector_primario": detector_primario,
+        "n_normales": int(len(scores)),
+        "n_por_fuente": ";".join(f"{k}={int(v)}" for k, v in counts.items()),
+    }
+
+
+def propagate_price_traceability(results_dir: Path, context: Mapping[str, Any]) -> list[Path]:
+    """Añade las columnas de trazabilidad a TODOS los CSV de comparison/price."""
+    price_dir = Path(results_dir) / "comparison" / PRICE_OUTPUT_SUBDIR
+    written: list[Path] = []
+    for path in sorted(price_dir.glob("*.csv")):
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        missing = [c for c in context if c not in df.columns]
+        if not missing:
+            continue
+        for col in missing:
+            df[col] = context[col]
+        written.append(save_csv(df, path))
+    return written
+
+
 # ─────────────────────────── Orquestación ───────────────────────────
 def _load_base_artifacts(results_dir: Path) -> tuple[pd.DataFrame, np.ndarray, Path]:
     """Lee analysis_base.csv + embeddings_clean.npy del PASO 8 (base)."""
@@ -295,6 +396,7 @@ def _load_base_artifacts(results_dir: Path) -> tuple[pd.DataFrame, np.ndarray, P
         )
     base = pd.read_csv(base_csv, encoding="utf-8-sig")
     emb = np.load(emb_npy)
+    base, emb = filtrar_normales(base, emb)
     if len(base) != emb.shape[0]:
         raise ValueError(
             f"analysis_base.csv ({len(base)}) no alinea con embeddings_clean.npy "
@@ -347,7 +449,8 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     )
     anchors = load_price_anchors(anchors_path)
     tau_quantile = float(getattr(args, "price_tau_quantile", 0.95))
-    placebo_docs_n = int(getattr(args, "price_placebo_docs", 300))
+    placebo_docs_n = int(getattr(args, "price_sample_size", None)
+                         or getattr(args, "price_placebo_docs", 500))
     model_name = str(getattr(args, "embedding_model", "paraphrase-multilingual-MiniLM-L12-v2"))
     seed = int(getattr(args, "seed", 42))
     cache_dir = Path(getattr(args, "cache_dir", None) or (results_dir / "cache"))
@@ -366,12 +469,24 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         emb_by_register[row["register"]].append(vec)
     anchor_by_register = {k: np.asarray(v) for k, v in emb_by_register.items()}
 
+    # Ancla sintética primaria: centroide L2 de todas las frases del ancla.
+    anchor_texts = synthetic_anchor_texts(anchors)
+    anchor_centroid_emb = embed_anchor_texts(
+        anchor_texts, model_name, cache_dir=cache_dir, anchors=anchors)
+    anchor_centroid = synthetic_anchor_centroid(anchor_centroid_emb)
+    print(f"  Ancla sintética: {len(anchor_texts)} términos/frases | "
+          f"resueltos {len(anchor_centroid_emb)} (encoder offline si faltaban en caché)")
+
     neg_texts = [str(t) for texts in anchors["negative_controls"].values() for t in texts]
     neg_emb = embed_anchor_texts(neg_texts, model_name, cache_dir=cache_dir, anchors=anchors)
 
     # ── Scores por documento (ambos modos → ablación) ──
     scores_by_mode = {
         mode: compute_price_scores(emb, anchor_by_register, mode=mode)
+        for mode in SCORE_MODES
+    }
+    semantic_by_mode = {
+        mode: centroid_scores(emb, anchor_centroid, mode=mode)
         for mode in SCORE_MODES
     }
     lexical = lexical_hits(base["text"].astype(str).tolist(), anchors["lexical_anchor"])
@@ -388,19 +503,21 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         raise ValueError(
             f"--price-mode debe ser uno de {DETECTOR_MODES + SCORE_MODES}: {raw_mode!r}")
     default_mode = score_mode
+    # El modo elegido por CLI queda como ablación; la mención siempre la define semantic.
+    detector_ablation = detector
+    detector = "semantic"
 
     # ── Placebo: controles negativos + N docs aleatorios del corpus ──
     rng = np.random.default_rng(seed)
     rand_idx = np.sort(rng.choice(len(base), size=min(placebo_docs_n, len(base)),
                                   replace=False))
     placebo_by_component: dict[str, np.ndarray] = {}
-    for i, name in enumerate(anchors["negative_controls"]):
+    neg_semantic = centroid_scores(neg_emb, anchor_centroid, mode=default_mode)
+    for name in anchors["negative_controls"]:
         rows = [t for t in anchors["negative_controls"][name]]
-        vecs = neg_emb[[neg_texts.index(t) for t in rows]]
-        neg_scores = compute_price_scores(vecs, anchor_by_register, mode=default_mode)["score"]
-        placebo_by_component[f"neg_control_{name}"] = neg_scores
-    rand_scores = compute_price_scores(emb[rand_idx], anchor_by_register,
-                                       mode=default_mode)["score"]
+        idx = [neg_texts.index(t) for t in rows]
+        placebo_by_component[f"neg_control_{name}"] = neg_semantic[idx]
+    rand_scores = centroid_scores(emb[rand_idx], anchor_centroid, mode=default_mode)
     placebo_by_component["random_docs"] = rand_scores
     placebo_scores = np.concatenate([v for v in placebo_by_component.values() if len(v)])
 
@@ -408,7 +525,8 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     print(f"  Placebo: {len(placebo_scores)} scores | τ(q={tau_quantile}) = {tau:.4f}")
 
     # ── price_scores.csv ──
-    scores = scores_by_mode[default_mode]
+    lex_count_arr = np.asarray([h["lex_count"] for h in lexical], dtype=int)
+    semantic = semantic_by_mode[default_mode]
     out = pd.DataFrame({
         "doc_id": base["doc_id"].to_numpy(),
         "text": base["text"].astype(str).to_numpy(),
@@ -418,7 +536,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         SOURCE_COLUMN: base[SOURCE_COLUMN].to_numpy(),
         "sentiment_label": base["sentiment_label"].to_numpy(),
         "sentiment_score": base["sentiment_score"].astype(float).to_numpy(),
-        "lex_count": [h["lex_count"] for h in lexical],
+        "lex_count": lex_count_arr,
         "lex_terms": [h["terms"] for h in lexical],
         "lex_patterns": [h["patterns_matched"] for h in lexical],
         "sim_resena_raw": scores_by_mode["raw"]["sim_resena"],
@@ -427,12 +545,16 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         "sim_resena_centered": scores_by_mode["centered"]["sim_resena"],
         "sim_promo_centered": scores_by_mode["centered"]["sim_promo"],
         "score_centered": scores_by_mode["centered"]["score"],
-        "price_score": scores["score"],
+        "price_score": semantic,
+        "score_semantic": semantic,
+        "score_lexical": lex_count_arr.astype(float),
+        "score_hybrid": np.maximum(semantic, (lex_count_arr >= 2).astype(float) * 0.5),
+        "score_band": score_bands(semantic, tau),
+        "detector_primario": "semantic",
     })
-    # Mención = regla del detector (semantic/lexical/hybrid) sobre τ.
-    out["above_tau"] = detector_mention(
-        out["price_score"], out["lex_count"], tau, detector)
-    out["detector"] = detector
+    # El detector primario SIEMPRE es semantic; lexical/hybrid solo son ablación.
+    out["above_tau"] = detector_mention(semantic, lex_count_arr, tau, "semantic")
+    out["detector"] = "semantic"
     written = [save_csv(out, out_dir / "price_scores.csv")]
 
     # ── tau_calibration.csv (componentes del placebo, p90/p95/p99) ──
@@ -464,7 +586,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
 
     # ── tau_sensitivity.csv (p50/p90/p95/p99 × raw/centered) ──
     written.append(save_csv(
-        _sensitivity_table(placebo_scores, {m: s["score"] for m, s in scores_by_mode.items()}, base),
+        _sensitivity_table(placebo_scores, semantic_by_mode, base),
         out_dir / "tau_sensitivity.csv",
     ))
 
@@ -478,7 +600,11 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
             "anchors_path": str(anchors_path),
             "model_name": model_name,
             "mode": default_mode,
-            "detector": detector,
+            "detector": "semantic",
+            "detector_ablation": detector_ablation,
+            "anchors_sha256": anchors_sha256(anchors_path),
+            "n_anchor_terms": int(len(anchor_texts)),
+            "n_anchor_terms_resolved": int(len(anchor_centroid_emb)),
             "tau_quantile": tau_quantile,
             "tau": round(tau, 6),
             "placebo_docs": int(len(rand_idx)),
@@ -489,7 +615,7 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         repo_dir=Path(__file__).resolve().parents[1],
     ))
 
-    print(f"  Docs sobre τ (detector={detector}): {int(out['above_tau'].sum()):,} / {len(out):,} "
+    print(f"  Docs sobre τ (detector=semantic): {int(out['above_tau'].sum()):,} / {len(out):,} "
           f"({100 * out['above_tau'].mean():.1f}%)")
     print(f"  Archivos: {[str(p) for p in written]}")
 
@@ -505,8 +631,20 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     valid: dict = {}
     try:
         from price_validation import run_price_validation
-        valid = run_price_validation(args, results_dir, out, tau,
-                                     tau_quantile=tau_quantile)
+        valid = run_price_validation(
+            args, results_dir, out, tau,
+            tau_quantile=tau_quantile,
+            anchors=anchors,
+            anchor_texts=anchor_texts,
+            anchor_emb=anchor_centroid_emb,
+            anchor_centroid=anchor_centroid,
+            doc_emb=emb,
+            negative_control_emb=neg_emb,
+            placebo_scores=placebo_scores,
+            placebo_components=placebo_by_component,
+            score_mode=default_mode,
+            cache_dir=cache_dir,
+        )
         written += list(valid.get("paths", []))
     except Exception as exc:
         print(f"  ⚠️ Validación F4.3 omitida por error: {exc}")
@@ -523,15 +661,19 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     # ── Parámetros de la corrida (insumo de la caché propia de price) ──
     params_path = out_dir / "price_params.json"
     params_path.write_text(json.dumps({
-        "mode": detector, "score_mode": score_mode,
+        "mode": detector, "mode_ablation": detector_ablation,
+        "score_mode": score_mode,
         "tau": round(float(tau), 6), "tau_quantile": tau_quantile,
         "seed": seed, "bootstrap": int(getattr(args, "bootstrap", 2000)),
         "permutations": int(getattr(args, "permutations", 1000)),
         "top_k": int(getattr(args, "price_top_k", 5)),
         "prior_strength": float(getattr(args, "prior_strength", 1000.0)),
-        "sample_size": int(getattr(args, "price_sample_size", 100) or 100),
+        "sample_size": placebo_docs_n,
         "palette": str(getattr(args, "palette", "ejecutiva")),
         "model_name": model_name,
+        "anchors_version": anchors["version"],
+        "anchors_sha256": anchors_sha256(anchors_path),
+        "detector_primario": "semantic",
     }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     written.append(params_path)
 
@@ -540,21 +682,46 @@ def run_price_core(args: argparse.Namespace, results_dir: Path) -> list[Path]:
 
 
 def run_price_task(args: argparse.Namespace, output_dir: Path) -> list[Path]:
-    """Entrada del PASO 12 en run_analysis.py: F4.2 → F4.4 → F4.3.
-
-    Normaliza los flags nuevos del CLI (price_anchor_file, price_sample_size,
-    price_annotation_file) a los nombres que consumen run_price_core y
-    run_price_validation, y delega en la misma cadena existente.
-    """
-    # --price-sample-size (alias --price-validation-n) → price_validation_n
+    """F4.2 → F4.4 → F4.3 automática, con trazabilidad propagada."""
+    results_dir = Path(output_dir)
+    # --price-sample-size ahora dimensiona el placebo aleatorio (default 500).
     sample = getattr(args, "price_sample_size", None)
     if sample is not None:
         args.price_validation_n = int(sample)
-    # --price-annotation-file → ruta de anotaciones de F4.3
+
     ann = getattr(args, "price_annotation_file", None)
     if ann:
-        args.price_annotation_file = str(Path(ann))
-    return run_price_core(args, Path(output_dir))
+        msg = ("--price-annotation-file queda ignorado: la validación humana fue "
+               "retirada del alcance; la validación es automática")
+        print(f"  ⚠️  DEPRECATED: {msg}.")
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
+    written = run_price_core(args, results_dir)
+
+    price_dir = results_dir / "comparison" / PRICE_OUTPUT_SUBDIR
+    params_path = price_dir / "price_params.json"
+    scores_path = price_dir / "price_scores.csv"
+    if params_path.exists() and scores_path.exists():
+        params = json.loads(params_path.read_text(encoding="utf-8"))
+        anchors_path = Path(
+            getattr(args, "price_anchor_file", None)
+            or getattr(args, "price_anchors", None)
+            or DEFAULT_ANCHORS
+        )
+        anchors = load_price_anchors(anchors_path)
+        scores = pd.read_csv(scores_path, encoding="utf-8-sig")
+        context = price_traceability_context(
+            anchors, anchors_path, scores, params["tau"], params["seed"])
+        written += propagate_price_traceability(results_dir, context)
+        # PASO 12.8: tablas canónicas, dos scatters, sección HTML y síntesis.
+        try:
+            from price_report import write_price_report
+
+            written += write_price_report(args, results_dir)
+        except Exception as exc:
+            print(f"  ⚠️ Informe price omitido por error: {exc}")
+            import traceback; traceback.print_exc()
+    return written
 
 
 # ══════════════════════════════════════════════════════════════════════════
