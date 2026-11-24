@@ -85,6 +85,9 @@ def enrich_scores(
     if doc_topics is not None and not doc_topics.empty and "doc_id" in doc_topics:
         cols = [c for c in ("doc_id", "topic_id", "topic_name")
                 if c in doc_topics.columns]
+        # Idempotente: la corrida anterior ya pudo enriquecer price_scores.csv.
+        out = out.drop(columns=[c for c in ("topic_id", "topic_name")
+                                if c in out.columns])
         out = out.merge(doc_topics[cols].drop_duplicates("doc_id"),
                         on="doc_id", how="left")
     for col in ("topic_id", "topic_name"):
@@ -226,9 +229,14 @@ def alignment_table(
     r_dmo = table[table["scope"] == "DMO"]
     r_ugc = table[table["scope"] != "DMO"]
     rate_dmo = float(r_dmo["rate"].iloc[0]) if len(r_dmo) else np.nan
-    rate_ugc = float(r_ugc["rate"].mean()) if len(r_ugc) else np.nan
+    # Agregación ponderada por n: la tasa global de UGC no es la media de tasas
+    # de plataforma (tripadvisor domina el corpus).
+    n_ugc = float(r_ugc["n_docs"].sum())
+    rate_ugc = (float((r_ugc["n_docs"] * r_ugc["rate"]).sum() / n_ugc)
+                if n_ugc else np.nan)
     mu_dmo = float(r_dmo["mean_cosine"].iloc[0]) if len(r_dmo) else np.nan
-    mu_ugc = float(r_ugc["mean_cosine"].mean()) if len(r_ugc) else np.nan
+    mu_ugc = (float((r_ugc["n_docs"] * r_ugc["mean_cosine"]).sum() / n_ugc)
+              if n_ugc else np.nan)
     centroid_cos = np.nan
     if embeddings is not None and anchor_centroid is not None and mention.any():
         emb = np.asarray(embeddings, dtype=float)
@@ -253,6 +261,10 @@ def alignment_table(
     table["centroid_cosine_mentions"] = np.nan
     table.loc[table["scope"] == "DMO_vs_UGC", "centroid_cosine_mentions"] = \
         round(centroid_cos, 6)
+    table["centroid_cosine_note"] = ""
+    table.loc[table["scope"] == "DMO_vs_UGC", "centroid_cosine_note"] = (
+        "no computable: 0 menciones en alguno de los dos grupos"
+        if pd.isna(centroid_cos) else "centroides L2 sobre docs que mencionan el concepto")
     table["gap_rate_pp"] = round(100 * (rate_dmo - rate_ugc), 4)
     table["gap_cosine"] = round(mu_dmo - mu_ugc, 6)
     table["anchor_centroid_used"] = anchor_centroid is not None
@@ -752,7 +764,12 @@ def build_findings_md(
     gap_cos = float(row["gap_cosine"].iloc[0]) if len(row) else np.nan
     cent = float(row["centroid_cosine_mentions"].iloc[0]) \
         if len(row) and pd.notna(row["centroid_cosine_mentions"].iloc[0]) else np.nan
+    cent_note = (str(row["centroid_cosine_note"].iloc[0])
+                 if len(row) and "centroid_cosine_note" in row.columns else "")
     r0 = rates.iloc[0] if not rates.empty else pd.Series(dtype=float)
+    dmo_mentions = int(alignment.loc[alignment["scope"] == "DMO",
+                                     "n_mentions"].iloc[0]) \
+        if (alignment["scope"] == "DMO").any() else 0
     d = dist[dist["scope"] == "DMO_vs_UGC_total"]
     emd = float(d["emd_wasserstein"].iloc[0]) if len(d) else np.nan
     jsd = float(d["jsd_base2"].iloc[0]) if len(d) else np.nan
@@ -783,7 +800,9 @@ def build_findings_md(
         f"[{r0.get('ci_low_ugc', np.nan):.4f}, {r0.get('ci_high_ugc', np.nan):.4f}] |",
         f"| Brecha de tasa (pp) | {gap_rate:+.2f} |",
         f"| Brecha de coseno medio | {gap_cos:+.4f} |",
-        f"| Coseno de centroides (menciones) | {cent:.4f} |",
+        f"| Coseno de centroides (menciones) | "
+        f"{cent:.4f} |" if pd.notna(cent)
+        else f"| Coseno de centroides (menciones) | {html.escape(cent_note)} |",
         f"| EMD/Wasserstein histogramas | {emd:.4f} |",
         f"| JSD (base 2) | {jsd:.4f} |",
         f"| FPR placebo random | {validation.get('fpr_random', np.nan):.4f} |",
@@ -802,7 +821,8 @@ def build_findings_md(
         "que se descartó como prueba de brecha.",
         "",
         "## Limitaciones",
-        f"- n de la DMO: {anchors.get('n_por_fuente', '?')}"
+        f"- n de la DMO: {anchors.get('n_por_fuente', '?')} "
+        f"({dmo_mentions} menciones sobre τ)"
         + (" — **muestra pequeña: interpretar tamaños de efecto, no solo p**."
            if small_sample else "."),
         "- Sesgo de plataforma del UGC: la frecuencia observada no es prevalencia poblacional.",

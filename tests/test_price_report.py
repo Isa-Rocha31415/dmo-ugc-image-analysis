@@ -58,6 +58,8 @@ def test_enrich_scores_alias_registro_y_tema():
     assert set(out["registro_dominante"]) <= {"reseña", "promocional"}
     assert out["es_mencion"].equals(raw["above_tau"])
     assert (out["tau"] == TAU).all()
+    twice = enrich_scores(out, raw[["doc_id", "topic_id", "topic_name"]], TAU)
+    assert not any(c.endswith(("_x", "_y")) for c in twice.columns)
 
 
 def test_density_normalizado_por_fuente():
@@ -106,9 +108,17 @@ def test_top_examples_incluye_todos_los_scopes_y_fuente():
 
 
 def test_alignment_reporta_gap_y_centroides():
-    al = alignment_table(_enriched())
+    sc = _enriched()
+    al = alignment_table(sc)
     assert "DMO_vs_UGC" in set(al["scope"])
-    assert {"gap_rate_pp", "gap_cosine", "centroid_cosine_mentions"} <= set(al)
+    assert {"gap_rate_pp", "gap_cosine", "centroid_cosine_mentions",
+            "centroid_cosine_note"} <= set(al)
+    g = al[al["scope"] == "DMO_vs_UGC"].iloc[0]
+    dmo = sc[sc["source_label"] == "DMO"]
+    ugc = sc[sc["source_label"] != "DMO"]
+    expected = dmo["es_mencion"].mean() - ugc["es_mencion"].mean()
+    assert g["rate"] == pytest.approx(expected, abs=1e-4)
+    assert g["gap_rate_pp"] == pytest.approx(100 * expected, abs=0.01)
 
 
 def test_enhance_comparison_fisher_y_denominadores():

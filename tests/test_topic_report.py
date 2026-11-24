@@ -69,8 +69,12 @@ class TestBuildTopicReportBlock(unittest.TestCase):
         self.assertIn("Cobertura: 60.00% de los comentarios (n=30)", console)
         self.assertEqual(console.count("┌"), 3)
         self.assertEqual(console.count("└"), 3)
-        self.assertIn("<pre", block["html"])
-        self.assertIn("Tópico 0: playa limpia", block["html"])
+        html_out = block["html"]
+        self.assertIn("topic-cards", html_out)
+        self.assertIn("Tópico 0", html_out)
+        self.assertIn("60.00%", html_out)
+        self.assertNotIn("┌", html_out)
+        self.assertNotIn("SIN_ASIGNAR", html_out)
 
     def test_csv_se_escribe_con_codificacion_correcta(self):
         import tempfile

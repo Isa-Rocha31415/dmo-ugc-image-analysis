@@ -153,57 +153,78 @@ def build_ngram_interactive_plot(
     palette: Any = None,
     max_samples: int = DEFAULT_MAX_SAMPLES,
 ) -> go.Figure:
-    """Figura única con dos trazas y botones para alternar normales/outliers.
+    """Figura única con 6 trazas y dos menús: orden del n-grama y grupo.
 
     Cada barra expone hasta tres comentarios de ``text_norm`` en ``customdata``
     y en el ``hovertemplate``, truncados a 120 caracteres y escapados para HTML.
+    ``n`` mantiene la firma legacy y determina el estado inicial del menú.
     """
     if n not in NGRAM_LABEL_ES:
         raise ValueError(f"n debe ser 1, 2 o 3; se recibió {n}")
 
     normales = _ensure_text_norm(df_normales)
     outliers = _ensure_text_norm(df_outliers)
-    map_norm = map_ngrams_to_comments(normales, n, max_samples)
-    map_out = map_ngrams_to_comments(outliers, n, max_samples)
     color_norm, color_out = _resolve_colors(palette)
-    label = NGRAM_LABEL_ES[n]
+    traces: list[go.Bar] = []
+    titles: dict[tuple[int, int], str] = {}
+    for order in (1, 2, 3):
+        label = NGRAM_LABEL_ES[order]
+        maps = (
+            map_ngrams_to_comments(normales, order, max_samples),
+            map_ngrams_to_comments(outliers, order, max_samples),
+        )
+        for group, (mapping, color, name) in enumerate(zip(
+            maps, (color_norm, color_out), ("Normales", "Outliers")
+        )):
+            who = "normales" if group == 0 else "outliers"
+            titles[order, group] = f"Top {top_n} {label} — Comentarios {who}"
+            traces.append(_trace(
+                mapping, top_n, color, name,
+                visible=(order == n and group == 0), max_samples=max_samples,
+            ))
 
-    title_norm = f"Top {top_n} {label} — Comentarios Normales"
-    title_out = f"Top {top_n} {label} — Comentarios Outliers"
+    def _mask(order: int, group: int) -> list[bool]:
+        return [i == 2 * (order - 1) + group for i in range(6)]
 
-    fig = go.Figure(data=[
-        _trace(map_norm, top_n, color_norm, "Normales", True, max_samples),
-        _trace(map_out, top_n, color_out, "Outliers", False, max_samples),
-    ])
+    def _button(label: str, order: int, group: int) -> dict[str, Any]:
+        return dict(
+            label=label, method="update",
+            args=[{"visible": _mask(order, group)},
+                  {"title": {"text": titles[order, group]}}],
+        )
+
+    top_buttons = [
+        _button(name, order, 0)
+        for order, name in ((1, "Unigramas"), (2, "Bigramas"), (3, "Trigramas"))
+    ]
+    group_buttons = [
+        _button("Comentarios normales", n, 0),
+        _button("Comentarios outliers", n, 1),
+    ]
+    fig = go.Figure(data=traces)
     fig.update_layout(
-        title=title_norm,
+        title=titles[n, 0],
         barmode="group",
         template="plotly_white",
-        xaxis_title=f"{label.capitalize()}",
+        xaxis_title="Frecuencia",
         yaxis_title="Frecuencia (comentarios)",
         xaxis_tickangle=-45,
         height=520,
         margin=dict(b=160),
-        updatemenus=[dict(
-            type="buttons",
-            direction="right",
-            x=0.0, xanchor="left", y=1.18, yanchor="top",
-            showactive=True,
-            buttons=[
-                dict(
-                    label="Comentarios Normales",
-                    method="update",
-                    args=[{"visible": [True, False]},
-                          {"title": {"text": title_norm}}],
-                ),
-                dict(
-                    label="Comentarios Outliers",
-                    method="update",
-                    args=[{"visible": [False, True]},
-                          {"title": {"text": title_out}}],
-                ),
-            ],
-        )],
+        updatemenus=[
+            dict(
+                type="buttons", direction="right", showactive=True,
+                x=0.0, xanchor="left", y=1.18, yanchor="top",
+                bgcolor=color_norm, bordercolor=color_norm,
+                font=dict(size=12, color="#ffffff"),
+                buttons=top_buttons,
+            ),
+            dict(
+                type="buttons", direction="right", showactive=True,
+                x=0.0, xanchor="left", y=1.09, yanchor="top",
+                buttons=group_buttons,
+            ),
+        ],
     )
     return fig
 
@@ -215,11 +236,10 @@ def build_all_ngram_figures(
     palette: Any = None,
     max_samples: int = DEFAULT_MAX_SAMPLES,
 ) -> dict[int, go.Figure]:
-    """Devuelve un Figure por orden de n-grama (1, 2 y 3)."""
+    """Devuelve un único Figure con las dos pestañas (clave legacy 1)."""
     return {
-        n: build_ngram_interactive_plot(
-            df_normales, df_outliers, n=n, top_n=top_n,
+        1: build_ngram_interactive_plot(
+            df_normales, df_outliers, n=1, top_n=top_n,
             palette=palette, max_samples=max_samples,
         )
-        for n in (1, 2, 3)
     }

@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "code"))
 
 from ngram_visualization import (  # noqa: E402
     _ensure_text_norm,
+    build_all_ngram_figures,
     build_ngram_interactive_plot,
     map_ngrams_to_comments,
 )
@@ -67,18 +68,29 @@ class TestMapNgramsToComments(unittest.TestCase):
 
 
 class TestBuildNgramInteractivePlot(unittest.TestCase):
-    def test_figura_unica_con_dos_trazas_y_botones(self):
+    def test_figura_unica_con_seis_trazas_y_dos_menus(self):
         fig = build_ngram_interactive_plot(
             _frame(NORMAL_TEXTOS, "ugc"), _frame(OUTLIER_TEXTOS, "outliers"), n=2
         )
-        self.assertEqual(len(fig.data), 2)
-        self.assertTrue(fig.data[0].visible)
-        self.assertFalse(fig.data[1].visible)
-        self.assertEqual(len(fig.layout.updatemenus), 1)
-        buttons = fig.layout.updatemenus[0].buttons
-        self.assertEqual(len(buttons), 2)
-        self.assertEqual(buttons[0].label, "Comentarios Normales")
-        self.assertEqual(buttons[1].label, "Comentarios Outliers")
+        self.assertEqual(len(fig.data), 6)
+        self.assertEqual(sum(bool(t.visible) for t in fig.data), 1)
+        self.assertTrue(fig.data[2].visible)
+        self.assertEqual(len(fig.layout.updatemenus), 2)
+        top, group = fig.layout.updatemenus
+        self.assertEqual([b.label for b in top.buttons],
+                         ["Unigramas", "Bigramas", "Trigramas"])
+        self.assertEqual([b.label for b in group.buttons],
+                         ["Comentarios normales", "Comentarios outliers"])
+
+    def test_cada_boton_deja_una_sola_traza_visible(self):
+        fig = build_ngram_interactive_plot(
+            _frame(NORMAL_TEXTOS, "ugc"), _frame(OUTLIER_TEXTOS, "outliers")
+        )
+        for menu in fig.layout.updatemenus:
+            for button in menu.buttons:
+                mask = button.args[0]["visible"]
+                self.assertEqual(len(mask), 6)
+                self.assertEqual(mask.count(True), 1)
 
     def test_customdata_y_hovertemplate_poblados(self):
         for n in (1, 2, 3):
@@ -109,7 +121,7 @@ class TestBuildNgramInteractivePlot(unittest.TestCase):
         fig = build_ngram_interactive_plot(
             pd.DataFrame(columns=["text_norm"]), pd.DataFrame(columns=["text_norm"]), n=1
         )
-        self.assertEqual(len(fig.data), 2)
+        self.assertEqual(len(fig.data), 6)
         self.assertEqual(len(fig.data[0].x), 0)
 
 
@@ -122,14 +134,14 @@ class TestEnsureTextNorm(unittest.TestCase):
 
 
 class TestNgramSectionHtml(unittest.TestCase):
-    def test_incrusta_tres_figuras(self):
-        import plotly.graph_objects as go
-        figs = {n: go.Figure(data=[go.Bar(x=["a"], y=[1])]) for n in (1, 2, 3)}
-        html = ngram_section_html(figs)
-        self.assertEqual(html.count("plotly-graph-div"), 3)
-        self.assertIn("Unigramas", html)
-        self.assertIn("Bigramas", html)
-        self.assertIn("Trigramas", html)
+    def test_incrusta_una_figura_autocontenida(self):
+        frame = _frame(NORMAL_TEXTOS, "ugc")
+        figs = build_all_ngram_figures(frame, frame)
+        markup = ngram_section_html(figs)
+        self.assertEqual(markup.count("plotly-graph-div"), 1)
+        self.assertIn("Unigramas", markup)
+        self.assertIn("Bigramas", markup)
+        self.assertIn("Trigramas", markup)
 
 
 class TestIntegracionHTML(unittest.TestCase):
@@ -176,7 +188,7 @@ class TestIntegracionHTML(unittest.TestCase):
             final = (results / "informe_final.html").read_text(encoding="utf-8")
             self.assertNotIn("{{NGRAM_SECTION}}", final)
             self.assertIn("Análisis de N-gramas", final)
-            self.assertGreaterEqual(final.count("plotly-graph-div"), 3)
+            self.assertGreaterEqual(final.count("plotly-graph-div"), 1)
             self.assertIn("customdata", final)
             self.assertIn("playa", final)
 

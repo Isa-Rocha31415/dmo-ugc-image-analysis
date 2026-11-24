@@ -119,7 +119,7 @@ class TestReporteHTMLSinJaccard(unittest.TestCase):
 
             html = (root / "informe_final.html").read_text(encoding="utf-8")
             self.assertIn("Métricas descriptivas de polaridad", html)
-            self.assertIn("POSITIVO", html)
+            self.assertNotIn("POSITIVO", html)
             self.assertNotIn("Jaccard", html)
             self.assertIn("jaccard_freq", buf.getvalue())
             self.assertTrue((root / "comparison" / "report" / "sentiment_descriptive.csv").exists())

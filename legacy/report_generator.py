@@ -21,11 +21,13 @@ if str(CODE_DIR) not in sys.path:
 from comparison.common import append_metadata, print_header, save_csv  # noqa: E402
 from io_corpus import CORPUS_COLUMN, SOURCE_COLUMN  # noqa: E402
 from report_sections import (  # noqa: E402
-    generic_table_html,
+    density_figure_html,
+    gaps_sidebar_html,
+    inline_plotly_fragment,
     jaccard_console_lines,
-    run_metadata_html,
+    price_section_html,
     sentiment_table_html,
-    stat_tests_html,
+    strip_plotly_updatemenus,
 )
 from sentiment_labels import sentiment_distribution  # noqa: E402
 from utils import palette_to_plot_colors  # noqa: E402
@@ -86,9 +88,13 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     lex = _safe_read_csv(results_dir / "comparison" / "lexical" / "metrics_lexical.csv")
     price_scores = _safe_read_csv(results_dir / "comparison" / "price" / "price_scores.csv")
     price_rates = _safe_read_csv(results_dir / "comparison" / "price" / "mention_rate_by_source.csv")
-    tau_cal = _safe_read_csv(results_dir / "comparison" / "price" / "tau_calibration.csv")
-    price_valence = _safe_read_csv(results_dir / "comparison" / "price" / "price_valence_conditioned.csv")
-    run_meta = _safe_read_csv(results_dir / "comparison" / "base" / "run_metadata.csv")
+    price_comparison = _safe_read_csv(results_dir / "comparison" / "price" / "price_comparison.csv")
+    price_dist = _safe_read_csv(results_dir / "comparison" / "price" / "price_distribution_tests.csv")
+    price_ct = _safe_read_csv(results_dir / "comparison" / "price" / "price_topic_crosstab.csv")
+    price_examples = _safe_read_csv(results_dir / "comparison" / "price" / "price_examples.csv")
+    price_alignment = _safe_read_csv(results_dir / "comparison" / "price" / "price_alignment.csv")
+    price_density = _safe_read_csv(results_dir / "comparison" / "price" / "price_density.csv")
+    gaps_sidebar = _safe_read_csv(results_dir / "comparison" / "thematic" / "gaps_table.csv")
 
     # Bloques generados por run_analysis.py (n-gramas, tópicos y UMAP 3D).
     def _read_block(name: str) -> str:
@@ -100,14 +106,10 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     umap_block = _read_block("umap_section.html")
 
     kpis: dict[str, str] = {}
-    bullets: list[str] = []
     n_total = 0
     n_dmo = 0
     n_ugc = 0
-    k_value = "—"
-    jsd_value: object = None
-    emd_value: object = None
-    rate_value: object = None
+    written: list[Path] = []
 
     if base is not None:
         n_total = len(base)
@@ -116,17 +118,10 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         kpis["n_docs"] = _make_kpi_card(
             f"{n_total:,}", "Documentos Totales", f"DMO: {n_dmo:,} | UGC: {n_ugc:,}"
         )
-        bullets.append(
-            f"Se analizaron <b>{n_total:,}</b> documentos: <b>{n_dmo:,}</b> de la DMO "
-            f"y <b>{n_ugc:,}</b> de fuentes percibidas."
-        )
 
-    # ── Sentimiento: SOLO tabla descriptiva, nunca evidencia de brecha ──
-    sent_html = '<div class="placeholder">Sin datos de sentimiento</div>'
-    written: list[Path] = []
+    # La tabla descriptiva se sigue guardando como CSV; no se renderiza en el HTML.
     if base is not None and "sentiment_label" in base.columns:
         sent_table = sentiment_distribution(base, ("corpus", SOURCE_COLUMN))
-        sent_html = sentiment_table_html(sent_table)
         report_dir = results_dir / "comparison" / "report"
         report_dir.mkdir(parents=True, exist_ok=True)
         written.append(save_csv(sent_table, report_dir / "sentiment_descriptive.csv"))
@@ -147,31 +142,15 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         if not d_ugc.empty:
             jsd = d_ugc.iloc[0]["jsd_base2"]
             emd = d_ugc.iloc[0]["emd_cosine"]
-            jsd_value, emd_value = jsd, emd
             kpis["alignment"] = _make_kpi_card(
                 f"{(1 - jsd) * 100:.1f}%", "Alineación Semántica", f"JSD₂={jsd:.3f} | EMD={emd:.3f}"
             )
-            if jsd < 0.05:
-                bullets.append("Las distribuciones temáticas DMO y UGC están <b>muy alineadas</b> (JSD₂ &lt; 0.05).")
-            elif jsd < 0.15:
-                bullets.append("Las distribuciones temáticas DMO y UGC están <b>moderadamente distintas</b> (JSD₂ entre 0.05 y 0.15).")
-            else:
-                bullets.append("Las distribuciones temáticas DMO y UGC están <b>marcadamente distintas</b> (JSD₂ &gt; 0.15).")
 
     if grid is not None and not grid.empty:
         sel = grid[grid["selected"] == True]
         if not sel.empty:
-            k_value = str(int(sel.iloc[0]["k"]))
-            kpis["k_selected"] = _make_kpi_card(k_value, "Tópicos (k)", "Selección automática")
-
-    if gaps is not None and not gaps.empty:
-        g_ugc = gaps[gaps["scope"] == "ugc_total"]
-        if not g_ugc.empty:
-            bullets.append(
-                f"De los tópicos analizados: <b>{int((g_ugc['verdict'] == 'SOBRE_DMO').sum())}</b> "
-                f"sobre-representados en DMO, <b>{int((g_ugc['verdict'] == 'SOBRE_UGC').sum())}</b> "
-                f"sobre-representados en UGC, <b>{int((g_ugc['verdict'] == 'SIN_DIF').sum())}</b> "
-                "sin diferencia significativa."
+            kpis["k_selected"] = _make_kpi_card(
+                str(int(sel.iloc[0]["k"])), "Tópicos (k)", "Selección automática"
             )
 
     # ── Jaccard: consola auxiliar, NUNCA KPI ni bullet del HTML ──
@@ -183,50 +162,11 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     if price_rates is not None and not price_rates.empty:
         p_ugc = price_rates[price_rates["scope"] == "ugc_total"]
         if not p_ugc.empty:
-            rate = p_ugc.iloc[0]["rate"] * 100
-            rate_value = p_ugc.iloc[0]["rate"]
-            kpis["price"] = _make_kpi_card(f"{rate:.1f}%", "Mención de Precio", "UGC total")
-            bullets.append(
-                f"El concepto precio/valor/costo es mencionado en <b>{rate:.1f}%</b> del UGC."
+            kpis["price"] = _make_kpi_card(
+                f"{p_ugc.iloc[0]['rate'] * 100:.1f}%", "Mención de Precio", "UGC total"
             )
 
     kpi_cards = "\n".join(kpis.values()) or '<div class="placeholder">Sin datos</div>'
-    exec_bullets = "\n".join(_bullet(b) for b in bullets) or '<li class="placeholder">Sin datos</li>'
-
-    # ── a) Tabla de métricas globales del resumen ejecutivo ──
-    exec_metrics = pd.DataFrame([
-        {"Métrica": "Documentos en análisis", "Valor": f"{n_total:,}"},
-        {"Métrica": "Documentos DMO", "Valor": f"{n_dmo:,}"},
-        {"Métrica": "Documentos UGC", "Valor": f"{n_ugc:,}"},
-        {"Métrica": "Outliers excluidos", "Valor": f"{len(outliers) if outliers is not None else 0:,}"},
-        {"Métrica": "Tópicos seleccionados (k)", "Valor": k_value},
-        {"Métrica": "JSD₂ (temático)", "Valor": _fmt_num(jsd_value)},
-        {"Métrica": "EMD coseno", "Valor": _fmt_num(emd_value)},
-        {"Métrica": "Tasa de mención de precio", "Valor": _fmt_num(rate_value)},
-    ])
-    exec_metrics_html = generic_table_html(
-        exec_metrics, {"Métrica": "Métrica", "Valor": "Valor"}
-    )
-
-    stat_tests = stat_tests_html(gaps, price_valence)
-    run_metadata_section = run_metadata_html(
-        run_meta,
-        flags={
-            "paleta": args.palette,
-            "seed": args.seed,
-            "bootstrap": args.bootstrap,
-            "ngram_interactive": getattr(args, "ngram_interactive", True),
-            "umap_3d": getattr(args, "umap_3d", True),
-            "generate_wordclouds": getattr(args, "generate_wordclouds", False),
-            "verbose_jaccard": getattr(args, "verbose_jaccard", False),
-        },
-        sample_sizes={
-            "documentos": n_total,
-            "DMO": n_dmo,
-            "UGC": n_ugc,
-            "outliers": len(outliers) if outliers is not None else 0,
-        },
-    )
 
     sent_fig = _make_figure_box(
         Path("sentiment/sentiment_by_source_stacked.html"), results_dir,
@@ -245,10 +185,6 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     topics_fig = _make_figure_box(
         Path("topics/topics_3d_umap.html"), results_dir, "Mapa 3D no disponible",
     )
-    k_sel_fig = _make_figure_box(
-        Path("comparison/topics_joint/curvas_k.html"), results_dir,
-        "Curvas de selección no disponibles",
-    )
     lex_dmo = _make_figure_box(
         Path("comparison/lexical/wordcloud_logodds_dmo.html"), results_dir,
         "Wordcloud DMO no disponible",
@@ -258,95 +194,38 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         "Wordcloud UGC no disponible",
     )
 
-    gaps_html = '<div class="placeholder">No hay datos de brechas temáticas</div>'
-    if gaps is not None and not gaps.empty:
-        g_ugc = gaps[gaps["scope"] == "ugc_total"].copy()
-        if not g_ugc.empty:
-            g_ugc["abs_gap"] = g_ugc["gap_pp"].abs()
-            rows = []
-            for _, r in g_ugc.nlargest(10, "abs_gap").iterrows():
-                rows.append(
-                    f"<tr><td>{r['topic_name']}</td><td>{r['p_dmo']:.4f}</td>"
-                    f"<td>{r['p_ugc']:.4f}</td><td>{r['gap_pp']:+.4f}</td>"
-                    f"<td>{r['verdict']}</td></tr>"
-                )
-            gaps_html = (
-                '<div class="table-wrap"><table class="table"><thead><tr>'
-                '<th>Tópico</th><th>% DMO</th><th>% UGC</th><th>GAP</th><th>Veredicto</th>'
-                f'</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-            )
-
-    price_html = '<div class="placeholder">No hay datos de precio/valor</div>'
-    price_section_path = results_dir / "price_section.html"
-    if price_section_path.exists():
-        price_html = price_section_path.read_text(encoding="utf-8")
-    elif price_scores is not None and not price_scores.empty:
-        price_fig = _make_figure_box(
-            Path("comparison/price/price_scatter_valence.html"), results_dir,
-            "Scatter de valencia no disponible",
-        )
-        tau_html = ""
-        if tau_cal is not None and not tau_cal.empty:
-            tau_html = f"<p><b>τ (umbral):</b> {tau_cal.iloc[0]['tau']:.4f}</p>"
-        price_html = tau_html + price_fig
-
-    rep_html = '<div class="placeholder">No hay comentarios representativos disponibles</div>'
     doc_topics = _safe_read_csv(results_dir / "comparison" / "topics_joint" / "doc_topics.csv")
-    if doc_topics is not None and base is not None and not doc_topics.empty:
+    if (gaps_sidebar is None or gaps_sidebar.empty) and doc_topics is not None and base is not None:
         merged = base.merge(doc_topics[["doc_id", "topic_id", "topic_name"]], on="doc_id")
-        if not merged.empty:
-            rep_rows = []
-            for tid in merged["topic_id"].unique()[:5]:
-                subset = merged[merged["topic_id"] == tid]
-                if subset.empty:
-                    continue
-                row = subset.iloc[0]
-                text = str(row["text"])
-                text = text[:200] + "..." if len(text) > 200 else text
-                rep_rows.append(
-                    f"<tr><td>{row['topic_name']}</td><td>{row[SOURCE_COLUMN]}</td>"
-                    f"<td>{row.get('sentiment_label', 'N/A')}</td><td>{text}</td></tr>"
-                )
-            if rep_rows:
-                rep_html = (
-                    '<div class="table-wrap"><table class="table"><thead><tr>'
-                    '<th>Tópico</th><th>Fuente</th><th>Sentimiento</th><th>Texto (truncado)</th>'
-                    f'</tr></thead><tbody>{"".join(rep_rows)}</tbody></table></div>'
-                )
+        kept = merged[merged["topic_id"] != -1]
+        d_total = int((kept[CORPUS_COLUMN] == "DMO").sum())
+        u_total = int((kept[CORPUS_COLUMN] != "DMO").sum())
+        rows = []
+        for tid in sorted(kept["topic_id"].unique()):
+            subset = kept[kept["topic_id"] == tid]
+            p_dmo = int((subset[CORPUS_COLUMN] == "DMO").sum()) / d_total if d_total else 0.0
+            p_ugc = int((subset[CORPUS_COLUMN] != "DMO").sum()) / u_total if u_total else 0.0
+            rows.append({
+                "topic_name": subset.iloc[0]["topic_name"],
+                "p_dmo": p_dmo, "p_ugc": p_ugc,
+                "gap_pp": 100 * (p_ugc - p_dmo),
+            })
+        gaps_sidebar = pd.DataFrame(rows)
+    gaps_html = gaps_sidebar_html(gaps_sidebar)
 
-    all_figs = []
-    for html_file in sorted(results_dir.rglob("*.html")):
-        if "_cache" not in str(html_file) and html_file.name != "informe_final.html":
-            rel = html_file.relative_to(results_dir)
-            csv_file = html_file.with_name(html_file.stem + "_data.csv")
-            csv_link = (f'<a href="{csv_file.relative_to(results_dir)}">CSV</a>'
-                        if csv_file.exists() else "")
-            all_figs.append(
-                f'<tr><td>{rel.parent}</td><td>{html_file.name}</td>'
-                f'<td><a href="{rel}">Abrir</a></td><td>{csv_link}</td></tr>'
-            )
-    all_figures_html = (
-        '<div class="table-wrap"><table class="table"><thead><tr>'
-        '<th>Sección</th><th>Archivo</th><th>Enlace</th><th>Datos</th>'
-        f'</tr></thead><tbody>{"".join(all_figs)}</tbody></table></div>'
-        if all_figs else '<div class="placeholder">No hay figuras generadas</div>'
+    scatter_path = results_dir / "comparison" / "price" / "price_scatter_similarity.html"
+    scatter_html = ""
+    if scatter_path.exists():
+        fragment = inline_plotly_fragment(scatter_path.read_text(encoding="utf-8"))
+        scatter_html = strip_plotly_updatemenus(fragment)
+    umap_html = _make_figure_box(
+        Path("comparison/price/price_umap_concept.html"), results_dir,
+        "UMAP 3D no disponible",
     )
-
-    meth_html = (
-        '<ul class="bullets">'
-        f'<li><b>Embeddings:</b> {args.embedding_model}</li>'
-        f'<li><b>Modelo de tópicos:</b> {args.model}</li>'
-        f'<li><b>Seed:</b> {args.seed}</li>'
-        f'<li><b>Bootstrap:</b> B={args.bootstrap}</li>'
-        f'<li><b>Tareas ejecutadas:</b> {", ".join(args.comparison_tasks)}</li>'
-        f'<li><b>Fecha:</b> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</li>'
-        '</ul>'
-    )
-    lim_html = (
-        '<ul class="bullets">'
-        '<li>La polaridad POS/NEU/NEG es <b>descriptiva</b>: no prueba la brecha DMO vs UGC.</li>'
-        '<li>El análisis comparativo usa únicamente comentarios normales (sin outliers).</li>'
-        '</ul>'
+    price_html = price_section_html(
+        price_comparison, price_dist, price_ct, price_examples, price_alignment,
+        density_html=density_figure_html(price_density),
+        scatter_html=scatter_html, umap_html=umap_html,
     )
 
     colors = palette_to_plot_colors(args.palette)
@@ -371,25 +250,15 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         "{{ACCENT}}": accent,
         "{{DARK}}": dark,
         "{{KPI_CARDS}}": kpi_cards,
-        "{{EXECUTIVE_BULLETS}}": exec_bullets,
-        "{{EXECUTIVE_METRICS_TABLE}}": exec_metrics_html,
         "{{SENTIMENT_FIGURE}}": sent_fig,
         "{{SENTIMENT_HIST}}": sent_hist,
-        "{{SENTIMENT_DESCRIPTIVE_TABLE}}": sent_html,
         "{{NGRAM_SECTION}}": ngram_section,
         "{{TOPIC_REPORT_BLOCK}}": topic_report_block,
         "{{UMAP_3D_FIGURE}}": umap_block,
         "{{TOPICS_FIGURE}}": topics_fig,
-        "{{K_SELECTION_FIGURE}}": k_sel_fig,
         "{{GAPS_TABLE}}": gaps_html,
-        "{{STAT_TESTS_TABLE}}": stat_tests,
-        "{{RUN_METADATA_SECTION}}": run_metadata_section,
         "{{LEXICAL_FIGURES}}": lex_dmo + lex_ugc,
         "{{PRICE_SECTION}}": price_html,
-        "{{REPRESENTATIVE_COMMENTS}}": rep_html,
-        "{{ALL_FIGURES_TABLE}}": all_figures_html,
-        "{{METHODOLOGY_SECTION}}": meth_html,
-        "{{LIMITATIONS_SECTION}}": lim_html,
     }
     html_out = template
     for marker, value in replacements.items():
