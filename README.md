@@ -5,26 +5,32 @@
 
 ## 📋 Objetivo
 
-Pipeline de análisis NLP que compara la **imagen de destino proyectada** por una Organización de Marketing de Destino (DMO) con la **imagen percibida** por usuarios en fuentes digitales (Instagram, TripAdvisor, Reddit, etc.).
+Realizar un analisis de texto completo creando un dasboard interactivo en formato de pagina web dondese  compara la **imagen de destino proyectada** por una Organización de Marketing de Destino (DMO) con la **imagen percibida** por usuarios en fuentes digitales. 
 
-**Aporte diferencial:** Cuantificación de brechas temáticas, léxicas, de sentimiento y semánticas entre comunicación oficial y percepción real, con inferencia estadística robusta.
 
 ## 🚀 Instalación
+poner que debe tener conda para la creacion del entorno
+### Con requiriments.txt
+pon los pasos
+### Con yaml
+pon los pasos 
 
-### Requisitos
 
-- Python 3.10+
-- Conda con entorno `image_analysis` configurado
-- Modelos HuggingFace cacheados localmente (ver `requirements.txt`)
+## Como se usa?
+explicar como se usa 
+el comando principal es 
+    python run_analysis.py \
+        --csv-dmo "../data/df_dmo.csv" \
+        --csv-ugc "../data/df_ugc.csv" \
+        --text-col text --lang es \
+        --outlier-method IF --contamination auto \
+        --min-partition 50 \
+        --output-dir ../results \
+        --model bertopic --palette ejecutiva --num-topicos automatico
 
-### Setup
 
-```bash
-# Crear entorno (si no existe)
-conda create -n image_analysis python=3.10
+### Explicando cada uno de los arguemntos del comando
 
-# Activar
-conda activate image_analysis
+### comandos de ejemplo
 
-# Instalar dependencias (offline, requiere caché local)
-pip install -r requirements.txt --no-deps --no-build-isolation
+### 

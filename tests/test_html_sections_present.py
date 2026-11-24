@@ -21,8 +21,8 @@ REQUIRED_IDS = (
     "tematica", "brechas", "lexico", "precio",
 )
 PRICE_IDS = (
-    "precio-frecuencia", "precio-scatter", "precio-contexto",
-    "precio-ejemplos", "precio-lectura",
+    "precio-lectura", "precio-frecuencia", "precio-scatter", "precio-contexto",
+    "precio-ejemplos",
 )
 REMOVED_IDS = (
     "ejecutivo", "ejemplos", "apendice", "metodo", "metadatos-run",
@@ -183,16 +183,17 @@ def _args() -> Namespace:
     )
 
 
-def _render() -> str:
+def _render(return_path: bool = False):
     import tempfile
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)
     _fixture_results(root)
     with contextlib.redirect_stdout(io.StringIO()):
         run_report_task(_args(), root)
-    markup = (root / "informe_final.html").read_text(encoding="utf-8")
+    report = next(root.glob("informe_*_*.html"))
+    markup = report.read_text(encoding="utf-8")
     tmp.cleanup()
-    return markup
+    return (markup, report.name) if return_path else markup
 
 
 def _section(markup: str, sid: str) -> str:
@@ -267,11 +268,40 @@ class TestHtmlSectionsPresent(unittest.TestCase):
                          ["Unigramas", "Bigramas", "Trigramas",
                           "Comentarios normales", "Comentarios outliers"])
 
-    def test_lectura_dos_kpis_y_caveat(self):
+    def test_lectura_tres_kpis_al_inicio_y_caveat(self):
         lectura = _section(self.markup, "precio-lectura")
-        self.assertEqual(lectura.count('class="kpi kpi--price"'), 2)
+        self.assertEqual(lectura.count('class="kpi kpi--price"'), 3)
         self.assertIn("Muestra DMO pequeña: leer tamaños de efecto, no solo p.", lectura)
+        self.assertIn("Comentarios con este concepto", lectura)
         self.assertIn("-0.1743", lectura)
+        self.assertLess(self.markup.index('id="precio-lectura"'),
+                        self.markup.index('id="precio-frecuencia"'))
+
+    def test_sin_notas_ni_figure_boxes_anidadas(self):
+        self.assertNotIn("Pestañas de orden y grupo", self.markup)
+        self.assertNotIn('<div class="figure-box"><div class="figure-box"', self.markup)
+        self.assertIn(".updatemenu-item-rect", self.markup)
+        self.assertIn("#tematica .figure-box iframe", self.markup)
+
+    def test_ejemplos_con_una_sola_celda_de_texto(self):
+        ejemplos = _section(self.markup, "precio-ejemplos")
+        self.assertGreater(ejemplos.count("<summary"), 0)
+        self.assertEqual(ejemplos.count('class="cell-full"'), 0)
+        self.assertEqual(ejemplos.count("<summary"), ejemplos.count("</summary>"))
+
+    def test_strip_updatemenus_no_deja_coma_doble(self):
+        from report_sections import strip_plotly_updatemenus
+
+        fragment = 'Plotly.newPlot("x", [], {"height":720,"updatemenus":[{"buttons":[]}],"shapes":[]});'
+        result = strip_plotly_updatemenus(fragment)
+        self.assertNotIn("updatemenus", result)
+        self.assertNotIn(",,", result)
+        self.assertIn('"height":720,"shapes":[]', result)
+
+    def test_nombre_fechado_sin_informe_final(self):
+        _, name = _render(return_path=True)
+        self.assertRegex(name, r"^informe_[a-z0-9_]+_\d{4}-\d{2}-\d{2}\.html$")
+        self.assertNotEqual(name, "informe_final.html")
 
 
 class TestFlagsWordclouds(unittest.TestCase):

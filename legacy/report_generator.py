@@ -8,7 +8,9 @@ sección descriptiva separada; Jaccard solo se imprime en consola con
 from __future__ import annotations
 
 import argparse
+import re
 import sys
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -49,6 +51,16 @@ def _make_figure_box(rel_path: Path, results_dir: Path, placeholder: str) -> str
     return f'<div class="figure-box placeholder">{placeholder}</div>'
 
 
+def _report_filename(title: str, date: str) -> str:
+    """Nombre fechado del informe: `informe_<titulo>_YYYY-MM-DD.html`."""
+    slug = unicodedata.normalize("NFKD", str(title).lower())
+    slug = "".join(c for c in slug if not unicodedata.combining(c))
+    slug = re.sub(r"[^a-z0-9]+", "_", slug).strip("_")
+    if slug.startswith("informe_"):
+        slug = slug[len("informe_"):]
+    return f"informe_{slug or 'final'}_{date}.html"
+
+
 def _make_kpi_card(value: str, label: str, sub: str = "") -> str:
     """Tarjeta KPI."""
     sub_html = f'<div class="kpi__sub">{sub}</div>' if sub else ""
@@ -69,7 +81,7 @@ def _fmt_num(value: object) -> str:
 
 
 def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
-    """Genera results/informe_final.html y la tabla descriptiva de polaridad."""
+    """Genera results/informe_<titulo>_<fecha>.html y la tabla descriptiva de polaridad."""
     print_header("PASO 18: REPORTE FINAL HTML")
 
     template_path = CODE_DIR / "templates" / "informe_final.html"
@@ -218,9 +230,10 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     if scatter_path.exists():
         fragment = inline_plotly_fragment(scatter_path.read_text(encoding="utf-8"))
         scatter_html = strip_plotly_updatemenus(fragment)
-    umap_html = _make_figure_box(
-        Path("comparison/price/price_umap_concept.html"), results_dir,
-        "UMAP 3D no disponible",
+    umap_rel = Path("comparison/price/price_umap_concept.html")
+    umap_html = (
+        f'<iframe src="{umap_rel}"></iframe>' if (results_dir / umap_rel).exists()
+        else '<div class="placeholder">UMAP 3D no disponible</div>'
     )
     price_html = price_section_html(
         price_comparison, price_dist, price_ct, price_examples, price_alignment,
@@ -239,9 +252,10 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     else:
         primary, secondary, accent, dark = "#3e6fc0", "#2a9d8f", "#e0605e", "#16225e"
 
+    date = datetime.now().strftime("%Y-%m-%d")
     replacements = {
         "{{TITLE}}": args.title,
-        "{{DATE}}": datetime.now().strftime("%Y-%m-%d"),
+        "{{DATE}}": date,
         "{{INPUT_PATH}}": str(getattr(args, "csv_dmo", "DMO")),
         "{{PALETTE_NAME}}": args.palette,
         "{{N_DOCS}}": f"{n_total:,}" if base is not None else "0",
@@ -264,7 +278,7 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     for marker, value in replacements.items():
         html_out = html_out.replace(marker, str(value))
 
-    html_path = results_dir / "informe_final.html"
+    html_path = results_dir / _report_filename(args.title, date)
     html_path.write_text(html_out, encoding="utf-8")
     written.append(html_path)
     written.append(append_metadata(

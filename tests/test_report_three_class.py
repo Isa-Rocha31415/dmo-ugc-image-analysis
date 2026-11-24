@@ -117,13 +117,14 @@ class TestReporteHTMLSinJaccard(unittest.TestCase):
             with contextlib.redirect_stdout(buf):
                 written = run_report_task(args, root)
 
-            html = (root / "informe_final.html").read_text(encoding="utf-8")
+            report = next(root.glob("informe_*_*.html"))
+            html = report.read_text(encoding="utf-8")
             self.assertIn("Métricas descriptivas de polaridad", html)
             self.assertNotIn("POSITIVO", html)
             self.assertNotIn("Jaccard", html)
             self.assertIn("jaccard_freq", buf.getvalue())
             self.assertTrue((root / "comparison" / "report" / "sentiment_descriptive.csv").exists())
-            self.assertTrue(any(p.name == "informe_final.html" for p in written))
+            self.assertIn(report, written)
 
 
 if __name__ == "__main__":

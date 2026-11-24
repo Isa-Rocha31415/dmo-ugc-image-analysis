@@ -81,6 +81,9 @@ class TestBuildNgramInteractivePlot(unittest.TestCase):
                          ["Unigramas", "Bigramas", "Trigramas"])
         self.assertEqual([b.label for b in group.buttons],
                          ["Comentarios normales", "Comentarios outliers"])
+        self.assertEqual(top.bgcolor, group.bgcolor)
+        self.assertEqual(group.bgcolor, group.bordercolor)
+        self.assertEqual(group.font.color, "#ffffff")
 
     def test_cada_boton_deja_una_sola_traza_visible(self):
         fig = build_ngram_interactive_plot(
@@ -185,7 +188,7 @@ class TestIntegracionHTML(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()):
                 run_report_task(args, results)
 
-            final = (results / "informe_final.html").read_text(encoding="utf-8")
+            final = next(results.glob("informe_*_*.html")).read_text(encoding="utf-8")
             self.assertNotIn("{{NGRAM_SECTION}}", final)
             self.assertIn("Análisis de N-gramas", final)
             self.assertGreaterEqual(final.count("plotly-graph-div"), 1)
@@ -215,7 +218,7 @@ class TestIntegracionHTML(unittest.TestCase):
             )
             with contextlib.redirect_stdout(io.StringIO()):
                 run_report_task(args, results)
-            final = (results / "informe_final.html").read_text(encoding="utf-8")
+            final = next(results.glob("informe_*_*.html")).read_text(encoding="utf-8")
             self.assertNotIn("gramas viejos", final)
             self.assertIn("no disponible", final)
 

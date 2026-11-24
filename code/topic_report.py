@@ -97,27 +97,21 @@ def build_topic_cards_html(table: pd.DataFrame) -> str:
     rows = table[table["topic_id"] != -1]
     if rows.empty:
         return '<div class="placeholder">No hay tópicos retenidos</div>'
-    max_cov = max(float(r["coverage_pct"]) for _, r in rows.iterrows()) or 1.0
     cards: list[str] = []
     for _, row in rows.iterrows():
-        top5 = [p.strip() for p in str(row["top5_words"]).split(",") if p.strip()][:5]
-        allkw = [p.strip() for p in str(row["all_keywords"]).split(",") if p.strip()][:8]
+        words = [p.strip() for p in str(row["all_keywords"]).split(",") if p.strip()]
+        title = ", ".join(words[:3]) or str(row["title"])
+        allkw = "".join(f'<span class="pill-muted">{html.escape(p)}</span>' for p in words)
         cov = float(row["coverage_pct"])
-        pills_a = "".join(f'<span class="pill-accent">{html.escape(p)}</span>' for p in top5)
-        pills_m = "".join(f'<span class="pill-muted">{html.escape(p)}</span>' for p in allkw)
-        width = max(0.0, min(100.0, 100.0 * cov / max_cov))
         cards.append(
             '<article class="topic-card">'
             f'<span class="topic-card__chip">Tópico {int(row["topic_id"])}</span>'
-            f'<h3 class="topic-card__title">{html.escape(str(row["title"]))}</h3>'
-            '<span class="muted">Top 5 palabras</span>'
-            f'<div class="pills">{pills_a}</div>'
+            f'<h3 class="topic-card__title">{html.escape(title)}</h3>'
             '<span class="muted">Keywords completas</span>'
-            f'<div class="pills">{pills_m}</div>'
+            f'<div class="pills">{allkw}</div>'
             '<div class="coverage">'
             f'<div class="coverage__value">{cov:.2f}%</div>'
             f'<div class="coverage__n">(n={int(row["n_docs"])})</div>'
-            f'<div class="coverage__bar"><div class="coverage__fill" style="width:{width:.2f}%"></div></div>'
             '</div></article>'
         )
     return '<div class="topic-cards">' + "".join(cards) + "</div>"

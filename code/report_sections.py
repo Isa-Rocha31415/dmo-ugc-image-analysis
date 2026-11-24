@@ -158,8 +158,6 @@ def ngram_section_html(figures: Mapping[int, Any] | None) -> str:
         '<section class="row" id="ngramas">',
         '<div class="panel">',
         '<h2 class="panel__title">Análisis de N-gramas</h2>',
-        '<p class="section-note">Pestañas de orden y grupo: el hover muestra hasta tres '
-        'comentarios normalizados por barra.</p>',
         '<div class="figure-box">',
         pio.to_html(fig, full_html=False, include_plotlyjs="cdn"),
         "</div></div></section>",
@@ -291,6 +289,50 @@ def price_section_html(
         return (f'<div class="figure-box">{fragment}</div>' if fragment
                 else f'<div class="placeholder">{label} no disponible</div>')
 
+    def kpi(label: str, value: str, delta: str, caveat: str = "") -> str:
+        note = f'<p class="caveat">{caveat}</p>' if caveat else ""
+        return (
+            f'<article class="kpi kpi--price"><div class="kpi__label">{label}</div>'
+            f'<div class="kpi__value">{value}<span class="delta-chip">{delta}</span></div>'
+            f'{note}<div class="kpi__hairline"></div></article>'
+        )
+
+    total = comparison[comparison["scope"] == "DMO_vs_UGC_total"] if comparison is not None else None
+    if total is None or total.empty:
+        total = comparison.head(1) if comparison is not None else None
+
+    def _total_value(column: str, default: float = 0.0) -> float:
+        if total is None or total.empty or column not in total:
+            return default
+        return float(total.iloc[0][column])
+
+    r_dmo = _total_value("rate_dmo") * 100
+    r_ugc = _total_value("rate_ugc") * 100
+    gap_pp = _total_value("gap_pp", r_ugc - r_dmo)
+    n_mentions = int(_total_value("n_dmo_mentions")
+                     + _total_value("n_ugc_mentions"))
+    delta_cos = np.nan
+    if alignment is not None and not alignment.empty and "gap_cosine" in alignment:
+        values = alignment["gap_cosine"].dropna()
+        delta_cos = float(values.iloc[0]) if not values.empty else np.nan
+    if pd.isna(delta_cos) and alignment is not None and "scope" in alignment:
+        means = alignment.set_index("scope")["mean_cosine"]
+        if "DMO" in means.index and "UGC" in means.index:
+            delta_cos = float(means["DMO"]) - float(means["UGC"])
+    card1 = kpi(
+        "Presencia", f"{r_dmo:.2f}% vs {r_ugc:.2f}%", f"{gap_pp:+.2f} pp",
+        "Muestra DMO pequeña: leer tamaños de efecto, no solo p.",
+    )
+    card2 = kpi(
+        "Comentarios con este concepto", f"{n_mentions:,}", f"{r_ugc:.2f}% UGC",
+    )
+    arrow = "↓" if delta_cos < 0 else "↑"
+    card3 = kpi(
+        "Proximidad semántica", f"{delta_cos:+.4f}" if pd.notna(delta_cos) else "—",
+        f"{arrow} DMO − UGC",
+    )
+    wrap("precio-lectura", "Lectura rápida", f'<div class="kpi-grid">{card1}{card2}{card3}</div>')
+
     freq = comparison.copy() if comparison is not None else None
     if freq is not None and not freq.empty:
         for col in ("ci_low_dmo", "ci_high_dmo", "ci_low_ugc", "ci_high_ugc"):
@@ -372,8 +414,7 @@ def price_section_html(
 
     def comment(value: Any, _: Mapping[str, Any]) -> str:
         txt = html.escape(str(value))
-        return (f'<details class="cell-details"><summary title="{txt[:240]}">{txt}</summary>'
-                f'<div class="cell-full">{txt}</div></details>')
+        return f'<details class="cell-details"><summary title="{txt}">{txt}</summary></details>'
 
     ex_html = '<div class="table-wrap">' + generic_table_html(
         ex,
@@ -389,39 +430,6 @@ def price_section_html(
         },
     ) + "</div>" if ex is not None and not ex.empty else '<div class="placeholder">Sin ejemplos</div>'
     wrap("precio-ejemplos", "Ejemplos de comentarios con Precio, valor y costo", ex_html)
-
-    def kpi(label: str, value: str, delta: str, caveat: str = "") -> str:
-        note = f'<p class="caveat">{caveat}</p>' if caveat else ""
-        return (
-            f'<article class="kpi kpi--price"><div class="kpi__label">{label}</div>'
-            f'<div class="kpi__value">{value}<span class="delta-chip">{delta}</span></div>'
-            f'{note}<div class="kpi__hairline"></div></article>'
-        )
-
-    total = comparison[comparison["scope"] == "DMO_vs_UGC_total"] if comparison is not None else None
-    if total is None or total.empty:
-        total = comparison.head(1) if comparison is not None else None
-    r_dmo = float(total.iloc[0]["rate_dmo"]) * 100 if total is not None and "rate_dmo" in total else 0.0
-    r_ugc = float(total.iloc[0]["rate_ugc"]) * 100 if total is not None and "rate_ugc" in total else 0.0
-    gap_pp = float(total.iloc[0]["gap_pp"]) if total is not None and "gap_pp" in total else r_ugc - r_dmo
-    delta_cos = np.nan
-    if alignment is not None and not alignment.empty and "gap_cosine" in alignment:
-        values = alignment["gap_cosine"].dropna()
-        delta_cos = float(values.iloc[0]) if not values.empty else np.nan
-    if pd.isna(delta_cos) and alignment is not None and "scope" in alignment:
-        means = alignment.set_index("scope")["mean_cosine"]
-        if "DMO" in means.index and "UGC" in means.index:
-            delta_cos = float(means["DMO"]) - float(means["UGC"])
-    card1 = kpi(
-        "Presencia", f"{r_dmo:.2f}% vs {r_ugc:.2f}%", f"{gap_pp:+.2f} pp",
-        "Muestra DMO pequeña: leer tamaños de efecto, no solo p.",
-    )
-    arrow = "↓" if delta_cos < 0 else "↑"
-    card2 = kpi(
-        "Proximidad semántica", f"{delta_cos:+.4f}" if pd.notna(delta_cos) else "—",
-        f"{arrow} DMO − UGC",
-    )
-    wrap("precio-lectura", "f) Lectura", f'<div class="kpi-grid">{card1}{card2}</div>')
     return "\n".join(parts)
 
 
@@ -454,12 +462,11 @@ def inline_plotly_fragment(full_html: str) -> str:
 
 
 def strip_plotly_updatemenus(fragment: str) -> str:
-    """Quita el array `updatemenus` del JSON de la figura sin alterar el resto."""
+    """Quita `updatemenus` del JSON sin dejar comas colgantes en JavaScript."""
     pattern = re.compile(r'(?:"updatemenus"|updatemenus)\s*:\s*\[')
     out: list[str] = []
     cursor = 0
     for match in pattern.finditer(fragment):
-        out.append(fragment[cursor:match.start()])
         i, depth, in_str, escaped = match.end() - 1, 0, False, False
         while i < len(fragment):
             char = fragment[i]
@@ -480,6 +487,18 @@ def strip_plotly_updatemenus(fragment: str) -> str:
                     i += 1
                     break
             i += 1
+
+        start = match.start()
+        while start > cursor and fragment[start - 1].isspace():
+            start -= 1
+        if start > cursor and fragment[start - 1] == ",":
+            start -= 1
+        else:
+            while i < len(fragment) and fragment[i].isspace():
+                i += 1
+            if i < len(fragment) and fragment[i] == ",":
+                i += 1
+        out.append(fragment[cursor:start])
         cursor = i
     out.append(fragment[cursor:])
     return "".join(out)

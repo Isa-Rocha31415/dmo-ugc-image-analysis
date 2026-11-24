@@ -202,6 +202,8 @@ def build_ngram_interactive_plot(
         _button("Comentarios outliers", n, 1),
     ]
     fig = go.Figure(data=traces)
+    menu_style = dict(bgcolor=color_norm, bordercolor=color_norm,
+                      font=dict(size=12, color="#ffffff"))
     fig.update_layout(
         title=titles[n, 0],
         barmode="group",
@@ -215,14 +217,12 @@ def build_ngram_interactive_plot(
             dict(
                 type="buttons", direction="right", showactive=True,
                 x=0.0, xanchor="left", y=1.18, yanchor="top",
-                bgcolor=color_norm, bordercolor=color_norm,
-                font=dict(size=12, color="#ffffff"),
-                buttons=top_buttons,
+                **menu_style, buttons=top_buttons,
             ),
             dict(
                 type="buttons", direction="right", showactive=True,
                 x=0.0, xanchor="left", y=1.09, yanchor="top",
-                buttons=group_buttons,
+                **menu_style, buttons=group_buttons,
             ),
         ],
     )

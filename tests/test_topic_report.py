@@ -7,7 +7,11 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "code"))
 
-from topic_report import build_topic_report_block, topic_summary_frame  # noqa: E402
+from topic_report import (  # noqa: E402
+    build_topic_cards_html,
+    build_topic_report_block,
+    topic_summary_frame,
+)
 
 
 def _summary() -> pd.DataFrame:
@@ -75,6 +79,18 @@ class TestBuildTopicReportBlock(unittest.TestCase):
         self.assertIn("60.00%", html_out)
         self.assertNotIn("┌", html_out)
         self.assertNotIn("SIN_ASIGNAR", html_out)
+
+    def test_tarjetas_sin_top5_ni_barra_de_cobertura(self):
+        table = topic_summary_frame(_summary(), _doc_topics())
+        cards = build_topic_cards_html(table)
+        self.assertNotIn("Top 5 palabras", cards)
+        self.assertNotIn("coverage__bar", cards)
+        self.assertIn("Tópico 0", cards)
+        self.assertIn('<h3 class="topic-card__title">playa, limpia, arena</h3>', cards)
+        for word in ("familia", "centro", "sol", "agua", "arena"):
+            with self.subTest(word=word):
+                self.assertIn(f'<span class="pill-muted">{word}</span>', cards)
+        self.assertIn("60.00%", cards)
 
     def test_csv_se_escribe_con_codificacion_correcta(self):
         import tempfile
