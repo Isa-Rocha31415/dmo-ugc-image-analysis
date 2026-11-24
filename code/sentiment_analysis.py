@@ -217,19 +217,22 @@ def _transformer_scores(
       - Después puede funcionar offline si el modelo queda en caché.
       - Si necesitas offline estricto, apunta model_name a una carpeta local.
     """
+    import warnings
     from transformers import pipeline
 
-    # Evitar textos vacíos, que pueden romper algunos pipelines.
     safe_texts = [text if str(text).strip() else "n/a" for text in texts]
 
-    classifier = pipeline(
-        task="sentiment-analysis",
-        model=model_name,
-        device=device,
-        clean_up_tokenization_spaces=False,
-        cache_dir=cache_dir
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=FutureWarning)
+        
+        classifier = pipeline(
+            task="sentiment-analysis",
+            model=model_name,
+            device=device,
+            cache_dir=cache_dir
+        )
 
+    # 3. Parámetros exclusivos de inferencia (procesamiento por lotes)
     call_kwargs = {
         "batch_size": batch_size,
         "truncation": True,
