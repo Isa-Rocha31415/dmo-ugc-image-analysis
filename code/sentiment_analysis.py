@@ -201,7 +201,6 @@ def _parse_classification_output(pred: Any) -> Dict[str, float]:
 
     return output
 
-
 def _transformer_scores(
     texts: List[str],
     model_name: str,
@@ -227,7 +226,8 @@ def _transformer_scores(
         task="sentiment-analysis",
         model=model_name,
         device=device,
-        cache_dir=cache_dir,
+        clean_up_tokenization_spaces=False,
+        cache_dir=cache_dir
     )
 
     call_kwargs = {
@@ -240,6 +240,7 @@ def _transformer_scores(
     try:
         predictions = classifier(safe_texts, top_k=None, **call_kwargs)
     except Exception:
+        # Fallback por si top_k=None falla en algún modelo específico
         predictions = classifier(safe_texts, **call_kwargs)
 
     scores = []
@@ -249,7 +250,6 @@ def _transformer_scores(
         scores.append(parsed["score"])
 
     return scores
-
 
 # ---------------------------------------------------------------------------
 # Función principal

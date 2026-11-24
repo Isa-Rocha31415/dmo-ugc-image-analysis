@@ -1,6 +1,5 @@
 """Secciones auxiliares del informe HTML (helpers puros, sin efectos secundarios).
 
-Jaccard queda como validación de consola: estas funciones solo formatean datos.
 """
 from __future__ import annotations
 
@@ -22,7 +21,7 @@ HEADER_ES: dict[str, str] = {
 
 
 def jaccard_console_lines(metrics: pd.DataFrame, scope: str = "ugc_total") -> list[str]:
-    """Devuelve las líneas de consola de Jaccard@100 (nunca van al HTML)."""
+    """Devuelve las líneas de consola de Jaccard@100."""
     if metrics is None or metrics.empty:
         return []
     needed = {"metric", "scope", "k", "value"}
