@@ -807,24 +807,21 @@ def main():
     print(SEP)
     # [OPTIMIZACIÓN-2026] Wordclouds comentadas — no se usan en HTML.
     # Descomentar si se necesitan para reporte offline.
-    if args.generate_wordclouds:
-        from sentiment_wordclouds import generar_wordclouds_sentimiento
+    from sentiment_wordclouds import generar_wordclouds_sentimiento
 
-        wordcloud_results = generar_wordclouds_sentimiento(
-            df_clean=df_clean,
-            df_outliers=df_outliers,
-            text_column=args.text_col,
-            source_column=SOURCE_COLUMN,
-            output_dir=f"{args.output_dir}/sentiment/wordclouds",
-            lang=args.lang,
-            colormap_pos="Greens",
-            colormap_neg="Reds",
-            top_n=80,
-            palette=colors,
-        )
-        print(f"  ✅ Wordclouds PNG -> {args.output_dir}/sentiment/wordclouds")
-    else:
-        print("  ⏭️  Wordclouds omitidas (--generate-wordclouds desactivado).")
+    wordcloud_results = generar_wordclouds_sentimiento(
+        df_clean=df_clean,
+        df_outliers=df_outliers,
+        text_column=args.text_col,
+        source_column=SOURCE_COLUMN,
+        output_dir=f"{args.output_dir}/sentiment/wordclouds",
+        lang=args.lang,
+        colormap_pos="Greens",
+        colormap_neg="Reds",
+        top_n=80,
+        palette=colors,
+    )
+    print(f"  ✅ Wordclouds PNG -> {args.output_dir}/sentiment/wordclouds")
 
     # ══ PASO 7: Modelado de tópicos por sentimiento ══
     _mark_step("PASO 7")
