@@ -15,8 +15,8 @@ Pipeline COMPLETO en una sola ejecución:
 
 Uso (una sola corrida, desde ~/ac_4/code/):
     python run_analysis.py \
-        --csv-dmo "../data/processed/df_dmo.csv" \
-        --csv-ugc "../data/processed/df_ugc.csv" \
+        --csv-dmo "../data/df_dmo.csv" \
+        --csv-ugc "../data/df_ugc.csv" \
         --text-col text --lang es \
         --outlier-method IF --contamination auto \
         --min-partition 50 \
