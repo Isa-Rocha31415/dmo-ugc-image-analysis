@@ -291,5 +291,4 @@ Espacio reservado para las imágenes del dashboard.
 
 
 ## Contacto
-
-isabelrocha31415@gmail.com
+👋 Soy Isabel Rocha, estudiente de la universidad de Guanajauto en la ingeniería de Datos e Inteligencia Artificial. Si tienes alguna duda del proyeco me puedes contactar en mi correoisabelrocha31415@gmail.com
