@@ -89,6 +89,7 @@ El comando principal se ejecuta desde `code/`:
 
 ```bash
 python run_analysis.py \
+    --title "Informe Imagen proyectada vs Imagen Percibida Bert " \
     --csv-dmo "../data/df_dmo.csv" \
     --csv-ugc "../data/df_ugc.csv" \
     --text-col text --lang es \
@@ -97,8 +98,7 @@ python run_analysis.py \
     --output-dir ../results \
     --model bertopic --palette ejecutiva --num-topicos automatico
 ```
-
-La corrida imprime en consola un resumen por paso con separadores y títulos en español. Al terminar, abre el HTML principal de `results/` en un navegador. No necesita servidor: es un archivo autocontenido con Plotly embebido.
+La corrida imprime en consola un resumen por paso con separadores. Al terminar, abre el HTML principal de `results/` en un navegador. 
 
 Si quieres usar los corpus procesados, cambia las dos primeras rutas por:
 
@@ -132,7 +132,7 @@ Si quieres usar los corpus procesados, cambia las dos primeras rutas por:
 | `--global-outliers` | detección por fuente | Cambia la detección de outliers a global. |
 | `--embedding-model` | `paraphrase-multilingual-MiniLM-L12-v2` | Modelo de sentence-transformers para embeddings. |
 | `--sentiment-model` | modelo por defecto del módulo | Modelo HF de sentimiento. |
-| `--sentiment-neutral-tau` | `0.15` | Banda de score considerada neutra. Reetiqueta la caché sin recalcular el modelo. |
+| `--sentiment-neutral-tau` | `0.15` | Banda de score considerada neura. Reetiqueta la caché sin recalcular el modelo. |
 | `--sent-max-length` | `512` | Máximo de tokens para sentimiento. Cambiarlo no invalida la caché existente. |
 | `--cache-dir` | `<output-dir>/cache` | Carpeta de caché. |
 | `--no-cache` | desactivado | Ignora la caché. Recalcula todo; útil solo cuando cambian los insumos. |
@@ -235,22 +235,8 @@ Los CSV se guardan con `encoding="utf-8-sig"` y `index=False`. Cada HTML lleva j
 
 ## Paletas de color
 
-El sistema define cinco paletas. Cada una tiene tres variantes según el tipo de visión: `normal`, `protanopia` y `deuteranopia`. Las definiciones están en `code/utils.py`, en `COLOR_PALETTES`, y se convierten a colores de Plotly mediante `palette_to_plot_colors("ejecutiva")`.
+El sistema define cinco paletas. Cada una tiene tres variantes según el tipo de visión: `normal`, `protanopia` y `deuteranopia`. Las definiciones están en `code/utils.py`, en `COLOR_PALETTES`.
 
-Los roles de color son los mismos en todas las paletas:
-
-| Rol | Uso en el informe |
-|---|---|
-| `texto` | Texto general. |
-| `titulo` | Títulos de sección. |
-| `subtitulo` | Encabezados secundarios. |
-| `parrafo` | Cuerpo de texto. |
-| `primario` | Serie principal y acento institucional. |
-| `secundario` | Segunda serie y acentos gráficos. |
-| `terciario` | Rellenos suaves y fondos secundarios. |
-| `complementarios` | Tercera serie en adelante; el más cercano al verde y al rojo se usa para positivo y negativo. |
-| `fondo` | Fondo del gráfico. |
-| `borde` | Líneas de rejilla y bordes. |
 
 Valores de la variante `normal`:
 
