@@ -19,14 +19,12 @@ Todo el análisis es reproducible: semilla explícita, parámetros registrados y
 
 - Un informe HTML principal con el dashboard completo.
 - Secciones HTML independientes que se inyectan en el informe final.
-- Tablas CSV con datos, métricas y resultados estadísticos (UTF-8 con BOM, sin índice).
+- Tablas CSV con datos, métricas y resultados estadísticos.
 - La tabla de datos de cada figura HTML exportada como CSV, para poder rehacer los gráficos.
-- Un registro de tiempos y metadatos de ejecución en `results/comparison/base/run_metadata.csv`.
 
 ## Estructura del repositorio
 
 ```
-ac_4_local/
 ├── code/                    # pipeline y módulos de métricas
 │   ├── run_analysis.py      # punto de entrada del CLI
 │   ├── utils.py             # paletas y utilidades de color
@@ -34,7 +32,6 @@ ac_4_local/
 │   ├── templates/           # plantillas HTML
 │   └── resources/           # stopwords y anclas léxicas
 ├── data/                    # corpus de entrada (DMO y UGC)
-├── docs/                    # CLI.md, ANCHORS.md, AUDIT.md, DEV_STATUS.md
 ├── results/                 # informe, secciones, tablas y caché
 ├── tests/                   # pruebas con fixtures sintéticos
 ├── environment.yml          # entorno conda con versiones fijadas
@@ -45,20 +42,16 @@ ac_4_local/
 
 - Conda (Miniconda o Anaconda), necesario para crear el entorno.
 - Python 3.10.
-- Entorno WORKING OFFLINE: los modelos de embeddings y sentimiento ya están descargados en la caché del entorno. El pipeline no ejecuta `nltk.download`, no instala paquetes nuevos y no descarga modelos de Hugging Face.
-
-No hace falta GPU. La corrida de referencia se ejecuta en CPU reutilizando la caché.
 
 ## Instalación
 
-Todos los comandos de instalación se ejecutan desde la raíz del repositorio (`~/ac_4_local`).
+Todos los comandos de instalación se ejecutan desde la raíz del repositorio.
 
 ### Con `requirements.txt`
 
 El archivo `requirements.txt` es una especificación explícita de Conda, con versiones y builds pinadas.
 
 ```bash
-cd ~/ac_4_local
 conda create --name nlp_report --file requirements.txt
 conda activate nlp_report
 python --version
@@ -73,38 +66,28 @@ conda install --name nlp_report --file requirements.txt
 ### Con `environment.yml`
 
 ```bash
-cd ~/ac_4_local
 conda env create -f environment.yml
 conda activate nlp_report
 python --version
 ```
 
-Para actualizar un entorno ya creado:
 
-```bash
-conda env update -f environment.yml --prune
-```
-
-La versión de referencia es Python 3.10.22. El archivo `environment.yml` define el entorno `nlp_report`.
 
 ## Datos de entrada
 
 El pipeline necesita dos CSV:
 
-- `data/df_dmo.csv` (o `data/processed/df_dmo.csv`): textos publicados por la DMO, es decir, imagen proyectada.
-- `data/df_ugc.csv` (o `data/processed/df_ugc.csv`): textos de usuarios, es decir, imagen percibida. Se aceptan varios CSV de UGC repitiendo `--csv-ugc`.
+- `data/df_dmo.csv` : textos publicados por la DMO, es decir, imagen proyectada.
+- `data/df_ugc.csv` : textos de usuarios, es decir, imagen percibida. Se aceptan varios CSV de UGC repitiendo `--csv-ugc`.
 
-La columna de texto por defecto es `text`. Si no existe, el lector intenta resolver alias habituales (`texto`, `comment` y similares). El idioma de trabajo es español (`--lang es`).
+La columna de texto por defecto es `text`. Si no existe, el lector intenta resolver alias habituales (`texto` o `comment` ). El idioma de trabajo es español (`--lang es`).
 
-No se leen los CSV crudos de `data/raw`; se trabaja con los archivos procesados.
 
 ## Uso
 
 El comando principal se ejecuta desde `code/`:
 
 ```bash
-cd ~/ac_4_local/code
-
 python run_analysis.py \
     --csv-dmo "../data/df_dmo.csv" \
     --csv-ugc "../data/df_ugc.csv" \
@@ -137,7 +120,7 @@ Si quieres usar los corpus procesados, cambia las dos primeras rutas por:
 | `--min-partition` | `50` | Mínimo de comentarios por partición para modelar tópicos. Con menos filas se usa frecuencia de palabras. |
 | `--output-dir` | `../results` | Carpeta de salida de HTML, CSV y caché. |
 | `--model` | `bertopic` | Backend de tópicos: `bertopic`, `xidootopic` o `xidoo`. |
-| `--palette` | `ejecutiva` | Paleta de colores de todos los gráficos HTML. |
+| `--palette` | `ejecutiva` | Paleta de colores. |
 | `--num-topicos` | `automatico` | Número de tópicos por partición de sentimiento: entero mayor o igual que 1 o `automatico`. Alias: `--num-topics`. |
 
 ### Opciones útiles
@@ -163,9 +146,7 @@ Si quieres usar los corpus procesados, cambia las dos primeras rutas por:
 | `--ngram-interactive` / `--no-ngram-interactive` | activado | N-gramas con comentarios de ejemplo en el hover. |
 | `--umap-3d` / `--no-umap-3d` | activado | Scatter 3D de comentarios por tópico. Desactivar si no está `umap-learn`. |
 | `--generate-wordclouds` / `--no-wordclouds` | activado | Genera las nubes de palabras en PNG. |
-| `--verbose-jaccard` | desactivado | Imprime Jaccard auxiliar en consola. Nunca aparece en el HTML principal. |
 
-La documentación completa del CLI, incluidos los aliases legacy, está en `docs/CLI.md`.
 
 ### Comandos de ejemplo
 
@@ -291,7 +272,6 @@ Ajustes de las variantes para daltonismo:
 | `tecnologica` | Secundario `#B83280`, complementarios `#38B2AC`, `#C53030`, `#ECC94B` | Igual que `normal` |
 | `hospitalidad` | Igual que `normal` | Complementarios: `#2F855A`, `#2D3748`, `#744210` |
 
-Todas mantienen `fondo` en `#FFFFFF`. Los bordes son `#CBD5E0` en `ejecutiva`, `#D3D3D3` en `naturaleza`, `#B0B0B0` en `accesible`, `#D6BCFA` en `tecnologica` y `#F6AD55` en `hospitalidad`.
 
 ## Secciones del informe HTML
 
@@ -313,57 +293,12 @@ El dashboard se organiza en estos bloques:
    - Contexto temático por fuente.
    - Ejemplos de comentarios con menciones de precio, valor y costo.
 
-La detección del concepto de precio es semántica por defecto. Las reglas léxicas e híbridas quedan como ablaciones. La calibración usa un placebo y un ancla documentada en `docs/ANCHORS.md`; no hay anotación humana, y esa limitación se declara en el informe.
+
 
 ## Capturas del informe
 
-Espacio reservado para las imágenes del dashboard. Sustituir cada ruta por la captura real cuando se versionen las imágenes.
+Espacio reservado para las imágenes del dashboard. 
 
-| Sección | Captura |
-|---|---|
-| Indicadores clave | `docs/img/informe_indicadores.png` |
-| Polaridad POS / NEU / NEG | `docs/img/informe_polaridad.png` |
-| N-gramas interactivos | `docs/img/informe_ngramas.png` |
-| Mapa temático y brechas | `docs/img/informe_topicos.png` |
-| Distribución semántica UMAP 3D | `docs/img/informe_umap.png` |
-| Léxico distintivo | `docs/img/informe_lexico.png` |
-| Precio, valor y costo | `docs/img/informe_precio.png` |
-
-```html
-<!--
-<img src="docs/img/informe_indicadores.png" alt="Indicadores clave del informe">
-<img src="docs/img/informe_polaridad.png" alt="Distribución de polaridad">
-<img src="docs/img/informe_ngramas.png" alt="N-gramas interactivos">
-<img src="docs/img/informe_topicos.png" alt="Mapa temático y brechas">
-<img src="docs/img/informe_umap.png" alt="Distribución semántica UMAP 3D">
-<img src="docs/img/informe_lexico.png" alt="Léxico distintivo">
-<img src="docs/img/informe_precio.png" alt="Sección de precio, valor y costo">
--->
-```
-
-## Verificación
-
-Desde la raíz del repositorio:
-
-```bash
-conda activate nlp_report
-pytest -q
-```
-
-Las pruebas usan fixtures sintéticos y no ejecutan el pipeline completo. No lanzar GPU ni scripts SLURM para verificar cambios locales.
-
-Para una comprobación rápida del CLI, usar los corpus de `data/` y una carpeta de salida independiente de `results/`.
-
-## Solución de problemas
-
-| Síntoma | Causa probable | Acción |
-|---|---|---|
-| `CondaNotFoundError` al activar el entorno | Conda no está en el `PATH` | Instalar Miniconda y reiniciar la terminal. |
-| Falta el módulo `umap` | `umap-learn` no disponible | Usar `--no-umap-3d`. No instalar paquetes nuevos en el entorno offline. |
-| El informe HTML no muestra una sección | La tarea correspondiente no se ejecutó | Añadirla a `--comparison-tasks` o quitar `--skip-comparison`. |
-| Los resultados no cambian al modificar un parámetro | Caché reutilizada | Usar `--force-steps` con el paso afectado, o `--no-cache` de forma puntual. |
-| Cambia `--sent-max-length` y el sentimiento queda igual | Ese parámetro no entra en la clave de caché | Usar `--force-steps sentiment` o `--no-cache`. |
-| Pocas filas en DMO | Corpus pequeño | El pipeline usa Fisher y bootstrap cuando aplica; revisar los avisos de inestabilidad en el HTML. |
 
 ## Contacto
 
