@@ -21,7 +21,7 @@ Uso (una sola corrida, desde ~/ac_4/code/):
         --outlier-method IF --contamination auto \
         --min-partition 50 \
         --output-dir ../results \
-        --model bertopic --palette ejecutiva --num-topicos automatico
+        --model xidoo --palette ejecutiva --num-topicos automatico
 
 Caché: <output-dir>/cache/<paso>/<clave>/. La segunda corrida reutiliza lo que no cambió.
 """
@@ -530,8 +530,10 @@ def main():
                    default=True,
                    help="Scatter UMAP 3D de comentarios por tópico (default ON). "
                         "Requiere umap-learn; desactivar con --no-umap-3d")
-    g.add_argument("--generate-wordclouds", action="store_true",
-                   help="Genera las imágenes PNG de wordclouds (default OFF; costoso)")
+    g.add_argument("--generate-wordclouds", action=argparse.BooleanOptionalAction,
+                   default=True,
+                   help="Genera las imágenes PNG de wordclouds (default ON). "
+                        "Desactivar con --no-wordclouds")
     g.add_argument("--skip-comparison", action="store_true",
                    help="Ejecuta solo el bloque I (pasos 0–7)")
     g.add_argument("--comparison-tasks", nargs="+", choices=COMPARISON_TASKS,
@@ -805,7 +807,7 @@ def main():
     print(f"\n{SEP}")
     print("   PASO 6.5: WORDCLOUDS POR SENTIMIENTO")
     print(SEP)
-    # [OPTIMIZACIÓN-2026] Wordclouds desactivadas por defecto: no se usan en HTML.
+    # [OPTIMIZACIÓN-2026] Wordclouds activadas por defecto; --no-wordclouds las omite.
     if args.generate_wordclouds:
         from sentiment_wordclouds import generar_wordclouds_sentimiento
 
@@ -823,7 +825,7 @@ def main():
         )
         print(f"  ✅ Wordclouds PNG -> {args.output_dir}/sentiment/wordclouds")
     else:
-        print("  ⏭️  Wordclouds omitidas (activar con --generate-wordclouds)")
+        print("  ⏭️  Wordclouds omitidas (--no-wordclouds)")
 
     # ══ PASO 7: Modelado de tópicos por sentimiento ══
     _mark_step("PASO 7")

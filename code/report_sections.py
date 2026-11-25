@@ -289,12 +289,11 @@ def price_section_html(
         return (f'<div class="figure-box">{fragment}</div>' if fragment
                 else f'<div class="placeholder">{label} no disponible</div>')
 
-    def kpi(label: str, value: str, delta: str, caveat: str = "") -> str:
-        note = f'<p class="caveat">{caveat}</p>' if caveat else ""
+    def kpi(label: str, value: str, delta: str) -> str:
         return (
             f'<article class="kpi kpi--price"><div class="kpi__label">{label}</div>'
             f'<div class="kpi__value">{value}<span class="delta-chip">{delta}</span></div>'
-            f'{note}<div class="kpi__hairline"></div></article>'
+            '</article>'
         )
 
     total = comparison[comparison["scope"] == "DMO_vs_UGC_total"] if comparison is not None else None
@@ -321,7 +320,6 @@ def price_section_html(
             delta_cos = float(means["DMO"]) - float(means["UGC"])
     card1 = kpi(
         "Presencia", f"{r_dmo:.2f}% vs {r_ugc:.2f}%", f"{gap_pp:+.2f} pp",
-        "Muestra DMO pequeña: leer tamaños de efecto, no solo p.",
     )
     card2 = kpi(
         "Comentarios con este concepto", f"{n_mentions:,}", f"{r_ugc:.2f}% UGC",

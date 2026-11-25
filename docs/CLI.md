@@ -42,7 +42,7 @@ python run_analysis.py \
 | `--verbose-jaccard` | flag | OFF | Imprime Jaccard@100 auxiliar en consola al generar el informe HTML. Jaccard nunca aparece en el dashboard principal. |
 | `--ngram-interactive` / `--no-ngram-interactive` | flag | ON | Uni/bi/trigramas interactivos: cada barra muestra hasta 3 comentarios de `text_norm` en el hover. Desactivar con `--no-ngram-interactive`. |
 | `--umap-3d` / `--no-umap-3d` | flag | ON | Scatter 3D de comentarios por tópico sobre los embeddings cacheados. Requiere `umap-learn`; con `--no-umap-3d` se omite la sección. |
-| `--generate-wordclouds` | flag | OFF | Genera las imágenes PNG de wordclouds. Costoso; el HTML no las usa. Por defecto no se crea ningún `.png`/`.jpg`. |
+| `--generate-wordclouds` / `--no-wordclouds` | flag | ON | Genera las imágenes PNG de wordclouds. `--no-wordclouds` las omite. El flag positivo se conserva por compatibilidad. |
 | `--stability-runs` | int | `3` | Corridas de estabilidad (antes 5; pasar 5 restaura el valor previo). |
 | `--subsample` | float | `0.75` | Fracción por corrida (antes 0.8; pasar 0.8 restaura el valor previo). |
 | `--force-parallel` | flag | — | Activa los pools del PASO 7 y del dispatcher (default serial: crossover 5k dio 0.58×). |

@@ -268,10 +268,11 @@ class TestHtmlSectionsPresent(unittest.TestCase):
                          ["Unigramas", "Bigramas", "Trigramas",
                           "Comentarios normales", "Comentarios outliers"])
 
-    def test_lectura_tres_kpis_al_inicio_y_caveat(self):
+    def test_lectura_tres_kpis_sin_caveat_ni_hairline(self):
         lectura = _section(self.markup, "precio-lectura")
         self.assertEqual(lectura.count('class="kpi kpi--price"'), 3)
-        self.assertIn("Muestra DMO pequeña: leer tamaños de efecto, no solo p.", lectura)
+        self.assertNotIn('<p class="caveat">', lectura)
+        self.assertNotIn('<div class="kpi__hairline">', lectura)
         self.assertIn("Comentarios con este concepto", lectura)
         self.assertIn("-0.1743", lectura)
         self.assertLess(self.markup.index('id="precio-lectura"'),
@@ -309,6 +310,12 @@ class TestFlagsWordclouds(unittest.TestCase):
         source = (ROOT / "code" / "run_analysis.py").read_text(encoding="utf-8")
         self.assertIn("[OPTIMIZACIÓN-2026]", source)
         self.assertIn("if args.generate_wordclouds:", source)
+
+    def test_generacion_por_defecto_activa(self):
+        source = (ROOT / "code" / "run_analysis.py").read_text(encoding="utf-8")
+        self.assertIn('"--generate-wordclouds", action=argparse.BooleanOptionalAction,\n'
+                      '                   default=True', source)
+        self.assertIn('Wordclouds omitidas', source)
 
 
 if __name__ == "__main__":

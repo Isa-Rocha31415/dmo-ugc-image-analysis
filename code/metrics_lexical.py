@@ -195,16 +195,46 @@ def interpret_lexical(j100: float, cov_types: float) -> str:
 def _wordcloud_html(terms: pd.DataFrame, path: Path, title: str, colors: list[str]) -> Path:
     """Wordcloud plotly (tamaño=|z|, layout filotáctico determinista) + CSV de datos."""
     import plotly.graph_objects as go
+
     terms = terms.reset_index(drop=True)
     n = len(terms)
+    data_path = path.with_name(path.stem + "_data.csv")
+
     if n == 0:
-        import plotly.graph_objects as go
         fig = go.Figure()
         fig.update_layout(title=f"{title} — sin términos", template="plotly_white", height=400)
         fig.write_html(path, include_plotlyjs=True)
-        save_csv(pd.DataFrame(columns=["term", "logodds_z", "size", "x", "y"]),
-                 path.with_name(path.stem + "_data.csv"))
+        save_csv(pd.DataFrame(columns=["term", "logodds_z", "size", "x", "y"]), data_path)
         return path
+
+    if isinstance(colors, dict):
+        palette = [colors[k] for k in ("primary", "secondary", "tertiary", "quaternary")
+                   if k in colors]
+        if not palette:
+            palette = list(colors.get("categorical", []))
+    else:
+        palette = list(colors)
+    palette = [c for c in palette if str(c).lower() not in {"#ffffff", "#fff", "white"}]
+    palette = palette or ["#2B6CB0"]
+
+    z = terms["logodds_z"].abs().to_numpy()
+    size = 12 + 38 * (z - z.min()) / max(1e-9, z.max() - z.min())
+    theta = 2.399963 * np.arange(n)          # ángulo áureo (filotaxis)
+    r = np.sqrt(np.arange(n) + 1)
+    x, y = 2.6 * r * np.cos(theta), r * np.sin(theta)   # 2.6 reduce solapamiento
+
+    fig = go.Figure(go.Scatter(
+        x=x, y=y, mode="text", text=terms["term"],
+        textfont=dict(size=size, color=[palette[i % len(palette)] for i in range(n)]),
+        hovertemplate="%{text}<br>z=%{customdata:.2f}<extra></extra>",
+        customdata=terms["logodds_z"],
+    ))
+    fig.update_layout(title=title, template="plotly_white", height=700,
+                      xaxis=dict(visible=False), yaxis=dict(visible=False))
+    fig.write_html(path, include_plotlyjs=True)
+    save_csv(pd.DataFrame({"term": terms["term"], "logodds_z": terms["logodds_z"],
+                           "size": size, "x": x, "y": y}), data_path)
+    return path
 
 
 # ─────────────────────────── Tarea 'lexical' ───────────────────────────
