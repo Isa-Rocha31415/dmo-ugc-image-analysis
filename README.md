@@ -30,7 +30,7 @@ Todo el análisis es reproducible: semilla explícita, parámetros registrados y
 │   ├── utils.py             # paletas y utilidades de color
 │   ├── metrics/             # funciones puras de comparación
 │   ├── templates/           # plantillas HTML
-│   └── resources/           # stopwords y anclas léxicas
+│   └── resources/           # anclas léxicas
 ├── data/                    # corpus de entrada (DMO y UGC)
 ├── results/                 # informe, secciones, tablas y caché
 ├── tests/                   # pruebas con fixtures sintéticos
