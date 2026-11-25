@@ -284,6 +284,10 @@ El dashboard se organiza en estos bloques:
 ## Capturas del informe
 
 Espacio reservado para las imágenes del dashboard. 
+![](data/img/1.png)
+![](data/img/2.png)   
+![](data/img/3.png)   
+![](data/img/4.png)   
 
 
 ## Contacto
