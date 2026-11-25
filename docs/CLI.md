@@ -34,7 +34,7 @@ python run_analysis.py \
 | `--title` | str | `Imagen proyectada (DMO) vs imagen percibida (UGC)` | Título del informe HTML. |
 | `--top-n` | int | `50` | Top n-gramas en reportes. |
 | `--global-outliers` | flag | per-fuente | Detección global en vez de por fuente. |
-| `--model` | `bertopic` / `bidootopic` / `bidoo` | `bertopic` | Backend de modelado de tópicos. |
+| `--model` | `bertopic` / `xidootopic` / `xidoo` | `bertopic` | Backend único para PASO 7 y PASO 9 (selección de k). |
 | `--palette` | `ejecutiva`/`naturaleza`/`accesible`/`tecnologica`/`hospitalidad` | `ejecutiva` | Paleta de colores de todos los HTML. |
 | `--embedding-model` | str | `paraphrase-multilingual-MiniLM-L12-v2` | Modelo de sentence-transformers. |
 | `--sentiment-model` | str | modelo por defecto de `sentiment_analysis` | Modelo HF de sentimiento. |
@@ -186,6 +186,12 @@ en el bloque principal; con `--verbose-jaccard` solo los imprime también en con
 `--comparison-tasks`: `base topics lexical thematic price report` (implementadas; `report`
 genera `informe_final.html`) y `semantic affective figures` (PENDIENTE, sin fallar).
 Pasos 15/17 = huecos; no existen `ias`/`qualitative`.
+
+La tarea `topics` (PASO 9) usa el backend indicado por `--model` en PASO 7 y 9.
+Artefactos y caché quedan aislados en `comparison/topics_joint/<backend>/`
+(`bertopic` o `xidoo`), con `_cache/base_*.npz` y `_cache/grid_*.csv` propios.
+`--force-topics` o `--no-cache` fuerzan el recálculo de esa caché. Los fallos del
+backend son fatales: no hay degradación silenciosa a otro modelo.
 
 ## N-gramas interactivos
 

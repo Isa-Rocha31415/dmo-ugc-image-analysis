@@ -15,6 +15,24 @@ SEP = "█" * 70
 CSV_ENCODING = "utf-8-sig"
 
 
+def joint_backend(args: Any) -> str:
+    """Normaliza `--model` al backend canónico usado por PASO 7 y PASO 9.
+
+    Única fuente de verdad: 'bertopic' o 'xidoo' ('xidootopic' es alias legacy).
+    """
+    value = str(getattr(args, "model", "bertopic") or "bertopic").strip().lower()
+    if value.startswith("xidoo"):
+        return "xidoo"
+    if value.startswith("bert"):
+        return "bertopic"
+    raise ValueError(f"Backend de tópicos no soportado: {value!r}")
+
+
+def topics_joint_dir(args: Any, results_dir: Path) -> Path:
+    """Directorio de artefactos del PASO 9, aislado por backend."""
+    return Path(results_dir) / "comparison" / "topics_joint" / joint_backend(args)
+
+
 def print_header(title: str) -> None:
     """Imprime un encabezado con el estilo del pipeline."""
     print(f"\n{SEP}\n   {title}\n{SEP}")

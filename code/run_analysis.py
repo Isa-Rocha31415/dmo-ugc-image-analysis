@@ -114,13 +114,9 @@ def _parse_num_topics(v: str):
 
 
 def _normalize_model(value: str) -> str:
-    """Normaliza el backend elegido: 'bertopic' o el backend XidooTopic."""
-    v = (value or "").strip().lower()
-    if v.startswith("bert"):
-        return BACKEND_BERTOPIC
-    if v.startswith(BACKEND_XIDOO):
-        return BACKEND_XIDOO
-    raise ValueError(f"Modelo de topicos no soportado: {value}")
+    """Normaliza `--model`; misma fuente de verdad que el PASO 9."""
+    from comparison.common import joint_backend
+    return joint_backend(argparse.Namespace(model=value))
 
 
 def _asegurar_sentimiento_ternario(df: pd.DataFrame, neutral_tau: float = 0.15) -> pd.DataFrame:
@@ -222,10 +218,10 @@ def _write_ngram_interactive(
 
 def _write_topic_report_block(args: argparse.Namespace, output_dir: Path) -> list[Path]:
     """Bloques de tópicos (consola, HTML y CSV canónico) desde artefactos cacheados."""
-    from comparison.common import append_metadata, save_csv
+    from comparison.common import append_metadata, save_csv, topics_joint_dir
     from topic_report import build_topic_report_block
 
-    topics_dir = output_dir / "comparison" / "topics_joint"
+    topics_dir = topics_joint_dir(args, output_dir)
     summary_path = topics_dir / "topics_summary.csv"
     if not summary_path.exists():
         print("  ⚠️ Sin topics_summary.csv; bloque de tópicos omitido.")
@@ -270,7 +266,7 @@ def _write_umap_section(
 ) -> list[Path]:
     """Scatter UMAP 3D con embeddings cacheados y tabla de puntos exportada."""
     import plotly.io as pio
-    from comparison.common import append_metadata, save_csv
+    from comparison.common import append_metadata, save_csv, topics_joint_dir
     from visualization import build_umap_3d_plot
 
     sep = "█" * 70
@@ -287,7 +283,7 @@ def _write_umap_section(
     print(sep)
 
     base_path = output_dir / "comparison" / "base" / "analysis_base.csv"
-    doc_path = output_dir / "comparison" / "topics_joint" / "doc_topics.csv"
+    doc_path = topics_joint_dir(args, output_dir) / "doc_topics.csv"
     if not base_path.exists() or not doc_path.exists():
         html_path.write_text(
             '<div class="placeholder">UMAP 3D no disponible: faltan base o tópicos</div>',
@@ -433,7 +429,7 @@ def _run_comparison(
                 })
             elif task == "topics":
                 from joint_topic_model import run_topics_task
-                written += run_topics_task(args, output_dir)
+                written += run_topics_task(args, output_dir, _normalize_model(args.model))
                 written += _write_topic_report_block(args, output_dir)
                 written += _write_umap_section(args, output_dir, embeddings_clean)
             elif task == "lexical":
@@ -532,8 +528,10 @@ def main():
                         "Requiere umap-learn; desactivar con --no-umap-3d")
     g.add_argument("--generate-wordclouds", action=argparse.BooleanOptionalAction,
                    default=True,
-                   help="Genera las imágenes PNG de wordclouds (default ON). "
-                        "Desactivar con --no-wordclouds")
+                   help="Genera las imágenes PNG de wordclouds (default ON).")
+    g.add_argument("--no-wordclouds", dest="generate_wordclouds",
+                   action="store_false",
+                   help="Alias legacy de --no-generate-wordclouds.")
     g.add_argument("--skip-comparison", action="store_true",
                    help="Ejecuta solo el bloque I (pasos 0–7)")
     g.add_argument("--comparison-tasks", nargs="+", choices=COMPARISON_TASKS,

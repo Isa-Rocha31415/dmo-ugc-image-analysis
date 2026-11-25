@@ -79,52 +79,19 @@ def obtener_embeddings_xidoo(
     textos: list[str],
     random_state: int = 42,
 ) -> np.ndarray:
-    """
-    Obtiene los embeddings internos que XidooTopic genera.
-    Si no expone embeddings directamente, usamos los topic vectors
-    o hacemos fallback a TF-IDF + SVD.
-    """
+    """Embeddings reales de XidooTopic; cualquier fallo termina la corrida."""
+    import traceback
+
+    from xidoo_topic_modeler import XidooTopicModeler
+
     try:
-        from xidootopic.xidootopic import xidootopic
-        model = xidootopic(outlier_detector=None)
-        model.fit(textos)
-        if hasattr(model, "embeddings_"):
-            return np.asarray(model.embeddings_, dtype=np.float32)
-        if hasattr(model, "document_embeddings_"):
-            return np.asarray(model.document_embeddings_, dtype=np.float32)
-        if hasattr(model, "c_tf_idf_"):
-            return np.asarray(model.c_tf_idf_.toarray(), dtype=np.float32)
-    except Exception:
-        pass
-
-    # Fallback: TF-IDF + SVD (con stopwords en español como LISTA)
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.decomposition import TruncatedSVD
-
-    # ⬇️ Stopwords en español como LISTA (scikit-learn no acepta "spanish" como str)
-    stop_words_es = [
-        "el", "la", "los", "las", "un", "una", "unos", "unas",
-        "de", "del", "en", "con", "por", "para", "que", "es",
-        "se", "no", "lo", "al", "a", "o", "y", "e", "pero",
-        "más", "muy", "me", "mi", "su", "le", "les", "nos",
-        "te", "ya", "también", "como", "fue", "ser", "está",
-        "este", "esta", "eso", "esa", "hay", "han", "he",
-        "son", "tiene", "todo", "todos", "cuando", "sobre",
-        "entre", "desde", "hasta", "sin", "porque", "donde",
-        "cual", "quien", "sus", "mis", "tu", "yo", "él", "ella",
-        "ellos", "ellas", "usted", "nosotros", "esto", "aquel",
-        "aquella", "otro", "otra", "cada", "mismo", "mucha",
-        "mucho", "bien", "aquí", "ahí", "allí", "así", "tan",
-    ]
-
-    vec = TfidfVectorizer(
-        max_features=5000,
-        stop_words=stop_words_es,   # ← LISTA, no string
-    )
-    X = vec.fit_transform(textos)
-    n_comp = min(100, X.shape[1] - 1, X.shape[0] - 1)
-    svd = TruncatedSVD(n_components=max(2, n_comp), random_state=random_state)
-    return svd.fit_transform(X).astype(np.float32)
+        model = XidooTopicModeler(random_state=random_state)
+        model.fit_transform(textos)
+        return np.asarray(model.embeddings_, dtype=np.float32)
+    except Exception as exc:
+        print(f"  ❌ XidooTopic (embeddings) falló: {type(exc).__name__}: {exc}")
+        traceback.print_exc()
+        raise RuntimeError("No se obtuvo embeddings de XidooTopic; sin fallback.") from exc
 
 # ──────────────────────────────────────────────
 # Reducción 2D

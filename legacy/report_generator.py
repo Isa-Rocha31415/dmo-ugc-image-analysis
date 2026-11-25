@@ -20,7 +20,9 @@ CODE_DIR = Path(__file__).resolve().parents[1] / "code"
 if str(CODE_DIR) not in sys.path:
     sys.path.insert(0, str(CODE_DIR))
 
-from comparison.common import append_metadata, print_header, save_csv  # noqa: E402
+from comparison.common import (  # noqa: E402
+    append_metadata, print_header, save_csv, topics_joint_dir,
+)
 from io_corpus import CORPUS_COLUMN, SOURCE_COLUMN  # noqa: E402
 from report_sections import (  # noqa: E402
     density_figure_html,
@@ -91,10 +93,11 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     template = template_path.read_text(encoding="utf-8")
 
     # Leer artefactos (sin recalcular nada)
+    tj_dir = topics_joint_dir(args, results_dir)
     base = _safe_read_csv(results_dir / "comparison" / "base" / "analysis_base.csv")
     outliers = _safe_read_csv(results_dir / "comparison" / "base" / "outliers_base.csv")
-    summary = _safe_read_csv(results_dir / "comparison" / "topics_joint" / "topics_summary.csv")
-    grid = _safe_read_csv(results_dir / "comparison" / "topics_joint" / "topic_selection_grid.csv")
+    summary = _safe_read_csv(tj_dir / "topics_summary.csv")
+    grid = _safe_read_csv(tj_dir / "topic_selection_grid.csv")
     dist = _safe_read_csv(results_dir / "comparison" / "thematic" / "distribution_distances.csv")
     gaps = _safe_read_csv(results_dir / "comparison" / "thematic" / "gaps_table.csv")
     lex = _safe_read_csv(results_dir / "comparison" / "lexical" / "metrics_lexical.csv")
@@ -206,7 +209,7 @@ def run_report_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
         "Wordcloud UGC no disponible",
     )
 
-    doc_topics = _safe_read_csv(results_dir / "comparison" / "topics_joint" / "doc_topics.csv")
+    doc_topics = _safe_read_csv(tj_dir / "doc_topics.csv")
     if (gaps_sidebar is None or gaps_sidebar.empty) and doc_topics is not None and base is not None:
         merged = base.merge(doc_topics[["doc_id", "topic_id", "topic_name"]], on="doc_id")
         kept = merged[merged["topic_id"] != -1]

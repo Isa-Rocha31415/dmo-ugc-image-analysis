@@ -895,7 +895,8 @@ def write_price_report(
     tau = float(params.get("tau", status.get("tau", 0.0)))
     seed = int(params.get("seed", getattr(args, "seed", 42)))
 
-    doc_path = results_dir / "comparison" / "topics_joint" / "doc_topics.csv"
+    from comparison.common import topics_joint_dir
+    doc_path = topics_joint_dir(args, results_dir) / "doc_topics.csv"
     doc_topics = (pd.read_csv(doc_path, encoding="utf-8-sig")
                   if doc_path.exists() else None)
     scores = enrich_scores(pd.read_csv(scores_path, encoding="utf-8-sig"),

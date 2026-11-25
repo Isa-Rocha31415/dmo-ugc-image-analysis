@@ -4,6 +4,7 @@ import contextlib
 import io
 import os
 import time
+import traceback
 from concurrent.futures import ProcessPoolExecutor
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -361,20 +362,12 @@ def run_topic_modeling(
             frames.append(out_df)
 
         except Exception as exc:
-            print(f"     ❌ {backend_label} falló: {exc}")
-            print(f"     ⚠️ Cayendo a word_frequency como fallback")
-
-            output = _word_frequency_output(
-                subset=subset,
-                text_column=text_column,
-                sentiment_label=sentiment_label,
-                top_n=top_n_terms,
-            )
-            output["warning"] = f"{backend_label} falló y se usó fallback. Error: {exc}"
-            outputs[sentiment_label] = output
-
-            if "df" in output:
-                frames.append(output["df"])
+            print(f"     ❌ {backend_label} falló: {type(exc).__name__}: {exc}")
+            traceback.print_exc()
+            raise RuntimeError(
+                f"PASO 7: backend '{topic_backend}' falló en '{sentiment_label}'. "
+                "No se aplica fallback: revisa la instalación y la configuración."
+            ) from exc
 
     # Combinar todos los resultados
     if frames:

@@ -108,8 +108,9 @@ def _gaps_for_scope(lab_d_raw, lab_u_raw, topics, names, scope, B, seed) -> list
 def run_thematic_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     """Tarea P3: gaps de prevalencia + distancias distribucionales."""
     print_header("PASO 11: CAPA TEMÁTICA L2 — GAPS DE PREVALENCIA DMO vs UGC")
+    from comparison.common import topics_joint_dir
     base_dir = results_dir / "comparison" / "base"
-    tj_dir = results_dir / "comparison" / "topics_joint"
+    tj_dir = topics_joint_dir(args, results_dir)
     out_dir = results_dir / "comparison" / "thematic"
     out_dir.mkdir(parents=True, exist_ok=True)
 

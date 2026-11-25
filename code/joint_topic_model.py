@@ -3,9 +3,9 @@ joint_topic_model.py — TAREA P1: modelado de tópicos CONJUNTO (DMO+UGC).
 
 Metodología
 -----------
-1. Un único modelo base BERTopic (subclase de BertopicModeler, sin romper su uso)
-   sobre TODO el corpus limpio: UMAP(seed) + HDBSCAN + c-TF-IDF con filtros
-   estadísticos min_df/max_df (SIN listas de stopwords).
+1. Un único modelo base sobre TODO el corpus limpio, elegido por `--model`:
+   BERTopic (UMAP+HDBSCAN) o XidooTopic (UMAP+Leiden+Filtros+Merge). Ambos
+   alimentan el mismo c-TF-IDF con filtros min_df/max_df (sin stopwords).
 2. Grid de k (default 4..30): los tópicos base se fusionan a exactamente k con
    clustering aglomerativo WARD sobre centroides L2-normalizados. Ward minimiza el
    incremento de varianza intra-grupo, penaliza fusionar clusters grandes y evita
@@ -23,7 +23,7 @@ Metodología
 6. Desbalance DMO<<UGC: NO se remuestrea. --dmo-weight pondera centroides y c-TF-IDF;
    la comparación entre corpus se hace por proporciones con bootstrap (tarea P3).
 
-Outputs en ../results/comparison/topics_joint/:
+Outputs en ../results/comparison/topics_joint/<backend>/:
   topic_selection_grid.csv, curvas_k.html, topics_summary.csv, doc_topics.csv
   (+ topic_centroids.npy y caché propia en _cache/).
 """
@@ -44,7 +44,10 @@ from sklearn.metrics import adjusted_mutual_info_score, adjusted_rand_score
 from sklearn.preprocessing import normalize
 
 from bertopic_modeler import BertopicModeler
-from comparison.common import append_metadata, palette_colors, print_header, save_csv
+from comparison.common import (
+    append_metadata, joint_backend, palette_colors, print_header, save_csv,
+    topics_joint_dir,
+)
 from io_corpus import CORPUS_COLUMN
 from utils import palette_to_plot_colors
 
@@ -68,6 +71,44 @@ REQUIRED_GRID_COLS = {
     "min_topic_size", "max_share", "balance_entropy", "n_effective",
     "unassigned_share", "n_assigned",
 }
+
+
+def backend_version(backend: str) -> str:
+    """Versión del backend, parte de la huella de caché del PASO 9."""
+    if backend == "xidoo":
+        from xidoo_topic_modeler import xidoo_backend_version
+        return xidoo_backend_version()
+    try:
+        from importlib import metadata
+        return metadata.version("bertopic")
+    except Exception:
+        return "desconocida"
+
+
+def base_cache_payload(emb: np.ndarray, args: Any, backend: str) -> dict[str, Any]:
+    """Huella del modelo base. El backend cambia la clave siempre."""
+    return {
+        "backend": backend,
+        "backend_version": backend_version(backend),
+        "rows": emb.shape[0], "dim": emb.shape[1], "seed": args.seed,
+        "base_min_topic_size": args.base_min_topic_size,
+        "min_df": args.min_df, "max_df": args.max_df, "ngram_max": args.ngram_max,
+        "emb_sha": hashlib.sha256(emb.tobytes()).hexdigest(),
+    }
+
+
+def grid_cache_payload(ks: list[int], args: Any, backend: str,
+                       base_key: str) -> dict[str, Any]:
+    """Huella del grid. Incluye backend y la clave base, nunca compartida."""
+    return {
+        "grid_version": GRID_VERSION,
+        "backend": backend,
+        "backend_version": backend_version(backend),
+        "base_key": base_key, "ks": ks, "runs": args.stability_runs,
+        "subsample": args.subsample, "seed": args.seed,
+        "threshold": args.reassign_threshold, "dmo_weight": args.dmo_weight,
+        "weights": WEIGHTS,
+    }
 
 
 def build_count_vectorizer(min_df: int = 5, max_df: float = 0.40,
@@ -309,71 +350,94 @@ class JointBertopicModeler(BertopicModeler):
 
 
 def _fit_base_cached(
-    texts: list[str], emb: np.ndarray, args: argparse.Namespace, cache_dir: Path
+    texts: list[str], emb: np.ndarray, args: argparse.Namespace, cache_dir: Path,
+    backend: str,
 ) -> tuple[np.ndarray, np.ndarray, int, int, str]:
-    """Ajusta (o reusa) el modelo base: reducción UMAP, labels base, params HDBSCAN.
+    """Ajusta (o reusa) el modelo base del backend elegido.
 
-    En cache hit NO se importa hdbscan (permite reejecutar aunque falte el paquete).
-    El cambio de linkage del merge NO invalida esta caché (los labels base no cambian).
+    Cada backend tiene su propia clave y su propio directorio. Los fallos de
+    XidooTopic se propagan: nunca se cae al modelo BERTopic.
     """
-    payload = {
-        "rows": emb.shape[0], "dim": emb.shape[1], "seed": args.seed,
-        "base_min_topic_size": args.base_min_topic_size,
-        "min_df": args.min_df, "max_df": args.max_df, "ngram_max": args.ngram_max,
-        "emb_sha": hashlib.sha256(emb.tobytes()).hexdigest(),
-    }
+    payload = base_cache_payload(emb, args, backend)
     key = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:20]
     cache_dir.mkdir(parents=True, exist_ok=True)
     npz = cache_dir / f"base_{key}.npz"
-    if npz.exists() and not args.force_topics:
+    if npz.exists() and not args.force_topics and not getattr(args, "no_cache", False):
         d = np.load(npz)
-        print(f"  ✅ Caché hit [topics_joint/base] -> {npz}")
+        print(f"  ✅ Caché hit [topics_joint/{backend}/base] -> {npz}")
         return d["reduction"], d["base_labels"], int(d["mcs"]), int(d["ms"]), key
 
-    try:
-        from hdbscan import HDBSCAN  # noqa: F401  (verifica disponibilidad offline)
-    except ImportError as exc:
-        raise ImportError(
-            "hdbscan no está disponible offline y no hay caché del modelo base. "
-            "Instálalo en el entorno antes de ejecutar el PASO 9."
-        ) from exc
-
-    print("  🧮 Entrenando modelo base conjunto (UMAP+HDBSCAN, una sola vez)...")
-    modeler = JointBertopicModeler(
-        min_df=args.min_df, max_df=args.max_df, ngram_max=args.ngram_max,
-        random_state=args.seed, min_topic_size=args.base_min_topic_size,
-        min_samples_per_topic=3, top_n_words=10,
-    )
-    res = modeler.fit_transform(texts, embeddings=emb)
-    base_labels = np.asarray(res["topic_id"], dtype=int)
-    reduction = np.asarray(modeler._model.umap_model.embedding_, dtype=np.float32)
-    mcs = int(getattr(modeler._model.hdbscan_model, "min_cluster_size",
-                      args.base_min_topic_size))
-    ms_raw = getattr(modeler._model.hdbscan_model, "min_samples", None)
-    ms = int(ms_raw) if ms_raw is not None else 1
+    if backend == "xidoo":
+        from xidoo_topic_modeler import XidooTopicModeler
+        print("  🧮 Entrenando modelo base conjunto (XidooTopic, una sola vez)...")
+        modeler = XidooTopicModeler(
+            random_state=args.seed, use_internal_outlier=True,
+            min_cluster_size=args.base_min_topic_size,
+        )
+        modeler.fit_transform(texts, embeddings=emb)
+        base_labels = np.asarray(modeler.base_labels_, dtype=int)
+        reduction = np.asarray(modeler.reduction_, dtype=np.float32)
+        mcs = int(modeler.min_cluster_size_)
+        ms = 1
+    else:
+        try:
+            from hdbscan import HDBSCAN  # noqa: F401  (verifica disponibilidad)
+        except ImportError as exc:
+            raise ImportError(
+                "hdbscan no está disponible y no hay caché del modelo base. "
+                "Instálalo en el entorno antes de ejecutar el PASO 9."
+            ) from exc
+        print("  🧮 Entrenando modelo base conjunto (BERTopic UMAP+HDBSCAN, una sola vez)...")
+        modeler = JointBertopicModeler(
+            min_df=args.min_df, max_df=args.max_df, ngram_max=args.ngram_max,
+            random_state=args.seed, min_topic_size=args.base_min_topic_size,
+            min_samples_per_topic=3, top_n_words=10,
+        )
+        res = modeler.fit_transform(texts, embeddings=emb)
+        base_labels = np.asarray(res["topic_id"], dtype=int)
+        reduction = np.asarray(modeler._model.umap_model.embedding_, dtype=np.float32)
+        mcs = int(getattr(modeler._model.hdbscan_model, "min_cluster_size",
+                          args.base_min_topic_size))
+        ms_raw = getattr(modeler._model.hdbscan_model, "min_samples", None)
+        ms = int(ms_raw) if ms_raw is not None else 1
     np.savez(npz, reduction=reduction, base_labels=base_labels, mcs=mcs, ms=ms)
     return reduction, base_labels, mcs, ms, key
 
 
 def _stability_runs(
-    reduction: np.ndarray, n: int, mcs: int, ms: int, args: argparse.Namespace
+    reduction: np.ndarray, n: int, mcs: int, ms: int, args: argparse.Namespace,
+    backend: str, texts: list[str] | None = None, emb: np.ndarray | None = None,
 ) -> list[tuple[np.ndarray, np.ndarray]]:
-    """5 submuestras 80%: HDBSCAN re-ajustado en el espacio UMAP fijo (semilla derivada)."""
+    """Submuestras: HDBSCAN (bertopic) o XidooTopic re-ajustado (xidoo)."""
     if args.stability_runs <= 0:
         print("  ⚠️ --stability-runs 0: estabilidad = 0 para todos los k (no recomendado).")
         return []
-    try:
-        from hdbscan import HDBSCAN
-    except ImportError as exc:
-        raise ImportError(
-            "hdbscan no está disponible offline; no se puede medir estabilidad. "
-            "Instálalo o usa --stability-runs 0."
-        ) from exc
+    if backend == "xidoo":
+        from xidoo_topic_modeler import XidooTopicModeler
+        if texts is None or emb is None:
+            raise ValueError("Estabilidad xidoo requiere textos y embeddings.")
+        print(f"  🔁 Estabilidad: {args.stability_runs} re-ajustes de XidooTopic.")
+    else:
+        try:
+            from hdbscan import HDBSCAN
+        except ImportError as exc:
+            raise ImportError(
+                "hdbscan no está disponible; no se puede medir estabilidad. "
+                "Instálalo o usa --stability-runs 0."
+            ) from exc
     rng = np.random.default_rng(args.seed)
     runs = []
     for _ in range(args.stability_runs):
         idx = rng.choice(n, size=int(args.subsample * n), replace=False)
-        lab = HDBSCAN(min_cluster_size=mcs, min_samples=ms).fit_predict(reduction[idx])
+        if backend == "xidoo":
+            modeler = XidooTopicModeler(
+                random_state=args.seed, use_internal_outlier=True,
+                min_cluster_size=mcs,
+            )
+            modeler.fit_transform([texts[i] for i in idx], embeddings=emb[idx])
+            lab = np.asarray(modeler.base_labels_, dtype=int)
+        else:
+            lab = HDBSCAN(min_cluster_size=mcs, min_samples=ms).fit_predict(reduction[idx])
         full = np.full(n, -2, dtype=int)  # -2 = no muestreado
         full[idx] = lab
         runs.append((idx, full))
@@ -403,11 +467,14 @@ def _stability_for_k(
 
 
 # ─────────────────────────── Tarea 'topics' ───────────────────────────
-def run_topics_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
-    """Tarea P1: modelo conjunto + selección de k + artefactos en topics_joint/."""
+def run_topics_task(args: argparse.Namespace, results_dir: Path,
+                    backend: str | None = None) -> list[Path]:
+    """Tarea P1: modelo conjunto + selección de k en topics_joint/<backend>/."""
+    backend = backend or joint_backend(args)
     print_header("PASO 9: MODELADO CONJUNTO DE TÓPICOS (DMO+UGC) — SELECCIÓN DE k")
+    print(f"  🤖 Backend (--model): {backend} | versión: {backend_version(backend)}")
     base_dir = results_dir / "comparison" / "base"
-    out_dir = results_dir / "comparison" / "topics_joint"
+    out_dir = topics_joint_dir(args, results_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     base = pd.read_csv(base_dir / "analysis_base.csv", encoding="utf-8-sig")
@@ -427,7 +494,7 @@ def run_topics_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     print("  ℹ️ Comparación DMO vs UGC: por proporciones con bootstrap (tarea P3).")
 
     reduction, base_labels, mcs, ms, base_key = _fit_base_cached(
-        texts, emb, args, out_dir / "_cache"
+        texts, emb, args, out_dir / "_cache", backend
     )
     n_base = len(set(base_labels.tolist()) - {-1})
     if n_base < 2:
@@ -448,28 +515,23 @@ def run_topics_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
     B.data[:] = 1
 
     # ── Grid (con caché propia versionada y validada) ──
-    gpayload = {
-        "grid_version": GRID_VERSION,
-        "base_key": base_key, "ks": ks, "runs": args.stability_runs,
-        "subsample": args.subsample, "seed": args.seed,
-        "threshold": args.reassign_threshold, "dmo_weight": args.dmo_weight,
-        "weights": WEIGHTS,
-    }
+    gpayload = grid_cache_payload(ks, args, backend, base_key)
     gkey = hashlib.sha256(json.dumps(gpayload, sort_keys=True).encode()).hexdigest()[:20]
     gcache = out_dir / "_cache" / f"grid_{gkey}.csv"
 
     grid: pd.DataFrame | None = None
-    if gcache.exists() and not args.force_topics:
+    if (gcache.exists() and not args.force_topics
+            and not getattr(args, "no_cache", False)):
         cand = pd.read_csv(gcache, encoding="utf-8-sig")
         if REQUIRED_GRID_COLS.issubset(cand.columns):
             grid = cand
-            print(f"  ✅ Caché hit [topics_joint/grid] -> {gcache}")
+            print(f"  ✅ Caché hit [topics_joint/{backend}/grid] -> {gcache}")
         else:
             faltan = sorted(REQUIRED_GRID_COLS - set(cand.columns))
             print(f"  ⚠️ Caché de grid obsoleta (faltan {faltan}); se recalcula.")
 
     if grid is None:
-        runs = _stability_runs(reduction, n, mcs, ms, args)
+        runs = _stability_runs(reduction, n, mcs, ms, args, backend, texts, emb)
         rows = []
         for k in ks:
             merged, _ = merge_to_k(base_labels, emb, k, w)
@@ -609,7 +671,8 @@ def run_topics_task(args: argparse.Namespace, results_dir: Path) -> list[Path]:
 
     written.append(append_metadata(
         base_dir / "run_metadata.csv", task="topics",
-        params={**vars(args), "k_selected": k_sel, "weights": WEIGHTS,
+        params={**vars(args), "backend": backend, "k_selected": k_sel,
+                "weights": WEIGHTS,
                 "grid_version": GRID_VERSION, "merge_linkage": "ward_on_l2_centroids",
                 "max_topic_share_guard": MAX_TOPIC_SHARE,
                 "min_topic_floor": MIN_TOPIC_FLOOR,

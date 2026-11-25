@@ -76,16 +76,16 @@ def _fixture_results(root: Path) -> None:
     })
     _csv(root / "comparison/base/analysis_base.csv", base)
     _csv(root / "comparison/base/outliers_base.csv", pd.DataFrame({"doc_id": [9], "text": ["x"]}))
-    _csv(root / "comparison/topics_joint/topics_summary.csv", pd.DataFrame({
+    _csv(root / "comparison/topics_joint/bert/topics_summary.csv", pd.DataFrame({
         "topic_id": [0, 1, -1], "topic_name": ["playa limpia", "precio justo", "SIN_ASIGNAR"],
         "keywords_top8": ["playa; limpia; arena; sol; mar; familia; centro; hotel"] * 3,
         "n_docs": [2, 1, 1],
     }))
-    _csv(root / "comparison/topics_joint/doc_topics.csv", pd.DataFrame({
+    _csv(root / "comparison/topics_joint/bert/doc_topics.csv", pd.DataFrame({
         "doc_id": [0, 1, 2], "topic_id": [0, 0, 1],
         "topic_name": ["playa limpia", "playa limpia", "precio justo"],
     }))
-    _csv(root / "comparison/topics_joint/topic_selection_grid.csv",
+    _csv(root / "comparison/topics_joint/bert/topic_selection_grid.csv",
          pd.DataFrame({"k": [2], "selected": [True]}))
     _csv(root / "comparison/thematic/distribution_distances.csv",
          pd.DataFrame({"scope": ["ugc_total"], "jsd_base2": [0.01], "emd_cosine": [0.02]}))
@@ -155,8 +155,8 @@ def _fixture_results(root: Path) -> None:
     figs = build_all_ngram_figures(frame, frame)
     _write(root / "ngram_interactive.html", ngram_section_html(figs))
     from topic_report import build_topic_report_block
-    tsum = pd.read_csv(root / "comparison/topics_joint/topics_summary.csv", encoding="utf-8-sig")
-    dt = pd.read_csv(root / "comparison/topics_joint/doc_topics.csv", encoding="utf-8-sig")
+    tsum = pd.read_csv(root / "comparison/topics_joint/bert/topics_summary.csv", encoding="utf-8-sig")
+    dt = pd.read_csv(root / "comparison/topics_joint/bert/doc_topics.csv", encoding="utf-8-sig")
     _write(root / "topic_report_section.html",
            build_topic_report_block(tsum, dt, total_docs=3)["html"])
     _write(root / "umap_section.html", "<div>umap</div>")
